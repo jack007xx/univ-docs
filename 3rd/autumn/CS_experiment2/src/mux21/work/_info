@@ -1,0 +1,50 @@
+m255
+K4
+z2
+13
+!s112 1.1
+!i10d 8192
+!i10e 25
+!i10f 100
+cModel Technology
+Z0 d/mdhome/home8/ut5548448/mux21
+vmux21
+Z1 !s110 1602137114
+!i10b 1
+!s100 z:mkIY[AjhZHke;N<52Cm2
+IWdSSH]2hZ_?L@a7[f9oEH1
+Z2 VDg1SIo80bB@j0V0VzS_@n1
+R0
+w1602136248
+8mux21.v
+Fmux21.v
+L0 1
+Z3 OV;L;10.5b;63
+r1
+!s85 0
+31
+Z4 !s108 1602137114.000000
+Z5 !s107 mux21.v|test_mux21.v|
+Z6 !s90 -reportprogress|300|test_mux21.v|
+!i113 1
+Z7 tCvgOpt 0
+vtest_mux21
+R1
+!i10b 1
+!s100 ;E3_JSb^d:TJBj156j4fZ3
+IOilWHHZZ]HJHP]<ceBFdm0
+R2
+R0
+w1602136612
+8test_mux21.v
+Ftest_mux21.v
+L0 5
+R3
+r1
+!s85 0
+31
+R4
+R5
+R6
+!i113 1
+R7

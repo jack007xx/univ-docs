@@ -1,0 +1,7 @@
+
+State Machine - |m|st_reg
+Name st_reg.11 st_reg.10 st_reg.01 st_reg.00 
+st_reg.00 0 0 0 0 
+st_reg.01 0 0 1 1 
+st_reg.10 0 1 0 1 
+st_reg.11 1 0 0 1 

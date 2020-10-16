@@ -1,0 +1,70 @@
+m255
+K4
+z2
+13
+!s112 1.1
+!i10d 8192
+!i10e 25
+!i10f 100
+cModel Technology
+d/mdhome/home8/ut5548448/jikken_kadai1/bcd1
+vbcd1
+Z0 !s110 1602752445
+!i10b 1
+!s100 Ef7^gzIA1?1CT`LZB_[zm3
+IP^Il:m5IhDekhCkHDceBg1
+Z1 VDg1SIo80bB@j0V0VzS_@n1
+Z2 d/mdhome/home8/ut5548448/jikken_kadai1/bcd
+Z3 w1602742124
+8bcd1.v
+Fbcd1.v
+L0 1
+Z4 OV;L;10.5b;63
+r1
+!s85 0
+31
+Z5 !s108 1602752444.000000
+Z6 !s107 bcd1.v|test_bcd1.v|
+Z7 !s90 -reportprogress|300|test_bcd1.v|
+!i113 1
+Z8 tCvgOpt 0
+vbcd2
+!s110 1602751762
+!i10b 1
+!s100 I^Zb3OP>dDG3?`:]31Od51
+I0=RMBDlacAmjce4V[YQV43
+R1
+R2
+w1602743137
+8bcd2.v
+Fbcd2.v
+L0 3
+R4
+r1
+!s85 0
+31
+!s108 1602751761.000000
+!s107 bcd1.v|bcd2.v|test_bcd2.v|
+!s90 -reportprogress|300|test_bcd2.v|
+!i113 1
+R8
+vtest
+R0
+!i10b 1
+!s100 ?JN9eRUd2V]O>aggMcZU81
+I2eS^2H3XN]k]KU<YYKlzQ2
+R1
+R2
+R3
+8test_bcd1.v
+Ftest_bcd1.v
+L0 10
+R4
+r1
+!s85 0
+31
+R5
+R6
+R7
+!i113 1
+R8

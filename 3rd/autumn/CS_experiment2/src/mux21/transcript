@@ -1,0 +1,24 @@
+# OpenFile test_mux21.v
+vlib work
+vlog test_mux21.v
+# Model Technology ModelSim - Intel FPGA Edition vlog 10.5b Compiler 2016.10 Oct  5 2016
+# Start time: 15:05:14 on Oct 08,2020
+# vlog -reportprogress 300 test_mux21.v 
+# -- Compiling module mux21
+# -- Compiling module test_mux21
+# 
+# Top level modules:
+# 	test_mux21
+# End time: 15:05:14 on Oct 08,2020, Elapsed time: 0:00:00
+# Errors: 0, Warnings: 0
+vsim test_mux21
+# vsim test_mux21 
+# Start time: 15:06:00 on Oct 08,2020
+# Loading work.test_mux21
+# Loading work.mux21
+view wave
+# .main_pane.wave.interior.cs.body.pw.wf
+add wave *
+run 80ns
+# End time: 16:02:26 on Oct 08,2020, Elapsed time: 0:56:26
+# Errors: 0, Warnings: 0

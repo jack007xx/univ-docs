@@ -1,0 +1,27 @@
+# OpenFile test_bcd1.v
+vsim test_bcd1.v
+# OpenFile test_bcd1.v
+vlib work
+# ** Warning: (vlib-34) Library already exists at "work".
+vlog test_bcd1.v
+# Model Technology ModelSim - Intel FPGA Edition vlog 10.5b Compiler 2016.10 Oct  5 2016
+# Start time: 18:00:44 on Oct 15,2020
+# vlog -reportprogress 300 test_bcd1.v 
+# -- Compiling module bcd1
+# -- Compiling module test
+# 
+# Top level modules:
+# 	test
+# End time: 18:00:45 on Oct 15,2020, Elapsed time: 0:00:01
+# Errors: 0, Warnings: 0
+vsim test
+# vsim test 
+# Start time: 18:00:50 on Oct 15,2020
+# Loading work.test
+# Loading work.bcd1
+view wave
+# .main_pane.wave.interior.cs.body.pw.wf
+add wave *
+run 1000
+# End time: 18:02:23 on Oct 15,2020, Elapsed time: 0:01:33
+# Errors: 0, Warnings: 0

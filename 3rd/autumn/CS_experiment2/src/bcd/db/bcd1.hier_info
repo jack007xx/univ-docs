@@ -1,0 +1,19 @@
+|bcd1
+clk => r0[0].CLK
+clk => r0[1].CLK
+clk => r0[2].CLK
+clk => r0[3].CLK
+reset => r0[0].ACLR
+reset => r0[1].ACLR
+reset => r0[2].ACLR
+reset => r0[3].ACLR
+x => r0[0].ENA
+x => r0[3].ENA
+x => r0[2].ENA
+x => r0[1].ENA
+bcd1_out[0] <= r0[0].DB_MAX_OUTPUT_PORT_TYPE
+bcd1_out[1] <= r0[1].DB_MAX_OUTPUT_PORT_TYPE
+bcd1_out[2] <= r0[2].DB_MAX_OUTPUT_PORT_TYPE
+bcd1_out[3] <= r0[3].DB_MAX_OUTPUT_PORT_TYPE
+
+
