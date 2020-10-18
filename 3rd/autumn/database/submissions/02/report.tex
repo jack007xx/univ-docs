@@ -1,0 +1,50 @@
+\documentclass[a4paper,15pt]{jsarticle}
+
+% 数式
+\usepackage{amsmath,amsfonts}
+\usepackage{bm}
+% 画像
+\usepackage[dvipdfmx]{graphicx}
+
+\usepackage{listingsutf8,jlisting} %日本語のコメントアウトをする場合jlistingが必要
+%ここからソースコードの表示に関する設定
+\lstset{
+  basicstyle={\ttfamily},
+  identifierstyle={\small},
+  commentstyle={\smallitshape},
+  keywordstyle={\small\bfseries},
+  ndkeywordstyle={\small},
+  stringstyle={\small\ttfamily},
+  frame={tb},
+  breaklines=true,
+  columns=[l]{fullflexible},
+  numbers=left,
+  xrightmargin=0zw,
+  xleftmargin=3zw,
+  numberstyle={\scriptsize},
+  stepnumber=1,
+  numbersep=1zw,
+  lineskip=-0.5ex
+}
+
+\begin{document}
+\title{データベース演習課題2}
+\author{坪井正太郎（101830245）}
+\date{\today}
+\maketitle
+\subsection*{問1}
+\Large\[\pi _{商品ID, 商品名}(\sigma _{価格<'10000'(商品)})\]
+
+\subsection*{問2}
+\Large\[\pi _{商品ID, 日付}(\sigma _{氏名='田中一郎'} (顧客 \Join 購入))\]
+
+\subsection*{問3}
+\Large\[\pi _{商品ID, 商品名}(\sigma _{価格>'50000'} (商品 \Join 顧客 \Join 購入))\]
+
+\subsection*{問4}
+\Large\[\pi _{商品ID, 商品名}(商品 \Join _{価格>価格10001} \delta _{価格\leftarrow 価格10001}(\pi _{商品ID}(\sigma _{='10001'}(商品))))\]
+
+\subsection*{問5}
+\Large\[\pi _{分類}(商品) - \pi _{分類} (商品 - \sigma _{価格>='10000'}(商品))\]
+
+\end{document}
