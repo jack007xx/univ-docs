@@ -10,7 +10,7 @@ assign bcd1_out=r0;
 
 always @(posedge clk or negedge reset) begin
     if (reset == 1'b0) begin
-        r0<=0;
+        r0<=4'b0000;
     end else begin
         if (x == 1'b1) begin
             if (r0 < 9) begin
