@@ -28,7 +28,44 @@ ICE計算機上の，ModelSim，Quartusを使用する。
 作成した回路記述をQuartusでコンパイルし，論理合成とレイアウトを行う。回路構成やロジックエレメント数，遅延時間について確認する。
  
 \subsection{実験結果}
-\subsubsection{回路のHDL記述}
 \subsubsection{機能レベルシュミレーション}
+ModelSimでの入出力波形は以下のようになった。
+(キャプチャーでは値が見えないので，赤数字で10進の値を追記した。)
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\linewidth]{./src/adder16/adder16_wave21.png}
+\end{figure}
+
+足し算の結果は正しく出力されていることが確認できた。
+
 \subsubsection{論理合成}
+論理合成の結果，以下のような回路が作られた。
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\linewidth]{./src/adder16/adder16_print.png}
+\end{figure}
+
+ロジックエレメント数は19だった。
+
+回路全体の遅延時間は，以下のようになった。
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\linewidth]{./src/adder16/adder16Timing.png}
+\end{figure}
+
 \subsection{考察}
+\subsubsection{回路のHDL記述}
+コード\ref{adder16.v}では，16bitの入出力を定義して，assign句で出力に演算結果を割り当てている。
+17bit連接に対して足し算の結果を割り当てているため，結果が16bitに収まらない場合，coutの値は1になる。
+
+コード\ref{testadder16.v}ではテストベンチとして，入力をすべてゼロに初期化し，10nsごとにxを100づつ加算し，5nsごとにyを300づつ加算している。
+
+\subsubsection{機能レベルシュミレーション}
+シュミレーションの結果は仕様を満たす動作だった。
+キャプチャの範囲の外で，coutに桁上げが出力されていることも確認できた。
+
+\subsubsection{論理合成}
+論理合成の結果，遅延時間は入出力の前後に集中していた。
