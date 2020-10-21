@@ -29,7 +29,53 @@ ICE計算機上の，ModelSim，Quartusを使用する。
 作成した回路記述をQuartusでコンパイルし，論理合成とレイアウトを行う。回路構成やロジックエレメント数，遅延時間について確認する。
  
 \subsection{実験結果}
-\subsubsection{回路のHDL記述}
 \subsubsection{機能レベルシュミレーション}
+ModelSimで波形を作成した結果，以下のような波形になった。
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\linewidth]{./src/adder16s/adder16s_wave31.png}
+  \caption{adder16sの波形}
+\end{figure}
+
 \subsubsection{論理合成}
+論理合成の結果，以下のような回路が作られた。
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\linewidth]{./src/adder16s/adder16s_print.png}
+  \caption{adder16sの回路}
+\end{figure}
+
+ロジックエレメント数は35だった。
+
+回路全体の遅延時間は，以下のようになった。
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\linewidth]{./src/adder16s/adder16sTiming.png}
+  \caption{adder16sの遅延時間}
+\end{figure}
+
 \subsection{考察}
+\subsubsection{回路のHDL記述}
+コード\ref{adder16s.v}では，クロックの立ち上がりで，定義した2つの16bitレジスタに入力x，yの値を代入している。
+その結果がコード\ref{adder16.v}と同様にassignされているので，クロックに同期して動作すること以外は，\ref{adder16.v}と同じである。
+
+また，リセット信号の立ち下がりでレジスタの値はリセットされる。
+
+コード\ref{testadder16s.v}ではテストベンチとして，5nsごとにクロック信号を反転している。
+(10nsごとに回路が動作する)
+
+また，8nsごとにxに100を加算し，yに200加算している。
+
+\subsubsection{機能レベルシュミレーション}
+クロック信号に対応して出力されていた。
+また，リセット信号も正しく動作している。
+
+\subsubsection{論理合成}
+合成結果では，全加算器列と桁数*2個のフリップフロップによって回路が作られていた。
+これによって，組み合わせ回路のときよりもロジックエレメント数は増加している。
+
+一方で，全体の遅延時間は10\%程度減少している。
+これは，クロックによってフリップフロップが動作していることで，入出力にかかる時間が減っていることによると考えられる。

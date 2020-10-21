@@ -35,6 +35,7 @@ ModelSimでの入出力波形は以下のようになった。
 \begin{figure}[H]
   \centering
   \includegraphics[width=\linewidth]{./src/adder16/adder16_wave21.png}
+  \caption{adder16の波形}
 \end{figure}
 
 足し算の結果は正しく出力されていることが確認できた。
@@ -45,6 +46,7 @@ ModelSimでの入出力波形は以下のようになった。
 \begin{figure}[H]
   \centering
   \includegraphics[width=\linewidth]{./src/adder16/adder16_print.png}
+  \caption{adder16の回路}
 \end{figure}
 
 ロジックエレメント数は19だった。
@@ -54,6 +56,7 @@ ModelSimでの入出力波形は以下のようになった。
 \begin{figure}[H]
   \centering
   \includegraphics[width=\linewidth]{./src/adder16/adder16Timing.png}
+  \caption{adder16の遅延時間}
 \end{figure}
 
 \subsection{考察}
@@ -68,4 +71,5 @@ ModelSimでの入出力波形は以下のようになった。
 キャプチャの範囲の外で，coutに桁上げが出力されていることも確認できた。
 
 \subsubsection{論理合成}
-論理合成の結果，遅延時間は入出力の前後に集中していた。
+今回の合成結果では，一桁ごとに桁上りを含めた3入力の全加算器で加算し，直列につなげていた。
+また，遅延時間は入出力の前後に集中していた。

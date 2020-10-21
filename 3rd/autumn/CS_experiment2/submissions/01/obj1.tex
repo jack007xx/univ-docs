@@ -41,6 +41,7 @@ ModelSimで波形を作成した結果，以下のような波形になった。
 \begin{figure}[H]
   \centering
   \includegraphics[width=\linewidth]{./src/mux21/mux21_wave11.png}
+  \caption{mux21の波形}
 \end{figure}
 
 Yの出力値が期待どおりに0→1→0→0で推移し，S1によってD0，D1が切り替わっていることが確認できた。
@@ -51,6 +52,7 @@ Yの出力値が期待どおりに0→1→0→0で推移し，S1によってD0�
 \begin{figure}[H]
   \centering
   \includegraphics[width=\linewidth]{./src/mux21/mux21_print.png}
+  \caption{mux21の回路}
 \end{figure}
 
 ロジックエレメント数は2だった。
@@ -61,6 +63,7 @@ Y～Oの部分で遅延が大きくなった。
 \begin{figure}[H]
   \centering
   \includegraphics[width=\linewidth]{./src/mux21/mux21Timing.png}
+  \caption{mux21の遅延時間}
 \end{figure}
 
 \subsubsection{FPGAボードでの動作結果}
@@ -82,6 +85,7 @@ Yに$(\lnot{S1} \land D0)|(S1 \land D1)$を割り当てることで，S1の値�
 \begin{figure}[H]
   \centering
   \includegraphics[width=\linewidth]{./src/mux21/mux21elm.png}
+  \caption{mux21のゲート}
 \end{figure}
 
 また，この結果よりロジックエレメントの値はゲートの数に一致しないことも分かった。\\
