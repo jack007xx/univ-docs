@@ -5,7 +5,9 @@
 \usepackage{bm}
 % 画像
 \usepackage[dvipdfmx]{graphicx}
+
 \usepackage{here}
+\usepackage{url}
 
 \usepackage{listingsutf8,jlisting} %日本語のコメントアウトをする場合jlistingが必要
 %ここからソースコードの表示に関する設定
@@ -36,27 +38,54 @@
 \maketitle
 \section*{概要}
 
-\section*{はじめに}
-各実験で，シュミレータや論理合成のソフトウェアを使うために，以下の設定を行う。
-端末を終了した場合，再度sourceコマンドを実行する。
-\begin{lstlisting}[caption={設定の読み込み},label={設定の読み込み}]
-  $ ln -s /pub1/jikken/eda3/cadsetup.bash.altera ~/
-  $ source ~/cadsetup.bash.altera
-\end{lstlisting}
+% \section*{はじめに}
+% 各実験で，シュミレータや論理合成のソフトウェアを使うために，以下の設定を行う。
+% 端末を終了した場合，再度sourceコマンドを実行する。
+% \begin{lstlisting}[caption={設定の読み込み},label={設定の読み込み}]
+%   $ ln -s /pub1/jikken/eda3/cadsetup.bash.altera ~/
+%   $ source ~/cadsetup.bash.altera
+% \end{lstlisting}
 
-\section*{各実験}
-\input{obj1.tex}
+% \section*{各実験}
+% \input{obj1.tex}
 
-\section{実験2}
-\input{obj2.tex}
+% \section{実験2}
+% \input{obj2.tex}
 
-\section{実験3}
-\input{obj3.tex}
+% \section{実験3}
+% \input{obj3.tex}
 
-\section{実験課題1}
-\input{ex1.tex}
+% \section{実験課題1}
+% \input{ex1.tex}
 
-\section{実験課題2}
-\input{ex2.tex}
+% \section{実験課題2}
+% \input{ex2.tex}
+
+\section{論理合成の最適化について}
+\subsection{具体的な手法}
+HDLで記述された回路は，まず論理演算等が率直に実装される。
+次に，各演算に対する最適化や，モジュールの共用が行われる。
+
+具体的には，カルノー図による論理関数の簡単化や，1ゲートで実行できる演算の置換が行われる(XORなど)。
+
+モジュールの共用では，次のような最適化例がある。
+2入力1出力の，入力をゲートAに通してゲートBに通す回路を考える。
+このとき，素の入力にゲートBを施してからゲートAを通す回路が，等価な回路として考えられる場合，ゲートの数を1つ削減することができる。
+
+ZHANG, ZHIFEI\cite{RTL}によると，HDL記述の抽象度が高いほど，このような最適化を行う余地が生まれ，回路規模も遅延も小さくなる傾向があるとされている。
+実際，実験2で桁上りの先読みについて予想しているが，ZHANG, ZHIFEI\cite{RTL}では回路規模の点でも配線長の点でも不利になることから，4bit加算器の場合，ナイーブな実装のほうが優れているとされている。
+
+\subsection{遅延時間と回路面積の関係}
+ALTERA\cite{ALTERA}によると，回路合成による回路の分散と遅延時間はトレードオフになっていることがわかる。
+しかし，面積が小さい場合，配線の長さによる遅延時間も大きくなり，ZHANG, ZHIFEI\cite{RTL}のキャリー読み加算回路のように，配線前後で遅延時間が大幅に変動する。
+
+つまり，最適化の結果，段数を増やしてクリティカルパスを短くするような回路では，面積と遅延がトレードオフになる。
+しかし，演算による遅延に対して配線の影響が大きい場合，遅延は面積の大きさに伴って増加する。
+
+\begin{thebibliography}{99}
+  \bibitem{ALTERA}AN 584: 高度な FPGA デザインにおける  タイミング・クロージャ手法, ALTERA，\url{https://www.intel.co.jp/content/dam/altera-www/global/ja_JP/pdfs/literature/an/an584.pdf}
+  \bibitem{RTL} RTLとゲートレベルを混在させた最適な論理回路設計に関する研究，ZHANG, ZHIFEI，\url{https://dspace.jaist.ac.jp/dspace/handle/10119/12013}
+\end{thebibliography}
+すべて2020年10月22日閲覧
 
 \end{document}
