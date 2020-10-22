@@ -1,0 +1,51 @@
+\documentclass[a4paper,15pt]{jsarticle}
+
+% 数式
+\usepackage{amsmath,amsfonts}
+\usepackage{bm}
+% 画像
+\usepackage[dvipdfmx]{graphicx}
+
+\usepackage{here}
+\usepackage{url}
+
+\usepackage{listingsutf8,jlisting} %日本語のコメントアウトをする場合jlistingが必要
+%ここからソースコードの表示に関する設定
+\lstset{
+  basicstyle={\ttfamily},
+  identifierstyle={\small},
+  commentstyle={\smallitshape},
+  keywordstyle={\small\bfseries},
+  ndkeywordstyle={\small},
+  stringstyle={\small\ttfamily},
+  frame={tb},
+  breaklines=true,
+  columns=[l]{fullflexible},
+  numbers=left,
+  xrightmargin=0zw,
+  xleftmargin=3zw,
+  numberstyle={\scriptsize},
+  stepnumber=1,
+  numbersep=1zw,
+  lineskip=-0.5ex
+}
+
+\begin{document}
+
+\title{コンピュータ科学実験レポート}
+\author{坪井正太郎（101830245）}
+\date{\today}
+\maketitle
+
+\section*{はじめに}
+
+\section*{各実験}
+
+
+\begin{thebibliography}{99}
+  \bibitem{ALTERA}AN 584: 高度な FPGA デザインにおける  タイミング・クロージャ手法, ALTERA，2009，\url{https://www.intel.co.jp/content/dam/altera-www/global/ja_JP/pdfs/literature/an/an584_j.pdf}
+  \bibitem{RTL} RTLとゲートレベルを混在させた最適な論理回路設計に関する研究，ZHANG, ZHIFEI，2014，\url{https://dspace.jaist.ac.jp/dspace/handle/10119/12013}
+\end{thebibliography}
+すべて2020年10月22日閲覧
+
+\end{document}
