@@ -10,36 +10,38 @@ ICE計算機上の，ModelSim，Quartusを使用する。
 \subsection{実験方法}
 \subsection*{課題1-1}
 \subsubsection{回路のHDL記述}
-以下のような回路記述をbcd1.v，テストベンチをtest\_bcd1.vとして作成する。
+以下のような回路記述をbcd1.v，テストベンチをtest\_bcd1.vとして作成した。
 \lstinputlisting[caption=bcd1.v,label=bcd1.v]{./src/bcd/bcd1.v}
 \lstinputlisting[caption=test\_bcd1.v,label=testbcd1.v]{./src/bcd/test_bcd1.v}
 
 \subsubsection{機能レベルシュミレーション}
-作成したテストベンチをもとに，ModelSimで信号波形を出力する。
-入出力の値が仕様通りの真理値表と一致することを確認する。
+作成したテストベンチをもとに，ModelSimで信号波形を出力した。
+入出力の値が仕様通りの真理値表と一致することを確認した。
 
 \subsubsection{論理合成}
-以下の2ファイルを作成し，配置する。
+以下の2ファイルを作成し，配置した。
 \lstinputlisting[caption=bcd1.qpf,label=bcd1.qpf]{./src/bcd/bcd1.qpf}
 \lstinputlisting[caption=bcd1.qsf,label=bcd1.qsf]{./src/bcd/bcd1.qsf}
 
-作成した回路記述をQuartusでコンパイルし，論理合成とレイアウトを行う。回路構成やロジックエレメント数，遅延時間について確認する。
+作成した回路記述をQuartusでコンパイルし，論理合成とレイアウトを行した。
+回路構成やロジックエレメント数，遅延時間について確認した。
 
 \subsection*{課題1-2}
-以下のような回路記述をbcd2.v，テストベンチをtest\_bcd2.vとして作成する。
+以下のような回路記述をbcd2.v，テストベンチをtest\_bcd2.vとして作成した
 \lstinputlisting[caption=bcd2.v,label=bcd2.v]{./src/bcd/bcd2.v}
 \lstinputlisting[caption=test\_bcd2.v,label=testbcd2.v]{./src/bcd/test_bcd2.v}
 
 \subsubsection{機能レベルシュミレーション}
-作成したテストベンチをもとに，ModelSimで信号波形を出力する。
-入出力の値が仕様通りの真理値表と一致することを確認する。
+作成したテストベンチをもとに，ModelSimで信号波形を出力した。
+入出力の値が仕様通りの真理値表と一致することを確認した。
 
 \subsubsection{論理合成}
-以下の2ファイルを作成し，配置する。
+以下の2ファイルを作成し，配置した。
 \lstinputlisting[caption=bcd2.qpf,label=bcd2.qpf]{./src/bcd/bcd2.qpf}
 \lstinputlisting[caption=bcd2.qsf,label=bcd2.qsf]{./src/bcd/bcd2.qsf}
 
-作成した回路記述をQuartusでコンパイルし，論理合成とレイアウトを行う。回路構成やロジックエレメント数，遅延時間について確認する。
+作成した回路記述をQuartusでコンパイルし，論理合成とレイアウトを行った。
+回路構成やロジックエレメント数，遅延時間について確認した。
 
 \subsection{実験結果}
 \subsection*{課題1-1}
