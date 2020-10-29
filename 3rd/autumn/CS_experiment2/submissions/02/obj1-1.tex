@@ -6,22 +6,41 @@
 中身が以下のようなバイナリファイルprint\_B.binを配置した。
 \lstinputlisting[caption=print\_B.bin,label=printB.bin]{src/print_B}
 
-\begin{lstlisting}[caption={イメージファイルの作成},label={イメージファイルの作成}]
+以下のコマンドでROM配置用のイメージファイルと，機能レベルシュミレーション用のverilog HDL記述ファイルを生成した。
+\begin{lstlisting}[caption={イメージファイルの作成},label={イメージファイルの作成1-1}]
   $ bin2v print_B.bin
 \end{lstlisting}
 
+生成されたrom8x1024\_sim.vを参照し，以下の点について結果を予測した。
+\begin{itemize}
+  \item PC=0x0040 002cの命令を実行したときの，REG[2]の値
+  \item PC=0x0040 0030の命令を実行したときの，RAMの768番地の値
+  \item PC=0x0040 0034の命令を実行したときの，REG[3]の値
+  \item PC=0x0040 003cの命令を実行したとき，RAMの何番地の値がどう変化するか
+  \item PC=0x0040 0048の命令を実行したとき，RAMの何番地の値がどう変化するか
+\end{itemize}
 
+\subsubsection{論理合成，ダウンロード}
+以下を実行し，mips\_de10-lite.tar.gzを解凍し，メモリのイメージファイルを配置してコンパイルした。
+\begin{lstlisting}[caption={論理合成操作},label={論理合成操作1-1}]
+  $ tar -xvfz ./mips_de10-lite.tar.gz
+  $ mv ./rom8x1024.mif ./mips_de10-lite/
+  $ cd mips_de10-lite/
+  $ quartus_sh --flow compile MIPS_Default
+\end{lstlisting}
 
-\subsubsection{HDLでの回路記述}
-\subsubsection{機能レベルシュミレーション}
-\subsubsection{コンパイル}
-\subsubsection{FPGAボードでの回路実現}
+ACケーブル，モニタへのVGAケーブル，PCへのUSB接続，の順に行なったのち，モニタ電源をオンにした。
+以下のコマンドで，PCでの接続状況を確認し，FPGAにダウンロードした。
+\begin{lstlisting}[caption={FPGAでの回路実現},label={FPGAでの回路実現1-1}]
+  $ dmesg
+  $ quartus_pgm MIPS_Default.cdf
+\end{lstlisting}
+
+\subsubsection{動作確認}
+スイッチ0，1をonにして手動モードに切り替えた。
+KEY0を押し，プロセッサをリセットした。
+KEY1でカウンタを進めて，予想した点について動作を確認した。
 
 \subsection{実験結果}
-\subsubsection{機能レベルシュミレーション}
-\subsubsection{論理合成}
-\subsubsection{FPGAボードでの動作結果}
 
 \subsection{考察}
-\subsubsection{回路のHDL記述}
-\subsubsection{論理合成}
