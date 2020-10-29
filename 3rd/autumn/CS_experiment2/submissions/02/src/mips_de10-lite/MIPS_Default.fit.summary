@@ -1,0 +1,18 @@
+Fitter Status : Successful - Thu Oct 22 17:21:39 2020
+Quartus Prime Version : 19.1.0 Build 670 09/22/2019 SJ Lite Edition
+Revision Name : MIPS_Default
+Top-level Entity Name : MIPS_Default
+Family : MAX 10
+Device : 10M50DAF484C6GES
+Timing Models : Preliminary
+Total logic elements : 5,876 / 49,760 ( 12 % )
+    Total combinational functions : 4,477 / 49,760 ( 9 % )
+    Dedicated logic registers : 3,258 / 49,760 ( 7 % )
+Total registers : 3258
+Total pins : 121 / 360 ( 34 % )
+Total virtual pins : 0
+Total memory bits : 320,086 / 1,677,312 ( 19 % )
+Embedded Multiplier 9-bit elements : 0 / 288 ( 0 % )
+Total PLLs : 1 / 4 ( 25 % )
+UFM blocks : 0 / 1 ( 0 % )
+ADC blocks : 0 / 2 ( 0 % )

@@ -1,0 +1,9 @@
+[13058.403285] usb 1-5: new full-speed USB device number 3 using xhci_hcd
+[13058.532436] usb 1-5: New USB device found, idVendor=09fb, idProduct=6001
+[13058.532447] usb 1-5: New USB device strings: Mfr=1, Product=2, SerialNumber=3
+[13058.532454] usb 1-5: Product: USB-Blaster
+[13058.532461] usb 1-5: Manufacturer: Altera
+[13058.532466] usb 1-5: SerialNumber: 91d28408
+
+quartus_pgm MIPS_Default.cdf 
+
