@@ -3,14 +3,16 @@
 \subsection{実験の目的，概要}
 
 \subsection{実験方法}
+\subsubsection{メモリイメージファイルの作成}
 中身が以下のようなバイナリファイルprint\_B.binを配置した。
-\lstinputlisting[caption=print\_B.bin,label=printB.bin]{src/print_B}
+\lstinputlisting[caption=print\_B.bin,label=printB.bin]{src/01/print_B}
 
 以下のコマンドでROM配置用のイメージファイルと，機能レベルシュミレーション用のverilog HDL記述ファイルを生成した。
 \begin{lstlisting}[caption={イメージファイルの作成},label={イメージファイルの作成1-1}]
   $ bin2v print_B.bin
 \end{lstlisting}
 
+\subsubsection{命令列の確認}
 生成されたrom8x1024\_sim.vを参照し，以下の点について結果を予測した。
 \begin{itemize}
   \item PC=0x0040 002cの命令を実行したときの，REG[2]の値
@@ -20,8 +22,8 @@
   \item PC=0x0040 0048の命令を実行したとき，RAMの何番地の値がどう変化するか
 \end{itemize}
 
-\subsubsection{論理合成，ダウンロード}
-以下を実行し，mips\_de10-lite.tar.gzを解凍し，メモリのイメージファイルを配置してコンパイルした。
+\subsubsection{論理合成}
+以下を実行し，mips\_de10-lite.tar.gzを解凍し，その中にメモリのイメージファイルを配置してコンパイルした。
 \begin{lstlisting}[caption={論理合成操作},label={論理合成操作1-1}]
   $ tar -xvfz ./mips_de10-lite.tar.gz
   $ mv ./rom8x1024.mif ./mips_de10-lite/
@@ -29,6 +31,7 @@
   $ quartus_sh --flow compile MIPS_Default
 \end{lstlisting}
 
+\subsubsection{FPGAでの回路実現}
 ACケーブル，モニタへのVGAケーブル，PCへのUSB接続，の順に行なったのち，モニタ電源をオンにした。
 以下のコマンドで，PCでの接続状況を確認し，FPGAにダウンロードした。
 \begin{lstlisting}[caption={FPGAでの回路実現},label={FPGAでの回路実現1-1}]
@@ -36,11 +39,32 @@ ACケーブル，モニタへのVGAケーブル，PCへのUSB接続，の順に�
   $ quartus_pgm MIPS_Default.cdf
 \end{lstlisting}
 
-\subsubsection{動作確認}
 スイッチ0，1をonにして手動モードに切り替えた。
 KEY0を押し，プロセッサをリセットした。
 KEY1でカウンタを進めて，予想した点について動作を確認した。
 
 \subsection{実験結果}
+\subsubsection{メモリイメージファイルの作成}
+\ref{printB.bin}の操作によって，rom8x1024\_sim.vと，rom8x1024.mifが生成された。
+内容は以下のように，ROMへのアクセスと応答をエミュレーションしたシュミレーションファイルと，実際に命令列を配置するためのイメージファイルがだった。
+
+\subsubsection{命令列の確認}
+rom8x1024\_sim.vを参照し，以下のように予想した。
+
+\begin{description}
+  \item [PC=0x0040 002cの命令を実行したときの，REG2の値]\mbox{}\\
+    ゼロレジスタに768が加算されるので，768(=0x00000300)
+  \item [PC=0x0040 0030の命令を実行したときの，RAMの768番地の値]\mbox{}\\
+  ゼロレジスタの値が代入されるので，0
+  \item [PC=0x0040 0034の命令を実行したときの，REG3の値]\mbox{}\\
+    772
+  \item [PC=0x0040 003cの命令を実行したとき，RAMの何番地の値がどう変化するか]\mbox{}\\
+    \$3→772で，\$2→2なので，RAM[772]=2になる
+  \item [PC=0x0040 0048の命令を実行したとき，RAMの何番地の値がどう変化するか]\mbox{}\\
+    00400030でRAM[\$2→768]=0なので，RAM[768]が0→1になる
+\end{description}
+
+\subsubsection{論理合成，FPGAでの回路実現}
+ここに写真から読み取った情報を書く
 
 \subsection{考察}
