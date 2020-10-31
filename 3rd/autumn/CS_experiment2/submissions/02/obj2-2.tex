@@ -1,7 +1,58 @@
-\section{実験1-2}
+\section{実験2-2}
 \subsection{実験の目的，概要}
 
 \subsection{実験方法}
+\subsubsection{j命令のモジュール追加設計}
+以下の点について，cpu.vを編集して，新たにjp\_selモジュールを定義した。
+\begin{lstlisting}[caption={addiu命令の追加設計},label={addiu命令の追加設計}]
+// ワイヤ宣言
+wire  [31:0]     jp_sel_d0;  // jp 選択回路モジュール データ 1
+wire  [31:0]     jp_sel_d1;  // jp 選択回路モジュール データ 2
+wire  [31:0]     jp_sel_s;  // jp 選択回路モジュール セレクト信号
+wire  [31:0]     jp_sel_y;  // jp 選択回路モジュール 出力
+
+// セレクタの実体化
+mux32_32_32  jp_sel(jp_sel_d0, jp_sel_d1, jp_sel_s, jp_sel_y);
+mux32_32_32  pc_sel(pc_sel_d0, pc_sel_d1, pc_sel_s, pc_sel_y);
+
+// pc_nextへの接続変更
+assign pc_next = jp_sel_y;
+
+// 結線
+assign jp_sel_d0 = pc_sel_y;
+assign jp_sel_d1 = sh_j_y;
+assign jp_sel_s = jp;
+\end{lstlisting}
+
+\subsubsection{j命令のメイン制御回路追加設計}
+以下の点について，main\_ctrl.vを編集した。
+\begin{lstlisting}[caption={sw命令の追加設計},label={sw命令の追加設計}]
+// 命令コードの定義を追加
+`define  	 J  6'b000010
+
+// jp_selへのセレクト信号を追加
+assign  jp = ((op_code == `J) || ((op_code == `JAL) && 00)) ? 1'b1 : 1'b0;
+
+// write_enable制御信号の追加
+`J:      reg_write_enable_tmp = 1'b0;
+\end{lstlisting}
+
 \subsubsection{論理合成，FPGAでの回路実現}
+以下のように，コンパイルを行ない，dmesgで接続を確認した。
+その後FPGAにダウンロードして，FPGAでの動作を確認した。
+
+\begin{lstlisting}[caption={コンパイル，ダウンロード},label={コンパイル，ダウンロード2-2}]
+  $ cp rom8x1024.mif ./mipsde_10-lite
+  $ cd ./mipsde_10-lite
+  $ quartus_sh --flow compile MIPS_Default
+  $ quartus_pgm MIPS_Default.cdf 
+\end{lstlisting}
+
 \subsection{実験結果}
+\subsubsection{メモリイメージファイルの作成}
+
+\subsubsection{命令列の確認}
+
+\subsubsection{論理合成，FPGAでの回路実現}
+
 \subsection{考察}
