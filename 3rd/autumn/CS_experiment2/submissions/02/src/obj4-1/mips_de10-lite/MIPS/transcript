@@ -1,0 +1,56 @@
+# OpenFile test_cpu.v
+vlib work
+vlog test_cpu.v
+# Model Technology ModelSim - Intel FPGA Edition vlog 10.5b Compiler 2016.10 Oct  5 2016
+# Start time: 17:29:47 on Oct 22,2020
+# vlog -reportprogress 300 test_cpu.v 
+# -- Compiling module rom8x1024_sim
+# -- Compiling module ram8x2048_sim
+# -- Compiling module alu
+# -- Compiling module pc
+# -- Compiling module registers
+# -- Compiling module plus4
+# -- Compiling module adder32
+# -- Compiling module mux32_32_32
+# -- Compiling module mux5_5_5
+# -- Compiling module main_ctrl
+# -- Compiling module alu_ctrler
+# -- Compiling module shifter32_32_l2
+# -- Compiling module signext16_32
+# -- Compiling module is_branch
+# -- Compiling module cpu
+# -- Compiling module test_cpu
+# 
+# Top level modules:
+# 	test_cpu
+# End time: 17:29:47 on Oct 22,2020, Elapsed time: 0:00:00
+# Errors: 0, Warnings: 0
+vsim test_cpu
+# vsim test_cpu 
+# Start time: 17:29:58 on Oct 22,2020
+# Loading work.test_cpu
+# Loading work.cpu
+# Loading work.rom8x1024_sim
+# Loading work.ram8x2048_sim
+# Loading work.alu
+# Loading work.pc
+# Loading work.registers
+# Loading work.plus4
+# Loading work.adder32
+# Loading work.mux32_32_32
+# Loading work.mux5_5_5
+# Loading work.main_ctrl
+# Loading work.alu_ctrler
+# Loading work.shifter32_32_l2
+# Loading work.signext16_32
+# Loading work.is_branch
+# ** Warning: (vsim-3015) test_cpu.v(42): [PCDPC] - Port size (12) does not match connection size (8) for port 'o_pc'. The port definition is at: cpu.v(100).
+#    Time: 0 ns  Iteration: 0  Instance: /test_cpu/cpua File: cpu.v
+# ** Warning: (vsim-3015) cpu.v(324): [PCDPC] - Port size (12) does not match connection size (13) for port 'ram_addr'. The port definition is at: ram8x2048_sim.v(22).
+#    Time: 0 ns  Iteration: 0  Instance: /test_cpu/cpua/ram8x2048a File: ram8x2048_sim.v
+view wave 
+# .main_pane.wave.interior.cs.body.pw.wf
+add wave *
+run 1000
+# End time: 17:36:25 on Oct 22,2020, Elapsed time: 0:06:27
+# Errors: 0, Warnings: 2

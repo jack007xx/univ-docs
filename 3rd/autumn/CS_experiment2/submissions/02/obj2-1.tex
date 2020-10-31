@@ -1,7 +1,60 @@
-\section{実験1-2}
+
+\section{実験2-1}
 \subsection{実験の目的，概要}
 
 \subsection{実験方法}
-\subsubsection{論理合成，FPGAでの回路実現}
+\subsubsection{メモリイメージファイルの作成}
+中身が以下のようなバイナリファイルprint\_B\_while.binを配置した。
+\lstinputlisting[caption=print\_B\_while.bin,label=printBwhile.bin]{src/obj2-1/print_B_while}
+
+以下のコマンドでROM配置用のイメージファイルと，機能レベルシュミレーション用のverilog HDL記述ファイルを生成した。
+\begin{lstlisting}[caption={イメージファイルの作成},label={イメージファイルの作成2-1}]
+  $ bin2v print_B_while.bin
+\end{lstlisting}
+
+\subsubsection{命令列の確認}
+生成されたrom8x1024\_sim.vを参照し，以下の点について結果を予測した。
+\begin{itemize}
+  \item プロセッサが PC=0x004c の命令を実行することにより，PC に格納される値と，そ
+  れが表す命令メモリの番地。
+\end{itemize}
+
+\subsubsection{論理合成}
+以下を実行し，mips\_de10-lite.tar.gzを解凍し，その中にメモリのイメージファイルを配置してコンパイルした。
+\begin{lstlisting}[caption={論理合成操作},label={論理合成操作2-1}]
+  $ mv rom8x1024.mif mips_de10-lite/
+  $ cd mips_de10-lite/
+  $ quartus_sh --flow compile MIPS_Default
+\end{lstlisting}
+
+\subsubsection{FPGAでの回路実現}
+ACケーブル，モニタへのVGAケーブル，PCへのUSB接続，の順に行なったのち，モニタ電源をオンにした。
+以下のコマンドで，PCでの接続状況を確認し，FPGAにダウンロードした。
+\begin{lstlisting}[caption={FPGAでの回路実現},label={FPGAでの回路実現2-1}]
+  $ dmesg
+  $ quartus_pgm MIPS_Default.cdf
+\end{lstlisting}
+
+スイッチ0，1をonにして手動モードに切り替えた。
+KEY0を押し，プロセッサをリセットした。
+KEY1でカウンタを進めて，予想した点について動作を確認した。
+
 \subsection{実験結果}
+\subsubsection{メモリイメージファイルの作成}
+\ref{printB.bin}の操作によって，rom8x1024\_sim.vと，rom8x1024.mifが生成された。
+内容は以下のように，ROMへのアクセスと応答をエミュレーションしたシュミレーションファイルと，実際に命令列を配置するためのイメージファイルだった。
+
+\subsubsection{命令列の確認}
+rom8x1024\_sim.vを参照し，以下のように予想した。
+\begin{itemize}
+  \item プロセッサが PC=0x004c の命令を実行することにより，PC に格納される値と，そ
+  れが表す命令メモリの番地。
+  \begin{itemize}
+    \item PC=0x002cで，番地も0x002c
+  \end{itemize}
+\end{itemize}
+
+\subsubsection{論理合成，FPGAでの回路実現}
+プログラムカウンタの値は，通常通り0x0050になった。
+
 \subsection{考察}
