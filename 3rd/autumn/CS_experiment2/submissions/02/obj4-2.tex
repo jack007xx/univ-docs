@@ -1,7 +1,97 @@
-\section{実験1-2}
+\section{実験4-2}
 \subsection{実験の目的，概要}
 
 \subsection{実験方法}
+\subsubsection{sltiu命令のメイン制御回路追加設計}
+以下の点について，main\_ctrl.vを編集した。
+\begin{lstlisting}[caption={sltiu命令の追加設計},label={sltiu命令の追加設計}]
+// 命令コードの定義を追加
+`define   SLTIU 6'b001011
+
+// is_branch制御信号の追加
+`SLTIU:  is_branch_ctrl_tmp = 3'b110;  // do nothing
+
+// ALU の入力ポート B へ流すデータを選択するセレクト信号の記述
+`SLTIU:  alu_b_sel1_s_tmp = 1'b1;
+
+// ALU演算の制御信号の追加
+`SLTIU:  alu_op_tmp = 3'b111;
+
+// write_enable制御信号の追加
+`SLTIU:  reg_write_enable_tmp = 1'b1;
+
+// ALU_RAM_SELの制御信号の追加
+`SLTIU:  alu_ram_sel_s_tmp = 1'b0;
+
+// rt rd のセレクト信号の追加
+`SLTIU:  reg_widx_sel1_s_tmp = 1'b0;
+
+// PCとALUのセレクト信号の追加
+`SLTIU:  link_tmp = 1'b0;
+\end{lstlisting}
+
+\subsubsection{bne命令のメイン制御回路追加設計}
+以下の点について，main\_ctrl.vを編集した。
+\begin{lstlisting}[caption={bne命令の追加設計},label={bne命令の追加設計}]
+  // 命令コードの定義を追加
+  `define    BNE  6'b000101
+
+  // is_branch制御信号の追加
+  `BNE:    is_branch_ctrl_tmp = 3'b001;  // !=, NEQ
+
+  // レジスタと即値のセレクタ信号の追加
+  `BNE:    alu_b_sel1_s_tmp = 1'b0;
+
+  // 符号拡張モジュール sign_ext の制御信号
+  || (op_code == `BNE)                       
+
+  // write_enable制御信号の追加
+  `BNE:    reg_write_enable_tmp = 1'b0;
+\end{lstlisting}
+
+\subsubsection{lw命令のメイン制御回路追加設計}
+以下の点について，main\_ctrl.vを編集した。
+\begin{lstlisting}[caption={lw命令の追加設計},label={lw命令の追加設計}]
+  // 命令コードの定義を追加
+  `define     LW  6'b100011
+
+  // is_branch制御信号の追加
+  `LW:     is_branch_ctrl_tmp = 3'b110;  // do nothing
+  
+  // レジスタと即値のセレクタ信号の追加
+  `LW:     alu_b_sel1_s_tmp = 1'b1;
+
+  // ALU演算の制御信号の追加
+  `LW:     alu_op_tmp = 3'b000;
+
+  // write_enable制御信号の追加
+  `LW:     reg_write_enable_tmp = 1'b1;
+
+  // 演算結果とRAMの値のセレクト信号の追加
+  `LW:     alu_ram_sel_s_tmp = 1'b1;
+
+  // rt rd のセレクト信号の追加
+  `LW:     reg_widx_sel1_s_tmp = 1'b0;
+
+  // レジスタに書き込む，ALUの出力orRAMのデータと，PCの値のセレクタ信号の追加
+  `LW:     link_tmp = 1'b0;
+\end{lstlisting}
+
 \subsubsection{論理合成，FPGAでの回路実現}
+以下のように，コンパイルを行ない，dmesgで接続を確認した。
+その後FPGAにダウンロードして，FPGAでの動作を確認した。
+
+\begin{lstlisting}[caption={コンパイル，ダウンロード},label={コンパイル，ダウンロード4-2}]
+  $ cp rom8x1024.mif ./mipsde_10-lite
+  $ cd ./mipsde_10-lite
+  $ quartus_sh --flow compile MIPS_Default
+  $ quartus_pgm MIPS_Default.cdf 
+\end{lstlisting}
+
 \subsection{実験結果}
+\subsubsection{論理合成，FPGAでの回路実現}
+
 \subsection{考察}
+\subsubsection{sltiu命令のメイン制御回路追加設計}
+\subsubsection{bne命令のメイン制御回路追加設計}
+\subsubsection{lw命令のメイン制御回路追加設計}
