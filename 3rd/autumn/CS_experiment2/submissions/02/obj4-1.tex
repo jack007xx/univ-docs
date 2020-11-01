@@ -1,7 +1,78 @@
-\section{実験1-2}
+\section{実験4-1}
 \subsection{実験の目的，概要}
 
 \subsection{実験方法}
+\subsubsection{クロスコンパイル，メモリイメージファイルの作成}
+以下の，ディスプレイに61種類の文字を表示するプログラム，print\_all\_char.cを配置した。
+\lstinputlisting[caption=print\_all\_char.c,label=printallchar.c4-1]{src/obj4-1/print_all_char.c}
+
+以下のコマンドで，クロスコンパイルを行い，MIPSマシンコードprint\_all\_char.binを得た。
+\begin{lstlisting}[caption={クロスコンパイル，メモリイメージファイルの作成},label={クロスコンパイル，イメージファイルの作成4-1}]
+  $ cross_compile.sh print_all_char.c
+  $ bin2v print_all_char.bin
+\end{lstlisting}
+
+\subsubsection{命令列の確認}
+生成された，rom8x1024.mifを確認して，以下の点について結果を予測する。
+\begin{itemize}
+  \item 最初にPC=0x0074の命令を実行したときのレジスタ2番めの値
+  \item 最初にPC=0x0078の命令を実行したときのPCの値
+\end{itemize}
+
 \subsubsection{論理合成，FPGAでの回路実現}
+以下のコマンドで，論理合成，ダウンロードを行なった。
+\begin{lstlisting}[caption={論理合成，ダウンロード},label={論理合成，ダウンロード4-1}]
+  $ mv rom8x1024.mif mips_de10-lite/
+  $ cd mips_de10-lite/
+  $ quartus_sh --flow compile MIPS_Default
+  $ quartus_pgm MIPS_Default.cdf
+\end{lstlisting}
+
+FPGA上の動作を確認した。
+
 \subsection{実験結果}
+\subsubsection{クロスコンパイル，メモリイメージファイルの作成}
+以下のような，メモリイメージファイルが生成された。
+\lstinputlisting[caption=rom8x1024.mif,label=rom8x1024.mif4-1]{src/obj4-1/mips_de10-lite/rom8x1024.mif}
+
+\subsubsection{命令列の確認}
+ソースコード\ref{rom8x1024.mif4-1}を確認し，以下のような予想を立てた。
+\begin{itemize}
+  \item 最初にPC=0x0074の命令を実行したときのレジスタ2番目の値
+  \begin{itemize}
+    \item 1
+  \end{itemize}
+  \item 最初にPC=0x0078の命令を実行したときのPCの値
+  \begin{itemize}
+    \item PC=0x0038
+  \end{itemize}
+\end{itemize}
+
+\subsubsection{論理合成，FPGAでの回路実現}
+FPGA上で予想した点について確認したが，レジスタの値は0で，PCの値も更新されずに通常通り+4されて進んだ。
+
 \subsection{考察}
+ソースコード\ref{printallchar.c4-1}は，文字コードとして用意した値をインクリメントして，文字コードの並び順に61種類の文字列を表示するプログラムである。
+
+そこから生成されたソースコード\ref{rom8x1024.mif4-1}を確認して行なった予想では，以下のような考察を行った。
+\begin{itemize}
+  \item 最初にPC=0x0074の命令を実行したときのレジスタ2番目の値
+  \begin{itemize}
+    \item 1
+    \item 初回実行時，PC=0x0030から0x006cにジャンプしてくる
+    \item 0x006cでは，RAM[REG[30]]の値がREG[2]に代入される
+    \item RAM[REG[30]]は，0x002cで0に初期化されているのでのでREG[2]=0
+    \item 0x0074では，REG[2]が61より小さければ，1を代入するので，REG[2]=1
+  \end{itemize}
+  \item 最初にPC=0x0078の命令を実行したときのPCの値
+  \begin{itemize}
+    \item PC=0x0038
+    \item 先の予想より，REG[2]=1
+    \item このとき，PCの値はPC=PC+$(65520*4)_{10}$
+    \item 16進に直して加算すると，オーバーフローしてPC=0x0038
+  \end{itemize}
+\end{itemize}
+
+FPGA上の動作は，予想と異なった。
+これは，プロセッサにsltiu命令と，bne命令が実装されていないからであると考えられる。
+オペコードを読んでも，定義されていないので何もせずにPCが進んだ。
