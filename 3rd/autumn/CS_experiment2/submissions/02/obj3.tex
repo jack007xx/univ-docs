@@ -1,7 +1,21 @@
-\section{実験1-2}
+\section{実験3}
 \subsection{実験の目的，概要}
 
 \subsection{実験方法}
-\subsubsection{論理合成，FPGAでの回路実現}
+print\_B.cを編集して，以下のようなファイルmy\_print\_B\_while.cを作成した。
+\lstinputlisting[caption=my\_print\_B\_while.c,label=myprintBwhile.c]{./src/obj3/my_print_B_while.c}
+
+以下のコマンドで，MIPS用にクロスコンパイルして，生成されたバイナリからメモリイメージファイルを作成した。
+
+\begin{lstlisting}[caption={クロスコンパイル},label={クロスコンパイル}]
+  $ cross_compile.sh my_print_B_while.c
+  $ bin2v my_print_B_while.bin
+\end{lstlisting}
+
 \subsection{実験結果}
+コンパイルの結果，このようなメモリイメージファイルが生成された。
+\lstinputlisting[caption=rom8x1024.mif,label=rom8x1024.mif3]{src/obj3/rom8x1024.mif}
+
+内容は，実験2-1で使用したソースコード\ref{rom8x1024.mif2-1}と同じだった。
+
 \subsection{考察}

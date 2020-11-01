@@ -41,8 +41,12 @@ KEY1でカウンタを進めて，予想した点について動作を確認し�
 
 \subsection{実験結果}
 \subsubsection{メモリイメージファイルの作成}
-\ref{printB.bin}の操作によって，rom8x1024\_sim.vと，rom8x1024.mifが生成された。
+\ref{イメージファイルの作成2-1}の操作によって，rom8x1024\_sim.vと，rom8x1024.mifが生成された。
 内容は以下のように，ROMへのアクセスと応答をエミュレーションしたシュミレーションファイルと，実際に命令列を配置するためのイメージファイルだった。
+
+\lstinputlisting[caption=rom8x1024\_sim.v,label=rom8x1024sim.v2-1]{src/obj2-1/rom8x1024_sim.v}
+\lstinputlisting[caption=rom8x1024.mif,label=rom8x1024.mif2-1]{src/obj2-1/rom8x1024.mif}
+
 
 \subsubsection{命令列の確認}
 rom8x1024\_sim.vを参照し，以下のように予想した。
