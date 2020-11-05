@@ -11,26 +11,30 @@
 #define SERVER_ADDR "127.0.0.1"
 #define SERVER_PORT 12345
 
-enum {
+enum
+{
   NQUEUESIZE = 5, /* listen のための待ち行列枠数 */
 };
 
 char *message = "Hello!\nGood-by!!\n";
 
-int main(void) {
+int main(void)
+{
   int s, ws, soval, cc;
   struct sockaddr_in sa, ca;
   socklen_t ca_len;
 
   /* ソケットを作る */
-  if ((s = socket(AF_INET, SOCK_STREAM, 0)) == -1) {
+  if ((s = socket(AF_INET, SOCK_STREAM, 0)) == -1)
+  {
     perror("socket");
     exit(1);
   }
 
   /* アドレス再利用の設定 */
   soval = 1;
-  if (setsockopt(s, SOL_SOCKET, SO_REUSEADDR, &soval, sizeof(soval)) == -1) {
+  if (setsockopt(s, SOL_SOCKET, SO_REUSEADDR, &soval, sizeof(soval)) == -1)
+  {
     perror("setsockopt");
     exit(1);
   }
@@ -41,24 +45,28 @@ int main(void) {
   sa.sin_family = AF_INET;
   sa.sin_port = htons(SERVER_PORT);
   sa.sin_addr.s_addr = htonl(INADDR_ANY);
-  if (bind(s, (struct sockaddr *)&sa, sizeof(sa)) == -1) {
+  if (bind(s, (struct sockaddr *)&sa, sizeof(sa)) == -1)
+  {
     perror("bind");
     exit(1);
   }
 
   /* 待ち行列を準備 */
-  if (listen(s, NQUEUESIZE)) {
+  if (listen(s, NQUEUESIZE))
+  {
     perror("listen");
     exit(1);
   }
 
   fprintf(stderr, "Ready.\n");
 
-  for (;;) {
+  for (;;)
+  {
     /* 接続を受け入れる */
     fprintf(stderr, "Waiting for a connection...\n");
     ca_len = sizeof(ca);
-    if ((ws = accept(s, (struct sockaddr *)&ca, &ca_len)) == -1) {
+    if ((ws = accept(s, (struct sockaddr *)&ca, &ca_len)) == -1)
+    {
       perror("accept");
       exit(1);
     }
@@ -66,19 +74,22 @@ int main(void) {
 
     /* クライアントに通信文を送る */
     fprintf(stderr, "Sending the message...\n");
-    if ((cc = write(ws, message, strlen(message))) == -1) {
+    if ((cc = write(ws, message, strlen(message))) == -1)
+    {
       perror("shutdown");
       exit(1);
     }
 
     /* 通信を止める */
-    if (shutdown(ws, SHUT_RDWR) == -1) {
+    if (shutdown(ws, SHUT_RDWR) == -1)
+    {
       perror("shutdown");
       exit(1);
     }
 
     /* 接続済みソケットを閉じる */
-    if (close(ws) == -1) {
+    if (close(ws) == -1)
+    {
       perror("close");
       exit(1);
     }

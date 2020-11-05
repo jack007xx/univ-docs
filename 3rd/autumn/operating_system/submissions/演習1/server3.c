@@ -18,9 +18,7 @@ enum
 
 int main(void)
 {
-  // 変更部！！！！！！！！
   char message[256];
-  // 変更部！！！！！！！！
 
   int s, ws, soval, cc;
   struct sockaddr_in sa, ca;
@@ -73,33 +71,38 @@ int main(void)
       exit(1);
     }
     fprintf(stderr, "Connection established.\n");
-
-    /* クライアントに通信文を送る */
-    fprintf(stderr, "Enter your message\n");
-
-    // 変更部！！！！！！！！
-    fscanf(stdin, "%255s", message);
-    // 変更部！！！！！！！！
-
-    if ((cc = write(ws, message, strlen(message))) == -1)
+    if (fork() == 0)
     {
-      perror("shutdown");
-      exit(1);
+      close(s);
+
+      /* クライアントに通信文を送る */
+      fprintf(stderr, "Enter your message\n");
+      fscanf(stdin, "%255s", message);
+      if ((cc = write(ws, message, strlen(message))) == -1)
+      {
+        perror("shutdown");
+        exit(1);
+      }
+
+      /* 通信を止める */
+      if (shutdown(ws, SHUT_RDWR) == -1)
+      {
+        perror("shutdown");
+        exit(1);
+      }
+
+      /* 接続済みソケットを閉じる */
+      if (close(ws) == -1)
+      {
+        perror("close");
+        exit(1);
+      }
+
+      close(ws);
+      exit(0);
     }
 
-    /* 通信を止める */
-    if (shutdown(ws, SHUT_RDWR) == -1)
-    {
-      perror("shutdown");
-      exit(1);
-    }
-
-    /* 接続済みソケットを閉じる */
-    if (close(ws) == -1)
-    {
-      perror("close");
-      exit(1);
-    }
+    close(ws);
 
     /* 次の要求の受け入れへ */
   }

@@ -1,0 +1,79 @@
+\documentclass[a4paper,12pt]{jsarticle}
+
+% 数式
+\usepackage{amsmath,amsfonts}
+\usepackage{bm}
+% 画像
+\usepackage[dvipdfmx]{graphicx}
+
+\usepackage{listingsutf8,jlisting} %日本語のコメントアウトをする場合jlistingが必要
+%ここからソースコードの表示に関する設定
+\lstset{
+  basicstyle={\ttfamily},
+  identifierstyle={\small},
+  commentstyle={\smallitshape},
+  keywordstyle={\small\bfseries},
+  ndkeywordstyle={\small},
+  stringstyle={\small\ttfamily},
+  frame={tb},
+  breaklines=true,
+  columns=[l]{fullflexible},
+  numbers=left,
+  xrightmargin=0zw,
+  xleftmargin=3zw,
+  numberstyle={\scriptsize},
+  stepnumber=1,
+  numbersep=1zw,
+  lineskip=-0.5ex
+}
+
+\begin{document}
+
+\title{データベース演習課題4}
+\author{坪井正太郎（101830245）}
+\date{\today}
+\maketitle
+\section{}
+\begin{lstlisting}[caption={}]
+  SELECT 商品ID, 日付
+  FROM 顧客 NATURAL JOIN 購入
+  WHERE 氏名='田中一郎'
+\end{lstlisting}
+
+\section{}
+\begin{lstlisting}[caption={},label={}]
+  SELECT 氏名, 商品ID
+  FROM 顧客 NATURAL LEFT OUTER JOIN 購入
+\end{lstlisting}
+
+\section{}
+\begin{lstlisting}[caption={},label={}]
+  SELECT 顧客ID
+  FROM 購入
+  WHERE 商品ID IN 
+    (SELECT 商品ID
+     FROM 商品
+     WHERE 商品.分類='家電')
+\end{lstlisting}
+\newpage
+\section{}
+\begin{lstlisting}[caption={},label={}]
+  SELECT 顧客ID
+  FROM 購入 AS x
+  WHERE x.商品ID = 'I0001' AND x.日付 > ALL
+    (SELECT y.日付
+     FROM 購入 AS y
+     WHERE y.商品ID = 'I0001' AND y.顧客ID = 'C0002')
+\end{lstlisting}
+
+\section{}
+\begin{lstlisting}[caption={},label={}]
+  SELECT 顧客ID
+  FROM 購入 AS x
+  WHERE x.商品ID = 'I0001' AND x.日付 > ALL
+    (SELECT y.日付
+     FROM 購入 AS y
+     WHERE y.商品ID = 'I0001')
+\end{lstlisting}
+
+\end{document}
