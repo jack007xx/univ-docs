@@ -45,12 +45,12 @@
 \begin{table}[H]
   \centering
   \begin{tabular}{|c|c|c|c|c|}\hline
-    & （     & {］}                        & ）                          & \# \\\hline
-  S & S$\rightarrow $（X & S$\rightarrow $E］                    & S$\rightarrow $F）                      &    \\\hline
-  X &       & X$\rightarrow $F］                    & X$\rightarrow $E）                      &    \\\hline
-  E &       & E$\rightarrow $A                       & E$\rightarrow $A                       &    \\\hline
-  F &       & F$\rightarrow $A                       & F$\rightarrow $A                       &    \\\hline
-  A &       & $A\rightarrow \epsilon$ & $A\rightarrow \epsilon$ &   \\\hline
+      & （                 & {］}                    & ）                      & \# \\\hline
+    S & S$\rightarrow $（X & S$\rightarrow $E］      & S$\rightarrow $F）      &    \\\hline
+    X &                    & X$\rightarrow $F］      & X$\rightarrow $E）      &    \\\hline
+    E &                    & E$\rightarrow $A        & E$\rightarrow $A        &    \\\hline
+    F &                    & F$\rightarrow $A        & F$\rightarrow $A        &    \\\hline
+    A &                    & $A\rightarrow \epsilon$ & $A\rightarrow \epsilon$ &    \\\hline
   \end{tabular}
 \end{table}
 衝突しないので、LL(1)である。
@@ -80,21 +80,21 @@
 \begin{table}[H]
   \centering
   \begin{tabular}{|c||c|c|c|c|c|c|c|c|c|}\hline
-    & \multicolumn{4}{c|}{action}                                                                              & \multicolumn{5}{c|}{goto} \\\hline
-     & （  & ］ & ）   & \#  & S & X & E & F & A \\\hline\hline
-  0  & s2 & r8  & r8  &     & 1 &   & 3 & 4 &   \\\hline
-  1  &    &     &     & acc &   &   &   &   &   \\\hline
-  2  &    & r8  & r8  &     &   & 7 & 5 & 6 & 8 \\\hline
-  3  &    & s9  &     &     &   &   &   &   &   \\\hline
-  4  &    &     & s10 &     &   &   &   &   &   \\\hline
-  5  &    &     & s11 &     &   &   &   &   &   \\\hline
-  6  &    & s12 &     &     &   &   &   &   &   \\\hline
-  7  &    &     &     & r1  &   &   &   &   &   \\\hline
-  8 &  & \begin{tabular}[c]{@{}c@{}}r6\\ r7\end{tabular} & \begin{tabular}[c]{@{}c@{}}r6\\ r7\end{tabular} &  &     &     &    &    &    \\\hline
-  9  &    &     &     & r2  &   &   &   &   &   \\\hline
-  10 &    &     &     & r3  &   &   &   &   &   \\\hline
-  11 &    &     &     & r4  &   &   &   &   &   \\\hline
-  12 &    &     &     & r5  &   &   &   &   &  \\\hline
+       & \multicolumn{4}{c|}{action} & \multicolumn{5}{c|}{goto}                                                       \\\hline
+       & （                          & ］                        & ）                        & \#  & S & X & E & F & A \\\hline\hline
+    0  & s2                          & r8                        & r8                        &     & 1 &   & 3 & 4 &   \\\hline
+    1  &                             &                           &                           & acc &   &   &   &   &   \\\hline
+    2  &                             & r8                        & r8                        &     &   & 7 & 5 & 6 & 8 \\\hline
+    3  &                             & s9                        &                           &     &   &   &   &   &   \\\hline
+    4  &                             &                           & s10                       &     &   &   &   &   &   \\\hline
+    5  &                             &                           & s11                       &     &   &   &   &   &   \\\hline
+    6  &                             & s12                       &                           &     &   &   &   &   &   \\\hline
+    7  &                             &                           &                           & r1  &   &   &   &   &   \\\hline
+    8  &                             & \begin{tabular}[c]{@{}c@{}}r6\\ r7\end{tabular} & \begin{tabular}[c]{@{}c@{}}r6\\ r7\end{tabular} &     &   &   &   &   &   \\\hline
+    9  &                             &                           &                           & r2  &   &   &   &   &   \\\hline
+    10 &                             &                           &                           & r3  &   &   &   &   &   \\\hline
+    11 &                             &                           &                           & r4  &   &   &   &   &   \\\hline
+    12 &                             &                           &                           & r5  &   &   &   &   &   \\\hline
   \end{tabular}
 \end{table}
 
@@ -127,24 +127,26 @@ $I_8$で、Reduce/Reduce conflictが起こっているので、SLR(1)構文解�
 \begin{table}[H]
   \centering
   \begin{tabular}{|c||c|c|c|c|c|c|c|c|c|}
-  \hline
-     & \multicolumn{4}{c|}{action} & \multicolumn{5}{c|}{goto} \\ \hline
-     & （     & ］     & ）    & \#   & S   & X   & E   & F  & A  \\ \hline\hline
-  0  & s2    & r8    & r8   &      & 1   &     & 3   & 4  & 5  \\ \hline
-  1  &       &       &      & acc  &     & 8   & 6   & 7  & 9  \\ \hline
-  2  &       & r8    & r8   &      &     &     &     &    &    \\ \hline
-  3  &       & s10   &      &      &     &     &     &    &    \\ \hline
-  4  &       &       & s11  &      &     &     &     &    &    \\ \hline
-  5  &       & r6    & r7   &      &     &     &     &    &    \\ \hline
-  6  & s12   &       &      &      &     &     &     &    &    \\ \hline
-  7  &       & s13   &      &      &     &     &     &    &    \\ \hline
-  8  &       &       &      & r1   &     &     &     &    &    \\ \hline
-  9  &       & r7    & r6   &      &     &     &     &    &    \\ \hline
-  10 &       &       &      & r2   &     &     &     &    &    \\ \hline
-  11 &       &       &      & r3   &     &     &     &    &    \\ \hline
-  12 &       &       &      & r4   &     &     &     &    &    \\ \hline
-  13 &       &       &      & r5   &     &     &     &    &    \\ \hline
+    \hline
+       & \multicolumn{4}{c|}{action} & \multicolumn{5}{c|}{goto}                                 \\ \hline
+       & （                          & ］                        & ）  & \#  & S & X & E & F & A \\ \hline\hline
+    0  & s2                          & r8                        & r8  &     & 1 &   & 3 & 4 & 5 \\ \hline
+    1  &                             &                           &     & acc &   & 8 & 6 & 7 & 9 \\ \hline
+    2  &                             & r8                        & r8  &     &   &   &   &   &   \\ \hline
+    3  &                             & s10                       &     &     &   &   &   &   &   \\ \hline
+    4  &                             &                           & s11 &     &   &   &   &   &   \\ \hline
+    5  &                             & r6                        & r7  &     &   &   &   &   &   \\ \hline
+    6  & s12                         &                           &     &     &   &   &   &   &   \\ \hline
+    7  &                             & s13                       &     &     &   &   &   &   &   \\ \hline
+    8  &                             &                           &     & r1  &   &   &   &   &   \\ \hline
+    9  &                             & r7                        & r6  &     &   &   &   &   &   \\ \hline
+    10 &                             &                           &     & r2  &   &   &   &   &   \\ \hline
+    11 &                             &                           &     & r3  &   &   &   &   &   \\ \hline
+    12 &                             &                           &     & r4  &   &   &   &   &   \\ \hline
+    13 &                             &                           &     & r5  &   &   &   &   &   \\ \hline
   \end{tabular}
-  \end{table}
+\end{table}
+
 衝突しないので、LR(1)構文解析可能ではない。
+
 \end{document}
