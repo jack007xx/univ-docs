@@ -132,9 +132,10 @@ assign ram_write_enable = (op_code == `SW) ? 1'b1 : 1'b0;
 \end{itemize}
 
 \subsection{機能レベルシュミレーション}
+機能レベルシュミレーションの結果、波形は以下のようになった。
 \begin{figure}[H]
   \centering
-  \includegraphics[width=\linewidth]{./src/01/mips_de10-lite/MIPS/testCPUwave.ps}
+  \includegraphics[width=\linewidth]{./src/01/testCPUwave.png}
   \caption{プロセッサの波形}
 \end{figure}
 
