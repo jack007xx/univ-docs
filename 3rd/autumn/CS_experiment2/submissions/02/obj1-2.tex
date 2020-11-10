@@ -12,10 +12,10 @@
 // 命令コードの定義を追加
 `define ADDIU 6'b001001
 
-// 分岐判定のコントロール信号を追加
+// 分岐判定の制御信号を追加
 `ADDIU: is_branch_ctrl_tmp = 3'b110;
 
-// オペランドに即値，レジスタのどちらをとるのかの制御信号の追加
+// ALUのオペランドに即値，レジスタのどちらをとるのかのセレクト信号の追加
 `ADDIU: alu_b_sel1_s_tmp = 1'b1;
 
 // 即値の符号拡張が行われるかどうかのフラグを追加
@@ -33,7 +33,7 @@
 // RtとRdのセレクト信号の追加
 `ADDIU:  reg_widx_sel1_s_tmp = 1'b0;
 
-// レジスタに書き込む，ALUの出力orRAMのデータと，PCの値のセレクタ信号の追加
+// link_selへのセレクタ信号の追加
 `ADDIU:  link_tmp = 1'b0;
 
 \end{lstlisting}
@@ -44,10 +44,10 @@
 // 命令コードの定義を追加
 `define SW 6'b101011 // store word (I 形式)
 
-// RAMへの書き込みを制御する信号を追加
+// RAMへの書き込み制御信号を追加
 assign ram_write_enable = (op_code == `SW) ? 1'b1 : 1'b0;
 
-// 分岐判定のコントロール信号を追加
+// 分岐判定の制御信号を追加
 `SW: is_branch_ctrl_tmp = 3'b110; // do nothing
 
 // 即値とRtレジスタのセレクト信号を追加
@@ -65,8 +65,7 @@ assign ram_write_enable = (op_code == `SW) ? 1'b1 : 1'b0;
 \end{lstlisting}
 
 \subsubsection{論理合成，FPGAでの回路実現}
-以下のように，コンパイルを行ない，dmesgで接続を確認した。
-その後FPGAにダウンロードして，FPGAでの動作を確認した。
+以下のように，コンパイルを行ない，FPGAにダウンロードして，FPGAでの動作を確認した。
 
 \begin{lstlisting}[caption={コンパイル，ダウンロード},label={コンパイル，ダウンロード1-2}]
   $ quartus_sh --flow compile MIPS_Default
@@ -75,11 +74,11 @@ assign ram_write_enable = (op_code == `SW) ? 1'b1 : 1'b0;
 
 実行時には，1-1で予想した以下の点について確認する。
 \begin{itemize}
-  \item PC=0x0040 002cの命令を実行したときの，REG[2]の値
-  \item PC=0x0040 0030の命令を実行したときの，RAMの768番地の値
-  \item PC=0x0040 0034の命令を実行したときの，REG[3]の値
-  \item PC=0x0040 003cの命令を実行したとき，RAMの何番地の値がどう変化するか
-  \item PC=0x0040 0048の命令を実行したとき，RAMの何番地の値がどう変化するか
+  \item PC=0x002cの命令を実行したときの，REG[2]の値
+  \item PC=0x0030の命令を実行したときの，RAMの768番地の値
+  \item PC=0x0034の命令を実行したときの，REG[3]の値
+  \item PC=0x003cの命令を実行したとき，RAMの何番地の値がどう変化するか
+  \item PC=0x0048の命令を実行したとき，RAMの何番地の値がどう変化するか
 \end{itemize}
 
 \subsubsection{機能レベルシュミレーション}
@@ -109,25 +108,25 @@ assign ram_write_enable = (op_code == `SW) ? 1'b1 : 1'b0;
 
 実験1-1で行った予想との比較は，以下のように予想通りの結果になった。
 \begin{itemize}
-  \item PC=0x0040 002cの命令を実行したときの，REG[2]の値
+  \item PC=0x002cの命令を実行したときの，REG[2]の値
   \begin{itemize}
     \item 768が書き込まれた
   \end{itemize}
-  \item PC=0x0040 0030の命令を実行したときの，RAMの768番地の値
+  \item PC=0x0030の命令を実行したときの，RAMの768番地の値
   \begin{itemize}
     \item 0が書き込まれた
   \end{itemize}
-  \item PC=0x0040 0034の命令を実行したときの，REG[3]の値
+  \item PC=0x0034の命令を実行したときの，REG[3]の値
   \begin{itemize}
     \item 772が書き込まれた
   \end{itemize}
-  \item PC=0x0040 003cの命令を実行したとき，RAMの何番地の値がどう変化するか
+  \item PC=0x003cの命令を実行したとき，RAMの何番地の値がどう変化するか
   \begin{itemize}
     \item RAM[772]に2が書き込まれた
   \end{itemize}
-  \item PC=0x0040 0048の命令を実行したとき，RAMの何番地の値がどう変化するか
+  \item PC=0x0048の命令を実行したとき，RAMの何番地の値がどう変化するか
   \begin{itemize}
-    \item RAM[768]に1が書き込まれて，その前にはPC=0x0030でRAM[REG[2]→768]に0が書き込まれていた
+    \item RAM[768]に1が書き込まれて，その前にはPC=0x0030でRAM[REG[2]→768]に0が書き込まれた
   \end{itemize}
 \end{itemize}
 
@@ -140,3 +139,8 @@ assign ram_write_enable = (op_code == `SW) ? 1'b1 : 1'b0;
 \end{figure}
 
 \subsection{考察}
+予想した点について、レジスタへの書き込みにはaddiu命令が、メモリへの書き込みにはsw命令が追加されたことで、予想通りの結果が得られた。
+
+実行した結果、画面上に'B'が表示されたが、これはメモリ上のアドレス772に0x2が代入されたからであると考えた。
+このことから、このプロセッサではメモリマップドIOが採用されていると考えられる。
+アドレス772に任意の値を入力することで、任意の文字をディスプレイに表示させることができる。
