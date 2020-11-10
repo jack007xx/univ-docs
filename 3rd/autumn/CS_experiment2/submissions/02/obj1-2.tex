@@ -136,6 +136,7 @@ assign ram_write_enable = (op_code == `SW) ? 1'b1 : 1'b0;
   \centering
   \includegraphics[width=\linewidth]{./src/01/testCPUwave.png}
   \caption{プロセッサの波形}
+  \label{プロセッサの波形1-1}
 \end{figure}
 
 \subsection{考察}
@@ -144,3 +145,6 @@ assign ram_write_enable = (op_code == `SW) ? 1'b1 : 1'b0;
 実行した結果、画面上に'B'が表示されたが、これはメモリ上のアドレス772に0x2が代入されたからであると考えた。
 このことから、このプロセッサではメモリマップドIOが採用されていると考えられる。
 アドレス772に任意の値を入力することで、任意の文字をディスプレイに表示させることができる。
+
+機能レベルシュミレーションでも、予想と同じ結果を得ることができた。
+図\ref{プロセッサの波形1-1}でも、PC=0x002cの結果を見ることができる。
