@@ -23,7 +23,7 @@
 \end{itemize}
 
 \subsubsection{論理合成}
-以下を実行し，mips\_de10-lite.tar.gzを解凍し，その中にメモリのイメージファイルを配置してコンパイルした。
+生成されたrom8x1024.mifを配置し、コンパイルした。
 \begin{lstlisting}[caption={論理合成操作},label={論理合成操作2-1}]
   $ mv rom8x1024.mif mips_de10-lite/
   $ cd mips_de10-lite/
@@ -50,7 +50,6 @@ KEY1でカウンタを進めて，予想した点について動作を確認し�
 \lstinputlisting[caption=rom8x1024\_sim.v,label=rom8x1024sim.v2-1]{src/obj2-1/rom8x1024_sim.v}
 \lstinputlisting[caption=rom8x1024.mif,label=rom8x1024.mif2-1]{src/obj2-1/rom8x1024.mif}
 
-
 \subsubsection{命令列の確認}
 rom8x1024\_sim.vを参照し，以下のように予想した。
 \begin{itemize}
@@ -61,6 +60,12 @@ rom8x1024\_sim.vを参照し，以下のように予想した。
 \end{itemize}
 
 \subsubsection{論理合成，FPGAでの回路実現}
-プログラムカウンタの値は，通常通り0x0050になった。
+画面には、一度だけ'B'が表示された。
+予想したPC=0x004cが実行されると、次のPCは0x0050になった。
 
 \subsection{考察}
+バイナリから生成されたメモリイメージファイルを見ると、実験1で生成されたものと、文字の表示に関わる部分(RAMにswする部分)は一緒になっている。
+前後処理の間で、アドレス772に0x2が繰り返し代入する処理が読み取れる。
+
+実際の実行では、予想した部分でPCの値は通常通りPC+=4された。
+これは、通常の命令が実行されたのと同じ結果であり、j命令が実装されていないため、ただPCが更新されているためだと考えられる。
