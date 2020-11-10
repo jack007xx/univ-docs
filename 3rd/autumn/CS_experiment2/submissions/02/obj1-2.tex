@@ -1,5 +1,9 @@
 \section{実験1-2}
 \subsection{実験の目的，概要}
+この実験では，実験1-1で正しく動作しなかったプロセッサに，新たに命令実装を追加し，同じプログラムを実行，結果を確認する。
+また，実験1-1で行った予想と比較する。
+
+これによって，プロセッサに命令を追加する方法，配線図を実装に反映させる方法を確認する。
 
 \subsection{実験方法}
 \subsubsection{addiu命令の追加設計}
@@ -69,6 +73,15 @@ assign ram_write_enable = (op_code == `SW) ? 1'b1 : 1'b0;
   $ quartus_pgm MIPS_Default.cdf 
 \end{lstlisting}
 
+実行時には，1-1で予想した以下の点について確認する。
+\begin{itemize}
+  \item PC=0x0040 002cの命令を実行したときの，REG[2]の値
+  \item PC=0x0040 0030の命令を実行したときの，RAMの768番地の値
+  \item PC=0x0040 0034の命令を実行したときの，REG[3]の値
+  \item PC=0x0040 003cの命令を実行したとき，RAMの何番地の値がどう変化するか
+  \item PC=0x0040 0048の命令を実行したとき，RAMの何番地の値がどう変化するか
+\end{itemize}
+
 \subsubsection{機能レベルシュミレーション}
 以下のように，cou.vを編集した。
 \begin{itemize}
@@ -88,11 +101,41 @@ assign ram_write_enable = (op_code == `SW) ? 1'b1 : 1'b0;
   $ vsim test_cpu.v
 \end{lstlisting}
 
+シュミレーション終了後，cpu.vで変更した部分はもとに戻した。
+
 \subsection{実験結果}
-\subsubsection{メモリイメージファイルの作成}
-
-\subsubsection{命令列の確認}
-
 \subsubsection{論理合成，FPGAでの回路実現}
+ダウンロードして実行すると，画面上に'B'という文字が表示された。
+
+実験1-1で行った予想との比較は，以下のように予想通りの結果になった。
+\begin{itemize}
+  \item PC=0x0040 002cの命令を実行したときの，REG[2]の値
+  \begin{itemize}
+    \item 768が書き込まれた
+  \end{itemize}
+  \item PC=0x0040 0030の命令を実行したときの，RAMの768番地の値
+  \begin{itemize}
+    \item 0が書き込まれた
+  \end{itemize}
+  \item PC=0x0040 0034の命令を実行したときの，REG[3]の値
+  \begin{itemize}
+    \item 772が書き込まれた
+  \end{itemize}
+  \item PC=0x0040 003cの命令を実行したとき，RAMの何番地の値がどう変化するか
+  \begin{itemize}
+    \item RAM[772]に2が書き込まれた
+  \end{itemize}
+  \item PC=0x0040 0048の命令を実行したとき，RAMの何番地の値がどう変化するか
+  \begin{itemize}
+    \item RAM[768]に1が書き込まれて，その前にはPC=0x0030でRAM[REG[2]→768]に0が書き込まれていた
+  \end{itemize}
+\end{itemize}
+
+\subsection{機能レベルシュミレーション}
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\linewidth]{./src/01/mips_de10-lite/MIPS/testCPUwave.ps}
+  \caption{プロセッサの波形}
+\end{figure}
 
 \subsection{考察}

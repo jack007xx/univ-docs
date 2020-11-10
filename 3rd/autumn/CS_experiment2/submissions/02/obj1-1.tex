@@ -1,6 +1,10 @@
 
 \section{実験1-1}
 \subsection{実験の目的，概要}
+この実験では，ディスプレイに'B'を表示させるMIPSマシンコードを，MIPSプロセッサを再現したFPGA上で実行する。
+その際，事前にプロセッサの動作について予想しておき，結果と比較する。
+
+これによって，メモリイメージファイルの生成方法，メモリイメージファイルから機械語を読んで実行結果を予測する方法を確認する。
 
 \subsection{実験方法}
 \subsubsection{メモリイメージファイルの作成}
@@ -24,17 +28,14 @@
 
 \subsubsection{論理合成}
 以下を実行し，mips\_de10-lite.tar.gzを解凍し，その中にメモリのイメージファイルを配置してコンパイルした。
+
+ACケーブル，モニタへのVGAケーブル，PCへのUSB接続，の順に行なったのち，モニタ電源をオンにした。
+以下のコマンドで，PCでの接続状況を確認し，FPGAにダウンロードした。
 \begin{lstlisting}[caption={論理合成操作},label={論理合成操作1-1}]
   $ tar -xvfz ./mips_de10-lite.tar.gz
   $ mv ./rom8x1024.mif ./mips_de10-lite/
   $ cd mips_de10-lite/
   $ quartus_sh --flow compile MIPS_Default
-\end{lstlisting}
-
-\subsubsection{FPGAでの回路実現}
-ACケーブル，モニタへのVGAケーブル，PCへのUSB接続，の順に行なったのち，モニタ電源をオンにした。
-以下のコマンドで，PCでの接続状況を確認し，FPGAにダウンロードした。
-\begin{lstlisting}[caption={FPGAでの回路実現},label={FPGAでの回路実現1-1}]
   $ dmesg
   $ quartus_pgm MIPS_Default.cdf
 \end{lstlisting}
@@ -51,20 +52,31 @@ KEY1でカウンタを進めて，予想した点について動作を確認し�
 \subsubsection{命令列の確認}
 rom8x1024\_sim.vを参照し，以下のように予想した。
 
-\begin{description}
-  \item [PC=0x0040 002cの命令を実行したときの，REG2の値]\mbox{}\\
-    ゼロレジスタに768が加算されるので，768(=0x00000300)
-  \item [PC=0x0040 0030の命令を実行したときの，RAMの768番地の値]\mbox{}\\
-  ゼロレジスタの値が代入されるので，0
-  \item [PC=0x0040 0034の命令を実行したときの，REG3の値]\mbox{}\\
-    772
-  \item [PC=0x0040 003cの命令を実行したとき，RAMの何番地の値がどう変化するか]\mbox{}\\
-    \$3→772で，\$2→2なので，RAM[772]=2になる
-  \item [PC=0x0040 0048の命令を実行したとき，RAMの何番地の値がどう変化するか]\mbox{}\\
-    00400030でRAM[\$2→768]=0なので，RAM[768]が0→1になる
-\end{description}
+\begin{itemize}
+  \item PC=0x0040 002cの命令を実行したときの，REG[2]の値
+  \begin{itemize}
+    \item ゼロレジスタと768の加算が代入されるので，768(=0x00000300)
+  \end{itemize}
+  \item PC=0x0040 0030の命令を実行したときの，RAMの768番地の値
+  \begin{itemize}
+    \item ゼロレジスタの値が代入されるので，0
+  \end{itemize}
+  \item PC=0x0040 0034の命令を実行したときの，REG[3]の値
+  \begin{itemize}
+    \item 772が代入されるので，772
+  \end{itemize}
+  \item PC=0x0040 003cの命令を実行したとき，RAMの何番地の値がどう変化するか
+  \begin{itemize}
+    \item REG[3]→772で，REG[2]→2なので，RAM[772]が2になる
+  \end{itemize}
+  \item PC=0x0040 0048の命令を実行したとき，RAMの何番地の値がどう変化するか
+  \begin{itemize}
+    \item 00400030でRAM[REG[2]→768]=0なので，RAM[768]が0→1になる
+  \end{itemize}
+\end{itemize}
 
 \subsubsection{論理合成，FPGAでの回路実現}
-ここに写真から読み取った情報を書く
+手動でクロックを進めたが，画面には何も表示されなかった。
+addiu命令と，sw命令が実装されていないので，予想した点について正しく実行される命令はなかった。
 
 \subsection{考察}
