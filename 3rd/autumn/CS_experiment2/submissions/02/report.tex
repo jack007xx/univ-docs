@@ -38,14 +38,33 @@
 \maketitle
 
 \section*{はじめに}
+この実験では、一部の命令が実装されていないプロセッサに、適切な命令を実装して、条件付きループ命令を含む動作を行えるようにする。
+
+また、各実験では，シュミレータや論理合成のソフトウェアを使うために，以下の設定を行う。
+端末を終了した場合，再度sourceコマンドを実行する。
+\begin{lstlisting}[caption={設定の読み込み},label={設定の読み込み}]
+  $ ln -s /pub1/jikken/eda3/cadsetup.bash.altera ~/
+  $ source ~/cadsetup.bash.altera
+\end{lstlisting}
+
+HDLのコンパイルにはQuartus Primeを、機能レベルシュミレーションにはModel Simを使用した。
+
+バイナリファイルの内容は、hexdumpコマンドによる。
+一番左のカラムは、hexdumpの行数である。
 
 \section*{各実験}
-% \input{obj1-1.tex}
-% \input{obj1-2.tex}
-% \input{obj2-1.tex}
-% \input{obj2-2.tex}
-% \input{obj3.tex}
+\input{obj1-1.tex}
+\input{obj1-2.tex}
+\input{obj2-1.tex}
+\input{obj2-2.tex}
+\input{obj3.tex}
 \input{obj4-1.tex}
 \input{obj4-2.tex}
+
+\section{最終的な回路記述}
+変更を加えたcpu.vと、main\_ctrl.vを以下に示した。
+\lstinputlisting[caption=cpu.v,label=cpu.v]{./src/obj4-1/mips_de10-lite/MIPS/cpu.v}
+\lstinputlisting[caption=mainctrl.v,label=mainctrl.v]{./src/obj4-1/mips_de10-lite/MIPS/main_ctrl.v}
+
 
 \end{document}
