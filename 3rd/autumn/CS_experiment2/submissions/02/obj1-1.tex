@@ -1,35 +1,35 @@
 \section{実験1-1}
-\subsection{実験の目的，概要}
-この実験では，ディスプレイに'B'を表示させるMIPSマシンコードを，MIPSプロセッサを再現したFPGA上で実行する。
-その際，事前にプロセッサの動作について予想しておき，結果と比較する。
+\subsection{実験の目的、概要}
+この実験では、ディスプレイに'B'を表示させるMIPSマシンコードを、MIPSプロセッサを再現したFPGA上で実行する。
+その際、事前にプロセッサの動作について予想しておき、結果と比較する。
 
-これによって，メモリイメージファイルの生成方法，メモリイメージファイルから機械語を読んで実行結果を予測する方法を確認することを目的とする。
+これによって、メモリイメージファイルの生成方法、メモリイメージファイルから機械語を読んで実行結果を予測する方法を確認することを目的とする。
 
 \subsection{実験方法}
 \subsubsection{メモリイメージファイルの作成}
 中身が以下のようなバイナリファイルprint\_B.binを配置した。
 \lstinputlisting[caption=print\_B.bin,label=printB.bin]{src/01/print_B}
 
-以下のコマンドでROM配置用のイメージファイルと，機能レベルシュミレーション用のverilog HDL記述ファイルを生成した。
+以下のコマンドでROM配置用のイメージファイルと、機能レベルシュミレーション用のverilog HDL記述ファイルを生成した。
 \begin{lstlisting}[caption={イメージファイルの作成},label={イメージファイルの作成1-1}]
   $ bin2v print_B.bin
 \end{lstlisting}
 
 \subsubsection{命令列の確認}
-生成されたrom8x1024\_sim.vを参照し，以下の点について結果を予測した。
+生成されたrom8x1024\_sim.vを参照し、以下の点について結果を予測した。
 \begin{itemize}
-  \item PC=0x002cの命令を実行したときの，REG[2]の値
-  \item PC=0x0030の命令を実行したときの，RAMの768番地の値
-  \item PC=0x0034の命令を実行したときの，REG[3]の値
-  \item PC=0x003cの命令を実行したとき，RAMの何番地の値がどう変化するか
-  \item PC=0x0048の命令を実行したとき，RAMの何番地の値がどう変化するか
+  \item PC=0x002cの命令を実行したときの、REG[2]の値
+  \item PC=0x0030の命令を実行したときの、RAMの768番地の値
+  \item PC=0x0034の命令を実行したときの、REG[3]の値
+  \item PC=0x003cの命令を実行したとき、RAMの何番地の値がどう変化するか
+  \item PC=0x0048の命令を実行したとき、RAMの何番地の値がどう変化するか
 \end{itemize}
 
 \subsubsection{論理合成}
-以下を実行し，mips\_de10-lite.tar.gzを解凍し，その中にメモリのイメージファイルを配置してコンパイルした。
+以下を実行し、mips\_de10-lite.tar.gzを解凍し、その中にメモリのイメージファイルを配置してコンパイルした。
 
-ACケーブル，モニタへのVGAケーブル，PCへのUSB接続，の順に行なったのち，モニタ電源をオンにした。
-以下のコマンドで，PCでの接続状況を確認し，FPGAにダウンロードした。
+ACケーブル、モニタへのVGAケーブル、PCへのUSB接続、の順に行なったのち、モニタ電源をオンにした。
+以下のコマンドで、PCでの接続状況を確認し、FPGAにダウンロードした。
 \begin{lstlisting}[caption={論理合成操作},label={論理合成操作1-1}]
   $ tar -xvfz ./mips_de10-lite.tar.gz
   $ mv ./rom8x1024.mif ./mips_de10-lite/
@@ -39,48 +39,48 @@ ACケーブル，モニタへのVGAケーブル，PCへのUSB接続，の順に�
   $ quartus_pgm MIPS_Default.cdf
 \end{lstlisting}
 
-スイッチ0，1をonにして手動モードに切り替えた。
-KEY0を押し，プロセッサをリセットした。
-KEY1でカウンタを進めて，予想した点について動作を確認した。
+スイッチ0、1をonにして手動モードに切り替えた。
+KEY0を押し、プロセッサをリセットした。
+KEY1でカウンタを進めて、予想した点について動作を確認した。
 
 \subsection{実験結果}
 \subsubsection{メモリイメージファイルの作成}
-\ref{printB.bin}の操作によって，rom8x1024\_sim.vと，rom8x1024.mifが生成された。
-内容は以下のように，ROMへのアクセスと応答をエミュレーションしたシュミレーションファイルと，実際に命令列を配置するためのイメージファイルだった。
+\ref{printB.bin}の操作によって、rom8x1024\_sim.vと、rom8x1024.mifが生成された。
+内容は以下のように、ROMへのアクセスと応答をエミュレーションしたシュミレーションファイルと、実際に命令列を配置するためのイメージファイルだった。
 
 \lstinputlisting[caption=rom8x1024\_sim.v,label=rom8x1024sim.v1-1]{./src/01/rom8x1024_sim.v}
 \lstinputlisting[caption=rom8x1024.mif,label=rom8x1024.mif1-1]{./src/01/mips_de10-lite/rom8x1024.mif}
 
 
 \subsubsection{命令列の確認}
-生成されたrom8x1024\_sim.v(ソースコード\ref{rom8x1024.mif1-1})を参照し，以下のように予想した。
+生成されたrom8x1024\_sim.v(ソースコード\ref{rom8x1024.mif1-1})を参照し、以下のように予想した。
 
 \begin{itemize}
-  \item PC=0x002cの命令を実行したときの，REG[2]の値
+  \item PC=0x002cの命令を実行したときの、REG[2]の値
   \begin{itemize}
-    \item ゼロレジスタと768の加算が代入されるので，768(=0x00000300)
+    \item ゼロレジスタと768の加算が代入されるので、768(=0x00000300)
   \end{itemize}
-  \item PC=0x0030の命令を実行したときの，RAMの768番地の値
+  \item PC=0x0030の命令を実行したときの、RAMの768番地の値
   \begin{itemize}
-    \item ゼロレジスタの値が代入されるので，0
+    \item ゼロレジスタの値が代入されるので、0
   \end{itemize}
-  \item PC=0x0034の命令を実行したときの，REG[3]の値
+  \item PC=0x0034の命令を実行したときの、REG[3]の値
   \begin{itemize}
-    \item 772が代入されるので，772
+    \item 772が代入されるので、772
   \end{itemize}
-  \item PC=0x003cの命令を実行したとき，RAMの何番地の値がどう変化するか
+  \item PC=0x003cの命令を実行したとき、RAMの何番地の値がどう変化するか
   \begin{itemize}
-    \item REG[3]→772で，REG[2]→2なので，RAM[772]が2になる
+    \item REG[3]→772で、REG[2]→2なので、RAM[772]が2になる
   \end{itemize}
-  \item PC=0x0048の命令を実行したとき，RAMの何番地の値がどう変化するか
+  \item PC=0x0048の命令を実行したとき、RAMの何番地の値がどう変化するか
   \begin{itemize}
-    \item PC=0x0030でRAM[REG[2]→768]=0なので，RAM[768]が0→1になる
+    \item PC=0x0030でRAM[REG[2]→768]=0なので、RAM[768]が0→1になる
   \end{itemize}
 \end{itemize}
 
-\subsubsection{論理合成，FPGAでの回路実現}
-手動でクロックを進めたが，画面には何も表示されなかった。
-addiu命令と，sw命令が実装されていないので，予想した点について正しく実行される命令はなかった。
+\subsubsection{論理合成、FPGAでの回路実現}
+手動でクロックを進めたが、画面には何も表示されなかった。
+addiu命令と、sw命令が実装されていないので、予想した点について正しく実行される命令はなかった。
 
 \subsection{考察}
 addiuと、sw命令が実装されておらず、予想した時点で対応する命令コードを解釈できないので、何も実行されなかった。

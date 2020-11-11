@@ -1,5 +1,5 @@
 \section{実験4-2}
-\subsection{実験の目的，概要}
+\subsection{実験の目的、概要}
 実験4-1では、プロセッサにsltiu、bne、lw命令が実装されていないため、プログラムが正しく動作しなかった。
 本実験では、3つの命令をプロセッサに実装し、4-1と同じプログラムを動作させて比較する。
 
@@ -7,7 +7,7 @@
 
 \subsection{実験方法}
 \subsubsection{sltiu命令のメイン制御回路追加設計}
-以下の点について，main\_ctrl.vを編集した。
+以下の点について、main\_ctrl.vを編集した。
 \begin{lstlisting}[caption={sltiu命令の追加設計},label={sltiu命令の追加設計}]
 // 命令コードの定義を追加
 `define   SLTIU 6'b001011
@@ -35,7 +35,7 @@
 \end{lstlisting}
 
 \subsubsection{bne命令のメイン制御回路追加設計}
-以下の点について，main\_ctrl.vを編集した。
+以下の点について、main\_ctrl.vを編集した。
 \begin{lstlisting}[caption={bne命令の追加設計},label={bne命令の追加設計}]
   // 命令コードの定義を追加
   `define    BNE  6'b000101
@@ -54,7 +54,7 @@
 \end{lstlisting}
 
 \subsubsection{lw命令のメイン制御回路追加設計}
-以下の点について，main\_ctrl.vを編集した。
+以下の点について、main\_ctrl.vを編集した。
 \begin{lstlisting}[caption={lw命令の追加設計},label={lw命令の追加設計}]
   // 命令コードの定義を追加
   `define     LW  6'b100011
@@ -77,29 +77,23 @@
   // rt rd のセレクト信号の追加
   `LW:     reg_widx_sel1_s_tmp = 1'b0;
 
-  // レジスタに書き込む，ALUの出力orRAMのデータと，PCの値のセレクタ信号の追加
+  // レジスタに書き込む、ALUの出力orRAMのデータと、PCの値のセレクタ信号の追加
   `LW:     link_tmp = 1'b0;
 \end{lstlisting}
 
-\subsubsection{論理合成，FPGAでの回路実現}
-以下のように，コンパイルを行ない，dmesgで接続を確認した。
-その後FPGAにダウンロードして，FPGAでの動作を確認した。
+\subsubsection{論理合成、FPGAでの回路実現}
+以下のように、コンパイルを行ない、FPGAにダウンロードして、FPGAでの動作を確認した。
 
-\begin{lstlisting}[caption={コンパイル，ダウンロード},label={コンパイル，ダウンロード4-2}]
+\begin{lstlisting}[caption={コンパイル、ダウンロード},label={コンパイル、ダウンロード4-2}]
   $ cp rom8x1024.mif ./mipsde_10-lite
   $ cd ./mipsde_10-lite
   $ quartus_sh --flow compile MIPS_Default
   $ quartus_pgm MIPS_Default.cdf 
-\end{lstlisting}
+\end{lstlisting}  
 
 \subsection{実験結果}
-\subsubsection{論理合成，FPGAでの回路実現}
+\subsubsection{論理合成、FPGAでの回路実現}
 ダウンロードして実行した。
-200Hzでカウントを進めたところ，画面上に61種類の文字が表示された。
+200Hzでカウントを進めたところ、画面上に61種類の文字が表示された。
 
 \subsection{考察}
-\subsubsection{sltiu命令のメイン制御回路追加設計}
-
-\subsubsection{bne命令のメイン制御回路追加設計}
-
-\subsubsection{lw命令のメイン制御回路追加設計}

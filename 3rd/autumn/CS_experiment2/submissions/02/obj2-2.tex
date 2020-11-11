@@ -1,13 +1,13 @@
 \section{実験2-2}
-\subsection{実験の目的，概要}
-この実験では，実験1-1で正しく動作しなかったプロセッサに，新たにジャンプ命令を追加し，同じプログラムを実行，結果を確認する。
-また，実験2-1で行った予想と比較する。
+\subsection{実験の目的、概要}
+この実験では、実験1-1で正しく動作しなかったプロセッサに、新たにジャンプ命令を追加し、同じプログラムを実行、結果を確認する。
+また、実験2-1で行った予想と比較する。
 
-これによって，プロセッサにモジュールを追加する方法、ジャンプ命令実行時の信号の動きを確認することを目的とする。
+これによって、プロセッサにモジュールを追加する方法、ジャンプ命令実行時の信号の動きを確認することを目的とする。
 
 \subsection{実験方法}
 \subsubsection{j命令のモジュール追加設計}
-以下の点について，cpu.vを編集して，新たにjp\_selモジュールを定義した。
+以下の点について、cpu.vを編集して、新たにjp\_selモジュールを定義した。
 \begin{lstlisting}[caption={addiu命令の追加設計},label={addiu命令の追加設計}]
 // ワイヤ宣言
 wire  [31:0]     jp_sel_d0;  // jp 選択回路モジュール データ 1
@@ -29,7 +29,7 @@ assign jp_sel_s = jp;
 \end{lstlisting}
 
 \subsubsection{j命令のメイン制御回路追加設計}
-以下の点について，main\_ctrl.vを編集した。
+以下の点について、main\_ctrl.vを編集した。
 \begin{lstlisting}[caption={sw命令の追加設計},label={sw命令の追加設計}]
 // 命令コードの定義を追加
 `define  	 J  6'b000010
@@ -41,11 +41,11 @@ assign  jp = ((op_code == `J) || ((op_code == `JAL) && 00)) ? 1'b1 : 1'b0;
 `J:      reg_write_enable_tmp = 1'b0;
 \end{lstlisting}
 
-\subsubsection{論理合成，FPGAでの回路実現}
-以下のように，コンパイルを行ない，ダウンロードして，FPGAでの動作を確認した。
+\subsubsection{論理合成、FPGAでの回路実現}
+以下のように、コンパイルを行ない、ダウンロードして、FPGAでの動作を確認した。
 実行結果を実験2-1での予想と比較した。
 
-\begin{lstlisting}[caption={コンパイル，ダウンロード},label={コンパイル，ダウンロード2-2}]
+\begin{lstlisting}[caption={コンパイル、ダウンロード},label={コンパイル、ダウンロード2-2}]
   $ cp rom8x1024.mif ./mipsde_10-lite
   $ cd ./mipsde_10-lite
   $ quartus_sh --flow compile MIPS_Default
@@ -53,7 +53,7 @@ assign  jp = ((op_code == `J) || ((op_code == `JAL) && 00)) ? 1'b1 : 1'b0;
 \end{lstlisting}
 
 \subsection{実験結果}
-\subsubsection{論理合成，FPGAでの回路実現}
+\subsubsection{論理合成、FPGAでの回路実現}
 実行すると、'B'が繰り返し表示された。
 予想では、PC=0x004cの後、PC=0x002cとなる予想であり、今回の実行結果はそのとおりになった。
 
