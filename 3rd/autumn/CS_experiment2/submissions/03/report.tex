@@ -1,0 +1,64 @@
+\documentclass[a4paper,15pt]{jsarticle}
+
+% 数式
+\usepackage{amsmath,amsfonts}
+\usepackage{bm}
+% 画像
+\usepackage[dvipdfmx]{graphicx}
+
+\usepackage{here}
+\usepackage{url}
+
+\usepackage{listingsutf8,jlisting} %日本語のコメントアウトをする場合jlistingが必要
+%ここからソースコードの表示に関する設定
+\lstset{
+  basicstyle={\ttfamily},
+  identifierstyle={\small},
+  commentstyle={\smallitshape},
+  keywordstyle={\small\bfseries},
+  ndkeywordstyle={\small},
+  stringstyle={\small\ttfamily},
+  frame={tb},
+  breaklines=true,
+  columns=[l]{fullflexible},
+  numbers=left,
+  xrightmargin=0zw,
+  xleftmargin=3zw,
+  numberstyle={\scriptsize},
+  stepnumber=1,
+  numbersep=1zw,
+  lineskip=-0.5ex
+}
+
+\begin{document}
+
+\title{コンピュータ科学実験レポート}
+\author{坪井正太郎（101830245）}
+\date{\today}
+\maketitle
+
+\section*{はじめに}
+この実験では、一部の命令が実装されていないプロセッサに、適切な命令を実装して、条件付きループ命令を含む動作を行えるようにする。
+
+また、各実験では，シュミレータや論理合成のソフトウェアを使うために，以下の設定を行う。
+端末を終了した場合，再度sourceコマンドを実行する。
+\begin{lstlisting}[caption={設定の読み込み},label={設定の読み込み}]
+  $ ln -s /pub1/jikken/eda3/cadsetup.bash.altera ~/
+  $ source ~/cadsetup.bash.altera
+\end{lstlisting}
+
+HDLのコンパイルにはQuartus Primeを、機能レベルシュミレーションにはModel Simを使用した。
+
+バイナリファイルの内容は、hexdumpコマンドによる。
+一番左のカラムは、hexdumpの行数である。
+
+\section*{各実験}
+\input{obj1-1.tex}
+\input{obj1-2.tex}
+\input{obj2-1.tex}
+\input{obj2-2.tex}
+\input{obj3.tex}
+\input{obj4-1.tex}
+\input{obj4-2.tex}
+
+\end{document}
