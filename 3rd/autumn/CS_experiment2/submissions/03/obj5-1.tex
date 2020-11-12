@@ -6,7 +6,64 @@
 これによって、現在足りていない機能を確認することを目的とする。
 
 \subsection{実験方法}
+以下のプログラムを配置した。
+% \lstinputlisting[caption=my\_print.c,label=myprint.c5-1]{}
+
+\subsubsection{クロスコンパイル、メモリイメージファイルの作成}
+以下の操作でクロスコンパイルし、メモリイメージファイルを作成した。
+\begin{lstlisting}[caption={クロスコンパイル、メモリイメージファイルの作成},label={クロスコンパイル、メモリイメージファイルの作成5-1}]
+$  cross_compile.sh my_print.c
+$  bin2v my_print.bin
+\end{lstlisting}
+
+\subsubsection{命令列の確認、動作予想}
+生成された、rom8x1024.mifを確認して、以下の点について結果を予測した。
+\begin{itemize}
+  \item 最初にPC=0x0074を実行した直後のREG[31]の値
+  \item 最初にPC=0x0074を実行した直後のPCの値
+\end{itemize}
+
+\subsubsection{論理合成、ダウンロード}
+以下の操作で、論理合成し、FPGAにダウンロードした。
+\begin{lstlisting}[caption={論理合成、ダウンロード},label={論理合成、ダウンロード5-1}]
+$  cp rom8x1024.mif ./mips_de10-lite/
+$  cd ./mips_de10-lite/
+$  quartus_sh --flow compile MIPS_Default
+$  quartus_pgm MIPS_Default.cdf
+\end{lstlisting}
+
+クロックを手動モードで送り、70個ほどの命令を実行、予想した点と、ディスプレイに表示されるはずの文字について確認した。
 
 \subsection{実験結果}
+\subsubsection{命令列の確認、動作予想}
+以下のようなメモリイメージファイルが生成された。
+% \lstinputlisting[caption=rom1024.mif,label=rom1024.mif]{}
+
+命令列を確認して、このような予想をたてた。
+\begin{itemize}
+  \item 最初にPC=0x0074を実行した直後のREG[31]の値
+  \begin{itemize}
+    \item REG[31]=0x0078
+  \end{itemize}
+  \item 最初にPC=0x0074を実行した直後のPCの値
+  \begin{itemize}
+    \item PC=0x00a0
+  \end{itemize}
+\end{itemize}
+
+\subsubsection{FPGAでの実行結果}
+予想した点について結果は、以下のようになった。
+\begin{itemize}
+  \item 最初にPC=0x0074を実行した直後のREG[31]の値
+  \begin{itemize}
+    \item REGWRITED=00000000,WEN=0であり、レジスタへの書き込みは発生していない
+  \end{itemize}
+  \item 最初にPC=0x0074を実行した直後のPCの値
+  \begin{itemize}
+    \item PC=0x0078であり、ジャンプなどはしていない
+  \end{itemize}
+\end{itemize}
+
+ディスプレイに文字は表示されなかった。
 
 \subsection{考察}
