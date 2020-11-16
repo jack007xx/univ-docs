@@ -1,0 +1,64 @@
+\documentclass[a4paper,10pt]{jsarticle}
+
+% 数式
+\usepackage{amsmath,amsfonts}
+\usepackage{bm}
+% 画像
+\usepackage[dvipdfmx]{graphicx}
+
+\usepackage{listingsutf8,jlisting} %日本語のコメントアウトをする場合jlistingが必要
+%ここからソースコードの表示に関する設定
+\lstset{
+  basicstyle={\ttfamily},
+  identifierstyle={\small},
+  commentstyle={\smallitshape},
+  keywordstyle={\small\bfseries},
+  ndkeywordstyle={\small},
+  stringstyle={\small\ttfamily},
+  frame={tb},
+  breaklines=true,
+  columns=[l]{fullflexible},
+  numbers=left,
+  xrightmargin=0zw,
+  xleftmargin=3zw,
+  numberstyle={\scriptsize},
+  stepnumber=1,
+  numbersep=1zw,
+  lineskip=-0.5ex
+}
+
+\begin{document}
+
+\title{演習課題6}
+\author{坪井正太郎（101830245）}
+\date{\today}
+\maketitle
+\section{}
+候補キーは
+\[\{B,C\},\{B,F\}\]
+
+\section{}
+\[R1\cap R2 = \{B,C\}\]
+\[R1 - R2 = \{A,B\}\]
+\[R2 - R1 = \{D,F\}\]
+となる。
+
+$C\rightarrow D\rightarrow A$より、$R1\cap R2 \rightarrow R1 - R2$が成立。
+よって、この分解は無損失分解である。
+
+\section{}
+分解されたリレーションと、射影した従属性からは、$D\rightarrow A$の従属性を導くことができない。
+
+よって、この分解は従属性保存分解ではない。
+
+\section{}
+関数従属性は既に極小被覆なので、各従属について、含まれる属性を分解にする。
+\[\rho = \{\{A,B,E\},\{B,C,F\},\{C,D\},\{D,A\},\{F,C\}\}\]
+部分集合として含まれる部分を除外して、
+\[\{\{A,B,E\},\{B,C,F\},\{C,D\},\{D,A\}\}\]
+
+\section{}
+3NFの条件2に対応する部分を更に分解した。
+\[\{\{A,B,E\},\{B,C\},\{C,F\},\{C,D\},\{D,A\}\}\]
+
+\end{document}
