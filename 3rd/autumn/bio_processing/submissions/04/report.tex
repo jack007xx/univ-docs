@@ -1,0 +1,82 @@
+\documentclass[a4paper,10pt]{jsarticle}
+
+% 数式
+\usepackage{amsmath,amsfonts}
+\usepackage{bm}
+% 画像
+\usepackage[dvipdfmx]{graphicx}
+
+\usepackage{listingsutf8,jlisting} %日本語のコメントアウトをする場合jlistingが必要
+%ここからソースコードの表示に関する設定
+\lstset{
+  basicstyle={\ttfamily},
+  identifierstyle={\small},
+  commentstyle={\smallitshape},
+  keywordstyle={\small\bfseries},
+  ndkeywordstyle={\small},
+  stringstyle={\small\ttfamily},
+  frame={tb},
+  breaklines=true,
+  columns=[l]{fullflexible},
+  numbers=left,
+  xrightmargin=0zw,
+  xleftmargin=3zw,
+  numberstyle={\scriptsize},
+  stepnumber=1,
+  numbersep=1zw,
+  lineskip=-0.5ex
+}
+
+\begin{document}
+
+\title{生体情報処理レポート課題\\
+  MacCulloch-Pittsモデルについて}
+\author{坪井正太郎（101830245）}
+\date{\today}
+\maketitle
+\section{}
+MacCulloch-Pittsモデルは、脳のニューロンの動きを単純にモデル化したものである。
+このモデルの入出力値は、0か1で、N入力1出力である。
+それぞれの入力に重みをつけた和が、しきい値を超えていれば1を、超えていなければ0を出力する。
+
+これは、脳のニューロンが他の神経細胞から信号をうけとり、しきい値で発火する現象を模している。
+
+出力値は、
+\[y=f
+  \left(
+  \sum_{i=1}^{n}(w_ix_i)-\theta
+  \right)
+\]
+ただし、
+\[f(u)=
+  \begin{cases}
+    1 & (u>0)      \\
+    0 & (u\leq  0)
+  \end{cases}
+\]
+となる。
+
+このモデルの入出力をつなげることで、単純パーセプトロンや、ニューラルネットワークを形成することができる。
+
+モデル単体では、限定的な論理演算を記述することができる能力しかない。
+これを1層重ねると線形分離可能な問題が、複数層では非線形な分類を行うことができる。
+
+\section{論理演算の実現}
+\subsection{not}
+not演算は、
+\[w=-1,\theta =-0.5\]
+で実現できる。
+
+\subsection{or}
+or演算は
+\[w[2]=\{1,1\},\theta =0.5\]
+で実現できる。
+
+\subsection{and}
+or演算は
+\[w[2]=\{1,1\},\theta =1.5\]
+で実現できる。
+
+これらの演算が実現できる一方で、xorなどの単純な直線で分類できない演算を行う能力はない。
+
+\end{document}
