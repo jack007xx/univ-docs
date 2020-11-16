@@ -1,2 +1,4 @@
 papers/
 out/
+*.drawio
+# *.pdf
