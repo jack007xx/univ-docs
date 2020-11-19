@@ -1,0 +1,133 @@
+\documentclass[a4paper,10pt]{jsarticle}
+
+% 数式
+\usepackage{amsmath,amsfonts}
+\usepackage{bm}
+% 画像
+\usepackage[dvipdfmx]{graphicx}
+
+\usepackage{listingsutf8,jlisting} %日本語のコメントアウトをする場合jlistingが必要
+%ここからソースコードの表示に関する設定
+\lstset{
+  basicstyle={\ttfamily},
+  identifierstyle={\small},
+  commentstyle={\smallitshape},
+  keywordstyle={\small\bfseries},
+  ndkeywordstyle={\small},
+  stringstyle={\small\ttfamily},
+  frame={tb},
+  breaklines=true,
+  columns=[l]{fullflexible},
+  numbers=left,
+  xrightmargin=0zw,
+  xleftmargin=3zw,
+  numberstyle={\scriptsize},
+  stepnumber=1,
+  numbersep=1zw,
+  lineskip=-0.5ex
+}
+
+\begin{document}
+
+\title{ソフトウェア設計法レポート課題(採点希望)}
+\author{坪井正太郎（101830245）}
+\date{\today}
+\maketitle
+\section{機能定義}
+\subsection{楽曲リスト}
+授業での説明に加えて、提供者の情報を追加した。
+\begin{itemize}
+  \item 楽曲提供時
+        \begin{itemize}
+          \item 入力
+                \begin{itemize}
+                  \item 楽曲データ
+                  \item タイトル
+                  \item ジャケット写真データ
+                  \item 楽曲提供者識別子
+                \end{itemize}
+          \item 出力
+                \begin{itemize}
+                  \item 登録完了
+                  \item 楽曲ID
+                \end{itemize}
+        \end{itemize}
+  \item 楽曲検索時
+        \begin{itemize}
+          \item 入力
+                \begin{itemize}
+                  \item 検索キーワード
+                  \item 過去の閲覧・購入履歴
+                \end{itemize}
+          \item 出力
+                \begin{itemize}
+                  \item 楽曲ID
+                \end{itemize}
+        \end{itemize}
+\end{itemize}
+
+\subsection{購入リスト}
+購入リストは、決済が正しく完了したもののみを受け付ける。
+決済完了情報に含まれる金額と、楽曲の値段を突き合わせる必要がある。
+\begin{itemize}
+  \item 入力
+        \begin{itemize}
+          \item 利用者識別子
+          \item 決済完了情報(領収書のようなものを想定。金額、対象、利用者などがわかる。)
+          \item 楽曲ID
+        \end{itemize}
+  \item 出力
+        \begin{itemize}
+          \item 登録完了
+        \end{itemize}
+\end{itemize}
+
+\subsection{利用者の決済機能}
+決済完了情報を出すことで、購入リストとの整合性をとる。
+\begin{itemize}
+  \item 入力
+        \begin{itemize}
+          \item 利用者識別子
+          \item 決済方法
+          \item 金額
+          \item 外部の決済サービス用クレデンシャル
+        \end{itemize}
+  \item 出力
+        \begin{itemize}
+          \item 決済完了情報
+        \end{itemize}
+\end{itemize}
+
+\subsection{楽曲提供者の決済機能}
+楽曲提供者は、望む方法で支払いを受けることができる。
+\begin{itemize}
+  \item サービス提供者からの支払い
+        \begin{itemize}
+          \item 入力
+                \begin{itemize}
+                  \item 支払先の楽曲提供者識別子
+                  \item 決済方法
+                  \item 金額
+                  \item 外部の決済サービス用クレデンシャル
+                \end{itemize}
+          \item 出力
+                \begin{itemize}
+                  \item 決済完了
+                \end{itemize}
+        \end{itemize}
+  \item 楽曲提供者への支払い
+        \begin{itemize}
+          \item 入力
+                \begin{itemize}
+                  \item 楽曲提供者識別子
+                  \item 入金(決済)方法
+                  \item 外部の決済サービス用クレデンシャル
+                \end{itemize}
+          \item 出力
+                \begin{itemize}
+                  \item 明細
+                \end{itemize}
+        \end{itemize}
+\end{itemize}
+
+\end{document}
