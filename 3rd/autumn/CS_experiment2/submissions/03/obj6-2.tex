@@ -8,6 +8,43 @@
 
 \subsection{実験方法}
 
+\subsection{追加設計}
+cpu.vに、以下の変更を加え、jpr\_selモジュールを追加した。
+\begin{lstlisting}[caption={cpu.vの追加設計},label={cpu.vの追加設計6-2}]
+jpr_selの入出力ワイヤを定義
+wire  [31:0]     jpr_sel_d0;  // jpr 選択回路モジュール データ 1
+wire  [31:0]     jpr_sel_d1;  // jpr 選択回路モジュール データ 2
+wire  [31:0]     jpr_sel_s;  // jpr 選択回路モジュール セレクト信号
+wire  [31:0]     jpr_sel_y;  // jpr 選択回路モジュール 出力
+
+32bitマルチプレクサモジュールをjpr_selとして宣言する
+入出力はさっき定義したワイヤを使う
+mux32_32_32  jpr_sel(jpr_sel_d0, jpr_sel_d1, jpr_sel_s, jpr_sel_y);
+
+セレクタの出力をPCに接続する
+assign pc_next = jpr_sel_y;
+代わりに，割り当てられていたjp_sel_yをコメントアウトする
+//assign pc_next = jp_sel_y;
+
+セレクタの入力を割り当てる
+assign jpr_sel_d0 = jp_sel_y;
+assign jpr_sel_d1 = alu_ram_sel_y;
+assign jpr_sel_s = jpr;
+\end{lstlisting}
+
+main\_ctrl.vに以下の変更を加え、jr命令が実行されるときの制御信号を定義した。
+\begin{lstlisting}[caption={main\_ctrl.vの追加設計},label={mainctrl.vの追加設計6-2}]
+jpr信号を出力する条件として、jrのファンクションコードを追加する。
+|| Rfunc == 6'b001000)) ? 1'b1 : 1'b0;
+
+レジスタの書き込み制御信号の出力条件を追加
+if (Rfunc == 6'b001000) begin
+  reg_write_enable_tmp = 1'b0;
+end else begin
+  reg_write_enable_tmp = 1'b1;
+end
+\end{lstlisting}
+
 \subsection{実験結果}
 
 \subsection{考察}
