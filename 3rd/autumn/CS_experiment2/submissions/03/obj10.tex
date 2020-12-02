@@ -7,7 +7,209 @@
 これによって、プロセッサに足りない機能に対して正しい変更を行い、機能を実現できることを確認する。
 
 \subsection{実験方法}
+以下のプログラムを配置した。
+\lstinputlisting[caption=mult.c,label=mult.c]{src/10/sosuu.c}
+
+\subsubsection{bin2vの拡張}
+bin2vに以下のような変更を行った。
+\begin{lstlisting}[caption={bin2vの拡張},label={bin2vの拡張}]
+// コメント追加、functコード追加、outputのためのコメント追加
+
+// コメント追加
+‘define R 6’b000000 R 形式 (add, addu, sub, subu, and, or, slt, jalr, jr, mult, mflo, divu, mfhi)
+
+// コメント追加
+  DIVU(op = 000000, func = 00011011)
+  DIVU Lo <= REG[rs] / REG[rt], Hi <= REG[rs] % REG[rt]; DIVU rs, rt
+
+// コメント追加
+  MFHI(op = 000000, func = 00010000)
+  MFHI REG[rd] <= Hi; MFHI rd
+
+// functコードの定義追加
+  #define    DIVU 27
+  #define    MFHI 16
+
+// functがmultのものだった場合の、rom8x1024_sim.v生成用の記述
+  case DIVU:
+    fprintf(outfp, "10'h%03x: data = 32'h%08x; // %08x: DIVU, ", rom_addr, wd, cmt_addr);
+    fprintf(outfp, "Lo<=REG[%d]/REG[%d], Hi<=REG[%d]%REG[%d];\n", rs, rt, rs, rt);
+    break;
+
+// functがmfloのものだった場合の、rom8x1024_sim.v生成用の記述
+  case MFHI:
+    fprintf(outfp, "10'h%03x: data = 32'h%08x; // %08x: MFHI, ", rom_addr, wd, cmt_addr);
+    fprintf(outfp, "REG[%d]<=Hi;\n", rd);
+    break;
+
+// functがmultのものだった場合の、rom8x1024_sim.v生成用の記述
+  case DIVU:
+    fprintf(outfp, "%03x : %08x ; %% %08x: DIVU, ", rom_addr, wd, cmt_addr);
+    fprintf(outfp, "Lo<=REG[%d]*REG[%d], Hi<=REG[%d]\%REG[%d]; %%\n", rs, rt, rs, rt);
+    break;
+
+// functがmfloのものだった場合の、rom8x1024_sim.v生成用の記述 
+  case MFHI:
+    fprintf(outfp, "%03x : %08x ; %% %08x: DIVU, ", rom_addr, wd, cmt_addr);
+    fprintf(outfp, "REG[%d]<=Hi; %%\n",rd);
+    break;
+\end{lstlisting}
+
+変更後、makeコマンドでmakeした。
+
+\subsubsection{alu.vの追加設計}
+\begin{lstlisting}[caption={alu.vの変更},label={alu.vの変更10}]
+  // コメントの追加
+  // divu(divide unsigned)
+  // mfhi(move from Hi)
+  
+  // alu制御コードのコメントの追加
+  // 0101, divu
+  // 1101, mfhi
+  
+  // ALU制御コードの定義
+  `define ALU_DIVU 4'b0101
+  `define ALU_MFHI 4'b1101
+  
+  // divu命令実行時に 商と剰余 の結果を {hi, lo}に格納する記述の追加
+  // multのものもまとめてif文で制御
+  if (alu_ctrl == `ALU_MULT) begin
+    {hi, lo} <= alu_a * alu_b;
+  end else if (alu_ctrl == `ALU_DIVU) begin
+    hi <= alu_a % alu_b;
+    lo <= alu_a / alu_b;
+  end
+
+  // mfhi命令実行時に {hi, lo} の hi を result に出力する記述の追加
+  `ALU_MFHI: begin
+    result <= hi;
+  end
+  
+\end{lstlisting}
+
+\subsubsection{alu\_ctrl.vの追加設計}
+\begin{lstlisting}[caption={alu\_ctrl.v},label={aluctrl.v10}]
+  // divu,mfhi命令用のALU制御コードの定義
+  `define     ALU_CTRL_DIVU 4'b0101
+  `define     ALU_CTRL_MFHI 4'b1101
+  
+  // divu,mfhi命令用のALU制御コードについてのコメント追加
+  // divu(divide unsigned), 010, 011011, 0101
+  // mfhi(move from hi), 010, 01000, 1101
+  
+  // 実行する命令がdivu,mfhi命令のとき、divu,mfhi命令用のALU制御コードを生成する処理の追加
+  end else if (func == 6'b011011) begin // func=DIVU
+    y = `ALU_CTRL_DIVU;
+  end else if (func == 6'b010000) begin // func=MFHI
+    y = `ALU_CTRL_MFHI;
+\end{lstlisting}
+
+\subsubsection{main\_ctrl.vの追加設計}
+\begin{lstlisting}[caption={main\_ctri.vの変更},label={mainctri.vの変更10}]
+  // mult, mflo 命令に関するコメントの追加
+  DIVU(op = 000000, func = 011011)
+  DIVU Lo <= REG[rs] / REG[rt], Hi <= REG[rs] % REG[rt]; DIVU rs, rt
+  MFHI(op = 000000, func = 010000)
+  MFHI REG[rd] <= Hi; MFHI rd
+\end{lstlisting}
+
+\subsubsection{アセンブリの出力}
+以下の操作でsosuu.cからsosuu.sを出力した。
+\begin{lstlisting}[caption={アセンブリの出力},label={アセンブリの出力}]
+$  mips-rtems-gcc -O0 -S sosuu.c
+\end{lstlisting}
+
+\subsubsection{sosuu.sの変更}
+\begin{lstlisting}[caption={sosuu.sの変更},label={sosuu.sの変更}]
+$L14:
+	lw	$3,32($fp)
+	lw	$2,4($fp)
+	nop
+	bne	$2,$0,1f
+	divu	$0,$3,$2
+	break	7
+1:
+	mfhi	$2
+	bne	$2,$0,$L15
+  nop
+  
+を
+
+$L14:
+	lw	$3,32($fp)
+	lw	$2,4($fp)
+	nop
+	divu	$0,$3,$2
+	bne	$2,$0,1f
+  nop
+	break	7
+1:
+	mfhi	$2
+	bne	$2,$0,$L15
+  nop
+
+に変更
+\end{lstlisting}
+
+\subsubsection{バイナリ出力、bin2v}
+以下の操作でバイナリファイルを生成し、
+\begin{lstlisting}[caption={アセンブリの出力、クロスコンパイル},label={アセンブリの出力}]
+$  mips-rtems-as -mips1 -g -o sosuu.o sosuu.s 
+$  mips-rtems-ld -N sosuu.o -o sosuu.bin -e main
+$  mips-rtems-objcopy -O binary sosuu.bin 
+$  ./bin2v/bin2v mult.bin
+\end{lstlisting}
+
+\subsubsection{論理合成、ダウンロード}
+以下の操作で、論理合成し、FPGAにダウンロードした。
+\begin{lstlisting}[caption={論理合成、ダウンロード},label={論理合成、ダウンロード9}]
+$  cp rom8x1024.mif ./mips_de10-lite/
+$  cd ./mips_de10-lite/
+$  quartus_sh --flow compile MIPS_Default
+$  quartus_pgm MIPS_Default.cdf
+\end{lstlisting}
+
+FPGA上でプログラムを実行し、結果を確認した。
 
 \subsection{実験結果}
+\subsubsection{メモリイメーファイルの生成結果}
+生成されたメモリイメーファイルのうち、追加実装した部分に関わるものは以下のようになった。
+\begin{lstlisting}[caption={メモリイメーファイルの追加実装に関わる部分},label={メモリイメーファイルの追加実装に関わる部分10}]
+  089 : 0062001b ; % 00400224: DIVU, Lo<=REG[3]*REG[2], Hi<=REG[3]%REG[2]; %
+  ・・・
+  08b : 00001010 ; % 0040022c: MFHI, REG[2]<=Hi; %
+\end{lstlisting}
+
+\subsubsection{divt.cの実行結果}
+プログラムをFPGAで実行した結果、以下のようになった。
+\begin{lstlisting}[caption={sosuu.cの実行結果},label={sosuu.cの実行結果10}]
+  HELLO
+  NUM=20
+  ECHO 20
+  03 05 07 11 13 17 19
+  NUM=
+\end{lstlisting}
 
 \subsection{考察}
+\subsubsection{bin2vの追加実装}
+この実験では、まず実験9と同様、bin2vで適切なコメント付きでメモリイメーファイルを作成するための実装をした。
+その結果、該当部分にコメントが挿入されたことがソースコード\ref{メモリイメーファイルの追加実装に関わる部分10}から分かる。
+
+\subsubsection{プロセッサの追加実装}
+また、プロセッサはmult命令の実装時と同様、ALU内部でdivuの演算結果をクロックの立ち上がりでHi,Lo別々に入力している。
+また、命令コードに対する制御コードはalu\_ctrler.vで定義し、出力した。
+
+\subsubsection{アセンブリの修正}
+実験9までで使用したクロスコンパイラは、パイプラインでの処理での遅延実行を行うように命令を並び替える。
+したがって、今回のプロセッサで正しく実行させる事ができない。
+
+そこで、実際の手続き通り、bne命令をdivu命令の後に差し替え、nop命令をbne命令の後ろに配置した。
+そのために、cat /pub1/jikken/eda/linux/bin/cross\_compile.sh でクロスコンパイラのアセンブリ出力前後のコマンドを主導で実行した。
+
+\subsubsection{sosuu.cの実行結果}
+sosuu.cでは、本来のアルゴリズムにしたがって、剰余を使った倍数判定を行なった。
+実行結果は正しいものになっているのが確認され、実行時には実験7よりも早く結果が表示された。
+これは、倍数判定にかかるステップ数がなくなったためであると考えられる。\\
+
+この実験では、これまでのプロセッサに対する変更をもとに、未実装な命令を正しく実行できるように変更した。
+これによって、この実験の目的を達成できたと考えた。

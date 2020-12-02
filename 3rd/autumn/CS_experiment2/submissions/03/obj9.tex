@@ -74,6 +74,16 @@ $  ./bin2v/bin2v mult.bin
   alu alua(clock, reset, alu_a, alu_b, alu_ctrl, alu_y, alu_comp);
 \end{lstlisting}
 
+\subsubsection{main\_ctrl.vの追加設計}
+\begin{lstlisting}[caption={main\_ctri.vの変更},label={mainctri.vの変更9}]
+  // mult, mflo 命令に関するコメントの追加
+  R 形式
+  MULT(op = 000000, func = 011000)
+  MULT {Hi, Lo} <= REG[rs] * REG[rt]; MULT rs,rt
+  MFLO(op = 000000, func = 010010)
+  MFLO REG[rd] <= Lo; MFLO rd
+\end{lstlisting}
+
 \subsubsection{alu.vの追加設計}
 \begin{lstlisting}[caption={alu.vの変更},label={alu.vの変更9}]
   // コメントの追加
@@ -113,16 +123,6 @@ $  ./bin2v/bin2v mult.bin
     result <= lo;
   end
   
-\end{lstlisting}
-
-\subsubsection{main\_ctrl.vの追加設計}
-\begin{lstlisting}[caption={main\_ctri.vの変更},label={mainctri.vの変更9}]
-  // mult, mflo 命令に関するコメントの追加
-  R 形式
-  MULT(op = 000000, func = 011000)
-  MULT {Hi, Lo} <= REG[rs] * REG[rt]; MULT rs,rt
-  MFLO(op = 000000, func = 010010)
-  MFLO REG[rd] <= Lo; MFLO rd
 \end{lstlisting}
 
 \subsubsection{alu\_ctrl.vの追加設計}
