@@ -7,7 +7,7 @@
 
 \subsection{実験方法}
 以下のプログラムを配置した。
-% \lstinputlisting[caption=my\_print.c,label=myprint.c5-1]{}
+\lstinputlisting[caption=my\_print.c,label=myprint.c5-1]{src/05/my_print.c}
 
 \subsubsection{クロスコンパイル、メモリイメージファイルの作成}
 以下の操作でクロスコンパイルし、メモリイメージファイルを作成した。
@@ -37,7 +37,7 @@ $  quartus_pgm MIPS_Default.cdf
 \subsection{実験結果}
 \subsubsection{命令列の確認、動作予想}
 以下のようなメモリイメージファイルが生成された。
-\lstinputlisting[caption=rom1024.mif,label=rom1024.mif]{}
+\lstinputlisting[caption=rom1024.mif,label=rom1024.mif]{src/05/rom8x1024.mif}
 
 命令列を確認して、このような予想をたてた。
 \begin{itemize}
@@ -60,10 +60,12 @@ $  quartus_pgm MIPS_Default.cdf
   \end{itemize}
   \item 最初にPC=0x0074を実行した直後のPCの値
   \begin{itemize}
-    \item PC=0x0078であり、ジャンプなどはしていない
+    \item PC=0x0078であり、ジャンプはしていない
   \end{itemize}
 \end{itemize}
 
 ディスプレイに文字は表示されなかった。
 
 \subsection{考察}
+このプロセッサには、jal命令が実装されていないので、プログラムが正しく動作しなかった。
+jal命令が正しく実装されている場合、31番目のレジスタに次の戻り先プログラムカウンタの位置が退避されて、プログラムカウンタの位置が命令で指定された場所に更新されるはずである。
