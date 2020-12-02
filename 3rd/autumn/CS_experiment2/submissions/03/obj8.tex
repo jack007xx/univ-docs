@@ -3,10 +3,77 @@
 本実験では、プロセッサからステッピングモータを扱う。
 最終的に、キーボードからモータを制御するプログラムを作成、実行する。
 
-これによって、このプロセッサで提供されている機能のを使用することで実現できるプログラムを作成することを目的とする。
+これによって、このプロセッサで提供されている機能を使用することで実現できるプログラムを作成することを目的とする。
 
 \subsection{実験方法}
+以下のようなプログラムを配置した。
+\lstinputlisting[caption=motor.c,label=motor.c]{src/08/motor.c}
+
+\subsubsection{クロスコンパイル、メモリイメージファイルの作成}
+以下の操作でクロスコンパイルし、メモリイメージファイルを作成した。
+\begin{lstlisting}[caption={クロスコンパイル、メモリイメージファイルの作成},label={クロスコンパイル、メモリイメージファイルの作成8}]
+$  cross_compile.sh motor.c
+$  bin2v motor.bin
+\end{lstlisting}
+
+\subsubsection{モーターの接続}
+このプログラムでは、GPIOピンを経由して、ステッピングモータを使用するため、プログラムのダウンロード前に、制御回路とGPIOピンを、モータと制御回路を接続した。
+
+\subsubsection{論理合成、ダウンロード}
+以下の操作で、論理合成し、FPGAにダウンロードした。
+\begin{lstlisting}[caption={論理合成、ダウンロード},label={論理合成、ダウンロード8}]
+$  cp rom8x1024.mif ./mips_de10-lite/
+$  cd ./mips_de10-lite/
+$  quartus_sh --flow compile MIPS_Default
+$  quartus_pgm MIPS_Default.cdf
+\end{lstlisting}
+
+FPGA上でプログラムを実行し、結果を確認した。
+
+\subsubsection{ステッピングモータ制御プログラムの作成}
+コンパイラと、プロセッサの対応する機能に注意して、motor.cを変更した。
+\lstinputlisting[caption=motor.c',label=motor.c']{src/08/my_motor.c}
+
+\subsubsection{クロスコンパイル、メモリイメージファイルの作成}
+以下の操作でクロスコンパイルし、メモリイメージファイルを作成した。
+\begin{lstlisting}[caption={クロスコンパイル、メモリイメージファイルの作成},label={クロスコンパイル、メモリイメージファイルの作成28}]
+$  cross_compile.sh motor.c
+$  bin2v motor.bin
+\end{lstlisting}
+
+\subsubsection{論理合成、ダウンロード}
+以下の操作で、論理合成し、FPGAにダウンロードした。
+\begin{lstlisting}[caption={論理合成、ダウンロード},label={論理合成、ダウンロード28}]
+$  cp rom8x1024.mif ./mips_de10-lite/
+$  cd ./mips_de10-lite/
+$  quartus_sh --flow compile MIPS_Default
+$  quartus_pgm MIPS_Default.cdf
+\end{lstlisting}
+
+ダウンロード後、FPGAで実行して動作を確認した。
 
 \subsection{実験結果}
+最初のmotor.cを実行した結果、モータは1方向に回転し続けた。
+
+motor.cを変更し、実行した結果、以下のような結果になった。
+(//でコメントアウトした部分で、モータの様子を記述した)
+\begin{lstlisting}[caption={変更したmotor.cの実行結果},label={変更したmotor.cの実行結果}]
+  STEP=200
+  DIR?=1
+  //最初の実行と同じ方向に、200ステップ分回転した
+  DONE!
+  STEP=100
+  DIR?=0
+  //最初の実行と逆の方向に、200ステップ分回転した
+  DONE!
+\end{lstlisting}
 
 \subsection{考察}
+変更前のmotor.cから、GPIOピンに、4bitのフラグを入力し、コイルの相を指定して励磁させていると考えられる。
+プログラムでは、「$1000\rightarrow 0100\rightarrow 0010\rightarrow 0001$」の順で繰り返し励磁されていた。
+
+変更後のプログラムでは、順方向の他に、逆方向への回転も実現するために、テーブルを定義した。
+1248と、8421の2つのテーブルを用意し、4bitシフトして下位4bitをとることで励磁するビット数を決定した。
+また、回転するステップ数を指定するため、ループ数を入力から指定することにした。
+
+この実験でのプログラムの作成を通して、プロセッサに搭載されている機能の中でプログラムを作成することができた。
