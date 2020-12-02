@@ -5,8 +5,103 @@
 
 本実験では、このプログラムを、正常に動作させることを目的とする。
 
-\subsection{実験方法}
+\subsection{実験方法1}
+以下のようなプログラムを配置した。
+\lstinputlisting[caption=sosuu.c,label=sosuu.c7]{src/07/sosuu.c}
 
-\subsection{実験結果}
+\subsubsection{クロスコンパイル、メモリイメージファイルの作成}
+以下の操作でクロスコンパイルし、メモリイメージファイルを作成した。
+\begin{lstlisting}[caption={クロスコンパイル、メモリイメージファイルの作成},label={クロスコンパイル、メモリイメージファイルの作成5-1}]
+$  cross_compile.sh sosuu.c
+$  bin2v sosuu.bin
+\end{lstlisting}
+
+\subsubsection{命令列の確認、動作予想}
+生成された、rom8x1024.mifを確認して、以下の点について結果を予測した。
+\begin{itemize}
+  \item 命令メモリの0x082の命令はどのような命令か
+  \item 命令メモリの0x082の命令はsosuu\_check()のどの記述に対応するか
+\end{itemize}
+
+\subsubsection{論理合成、ダウンロード}
+以下の操作で、論理合成し、FPGAにダウンロードした。
+\begin{lstlisting}[caption={論理合成、ダウンロード},label={論理合成、ダウンロード6-1}]
+$  cp rom8x1024.mif ./mips_de10-lite/
+$  cd ./mips_de10-lite/
+$  quartus_sh --flow compile MIPS_Default
+$  quartus_pgm MIPS_Default.cdf
+\end{lstlisting}
+
+FPGA上で、HELLO, NUM=と表示されたら、"20"を入力し、その結果を確認した。
+
+このプログラムは正しく動作しない。
+この問題について、解決する方法を2つ考えた。
+
+\subsection{実験結果1}
+\subsubsection{命令列からの予想}
+メモリイメージファイルから、以下のような予想をたてた。
+\begin{itemize}
+  \item 命令メモリの0x082の命令はどのような命令か
+        \begin{itemize}
+          \item 2つのレジスタの内容を符号なし整数と解釈して除算し、商はLO、余りはHIに格納する、divu命令
+          \item rsに3，rtに2を指定しているため、LO=REG[3]/REG[2]、LO=REG[3]\%REG[2]
+        \end{itemize}
+  \item 命令メモリの0x082の命令はsosuu\_check()のどの記述に対応するか
+        \begin{itemize}
+          \item ソースコード\ref{sosuu.c7}の88行目 if ((kouho \% tester) == 0)に対応する
+          \item RAMに0(false)を代入しており、変数をlwして++2していることから分かる
+        \end{itemize}
+\end{itemize}
+
+\subsubsection{プログラムの実行}
+以下のような表示となり、素数が表示されず、正しく実行されなかった。
+\begin{lstlisting}[caption={sosuu.c実行結果1},label={sosuu.c実行結果17}]
+HELLO
+NUM=20
+ECHO 20
+03 05 08
+NUM=
+\end{lstlisting}
+
+この問題について、以下のような解決方法を考えた。
+\begin{itemize}
+  \item プロセッサが実行できるようにプログラムを変更
+  \item プロセッサに命令を足りない命令を追加
+\end{itemize}
+
+\subsection{実験方法2}
+考案した解決方法のうち、今回は、「プロセッサが実行できるようにプログラムを変更」という方法で解決した。
+
+\subsubsection{Cプログラムの変更}
+sosuu.cのプログラムを以下のように変更した。
+\lstinputlisting[caption=sosuu.c,label=sosuu.c27]{src/07/sosuu’.c}
+
+\subsubsection{論理合成、ダウンロード}
+以下の操作で、論理合成し、FPGAにダウンロードした。
+\begin{lstlisting}[caption={論理合成、ダウンロード},label={論理合成、ダウンロード6-1}]
+$  cp rom8x1024.mif ./mips_de10-lite/
+$  cd ./mips_de10-lite/
+$  quartus_sh --flow compile MIPS_Default
+$  quartus_pgm MIPS_Default.cdf
+\end{lstlisting}
+
+FPGA上で実行し、プログラムの動作を確認した。
+
+\subsubsection{実験結果2}
+画面上には、以下のような結果が表示され、正しく素数を判定できていた。
+\begin{lstlisting}[caption={実行結果2},label={実行結果27}]
+HELLO
+NUM=20
+ECHO 20
+03 05 07 11 13 17 19
+NUM=
+\end{lstlisting}
 
 \subsection{考察}
+このプロセッサには、divu命令が実装されていない。
+そのため、正しくプログラムを実行することができなかったが、プログラムに変更することで、正しく動作させることに成功した。
+
+必要な変更は、剰余を用いずにkouhoをtesterで割り切ることができるか判定することであった。
+ここでは、testerにtesterを加えていき、kouhoを超える前に、kouho==testerとなるかどうかを判定した。
+これによって、kouhoがtesterで割り切ることができるか判定できると考えた。
+実際に、判定プログラムは正しく動作した。
