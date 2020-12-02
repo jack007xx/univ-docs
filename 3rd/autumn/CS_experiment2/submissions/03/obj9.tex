@@ -6,7 +6,189 @@
 これによって、hi,loレジスタを使用した演算の動作を確認することを目的とする。
 
 \subsection{実験方法}
+以下のプログラムを配置した。
+\lstinputlisting[caption=mult.c,label=mult.c]{src/09/mlut.c}
+
+\subsubsection{bin2vの拡張}
+bin2v.tar.gzを配置して、
+tar xvfz ./bin2v.tar.gz で、bin2vのソースコードとMakefileを取得した。
+
+bin2vに以下のような変更を行った。
+\begin{lstlisting}[caption={bin2vの拡張},label={bin2vの拡張}]
+// コメント追加、functコード追加、outputのためのコメント追加
+
+// コメント追加
+  ‘define R 6’b000000 R 形式 (add, addu, sub, subu, and, or, slt, jalr, jr, mult, mflo)
+
+// コメント追加
+  MULT(op = 000000, func = 011000)
+  MULT {Hi, Lo} <= REG[rs] * REG[rt]; MULT rs,rt
+  
+// コメント追加
+  MFLO(op = 000000, func = 010010)
+	MFLO REG[rd] <= Lo; MFLO rd
+
+// functコードの定義追加
+  #define    MULT 24
+  #define    MFLO 18
+
+// functがmultのものだった場合の、rom8x1024_sim.v生成用の記述
+  case MULT:
+    fprintf(outfp, "10'h%03x: data = 32'h%08x; // %08x: MULT, ", rom_addr, wd, cmt_addr);
+    fprintf(outfp, "{Hi, Lo}<=REG[%d]*REG[%d];\n", rs, rt);
+    break;
+
+// functがmfloのものだった場合の、rom8x1024_sim.v生成用の記述
+    case MFLO:
+    fprintf(outfp, "10'h%03x: data = 32'h%08x; // %08x: MFLO, ", rom_addr, wd, cmt_addr);
+    fprintf(outfp, "REG[%d]<=Lo;\n", rd);
+    break;
+
+// functがmultのものだった場合の、rom8x1024_sim.v生成用の記述
+    case MULT:
+    fprintf(outfp, "%03x : %08x ; %% %08x: MULT, ", rom_addr, wd, cmt_addr);
+    fprintf(outfp, "{Hi, Lo}<=REG[%d]*REG[%d]; %%\n",rs, rt);
+    break;
+
+// functがmfloのものだった場合の、rom8x1024_sim.v生成用の記述 
+  case MFLO:
+    fprintf(outfp, "%03x : %08x ; %% %08x: MFLO, ", rom_addr, wd, cmt_addr);
+    fprintf(outfp, "REG[%d]<=Lo; %%\n",rd);
+    break;
+\end{lstlisting}
+
+変更後、makeコマンドでmakeした。
+
+\subsubsection{クロスコンパイル、メモリイメージファイルの作成}
+以下の操作でクロスコンパイルし、メモリイメージファイルを作成した。
+\begin{lstlisting}[caption={クロスコンパイル、メモリイメージファイルの作成},label={クロスコンパイル、メモリイメージファイルの作成9}]
+$  cross_compile.sh mult.c
+$  ./bin2v/bin2v mult.bin
+\end{lstlisting}
+
+\subsubsection{cpu.vの追加設計}
+\begin{lstlisting}[caption={cpu.vの変更},label={cpu.vの変更9}]
+  aluインスタンスの入出力を同期回路として定義し直した。
+  alu  alua(alu_a, alu_b, alu_ctrl, alu_y, alu_comp);
+  ↓
+  alu alua(clock, reset, alu_a, alu_b, alu_ctrl, alu_y, alu_comp);
+\end{lstlisting}
+
+\subsubsection{alu.vの追加設計}
+\begin{lstlisting}[caption={alu.vの変更},label={alu.vの変更9}]
+  // コメントの追加
+  // mult(multiply)
+  // mflo(move from Lo)
+  
+  // alu制御コードのコメントの追加
+  // 1011, mult
+  // 1100, mflo
+  
+  // ALU制御コードの定義
+‘define ALU_MULT 4’b1011
+‘define ALU_MFLO 4’b1100
+  
+  // ALUモジュールの入力ポートの拡張
+  // clock,reset信号の追加
+  module alu (alu_a, alu_b, alu_ctrl, alu_y, alu_comp);
+  // を
+  module alu (clock, reset, alu_a, alu_b, alu_ctrl, alu_y, alu_comp);
+  // に変更
+  
+  // mult命令実行時に alu_a * alu_b の結果を {hi, lo}に格納する記述の追加
+  input clock, reset; // 入力 クロック, リセット
+  reg [31:0] hi; //上位
+  reg [31:0] lo; //下位
+  always @(posedge clock or negedge reset) begin
+    if (reset == 1’b0) begin
+      hi <= 32’h00000000;
+      lo <= 32’h00000000;
+    end else begin
+      {hi, lo} <= (alu_ctrl == ‘ALU_MULT) ? alu_a * alu_b : {hi, lo};
+    end
+  end
+  
+  // mflo命令実行時に {hi, lo} の lo を result に出力する記述の追加
+‘ALU_MFLO: begin
+    result <= lo;
+  end
+  
+\end{lstlisting}
+
+\subsubsection{main\_ctrl.vの追加設計}
+\begin{lstlisting}[caption={main\_ctri.vの変更},label={mainctri.vの変更9}]
+  // mult, mflo 命令に関するコメントの追加
+  R 形式
+  MULT(op = 000000, func = 011000)
+  MULT {Hi, Lo} <= REG[rs] * REG[rt]; MULT rs,rt
+  MFLO(op = 000000, func = 010010)
+  MFLO REG[rd] <= Lo; MFLO rd
+\end{lstlisting}
+
+\subsubsection{alu\_ctrl.vの追加設計}
+\begin{lstlisting}[caption={alu\_ctrl.v},label={aluctrl.v9}]
+  // mult,mflo命令用のALU制御コードの定義
+  `define     ALU_CTRL_MULT 4'b1011
+  `define     ALU_CTRL_MFLO 4'b1100
+  
+  // mult,mflo命令用のALU制御コードについてのコメント追加
+  // mult(multiply), 010, 011000, 1011
+  // mflo(move from lo), 010, 010010, 1100
+  
+  // 実行する命令がmult,mflo命令のとき、mult,mflo命令用のALU制御コードを生成する処理の追加
+  end else if (func == 6'b011000) begin // func=MULT
+    y = `ALU_CTRL_MULT;
+  end else if (func == 6'b010010) begin // func=MFLO
+    y = `ALU_CTRL_MFLO;
+\end{lstlisting}
+
+\subsubsection{論理合成、ダウンロード}
+以下の操作で、論理合成し、FPGAにダウンロードした。
+\begin{lstlisting}[caption={論理合成、ダウンロード},label={論理合成、ダウンロード9}]
+$  cp rom8x1024.mif ./mips_de10-lite/
+$  cd ./mips_de10-lite/
+$  quartus_sh --flow compile MIPS_Default
+$  quartus_pgm MIPS_Default.cdf
+\end{lstlisting}
+
+FPGA上でプログラムを実行し、結果を確認した。
 
 \subsection{実験結果}
+\subsubsection{メモリイメーファイルの生成結果}
+生成されたメモリイメーファイルのうち、追加実装した部分に関わるものは以下のようになった。
+\begin{lstlisting}[caption={メモリイメーファイルの追加実装に関わる部分},label={メモリイメーファイルの追加実装に関わる部分}]
+  050 : 00620018 ; % 00400140: MULT, {Hi, Lo}<=REG[3]*REG[2]; %
+  051 : 00001012 ; % 00400144: MFLO, REG[2]<=Lo; %
+\end{lstlisting}
+
+\subsubsection{mult.cの実行結果}
+mult.cを実行した結果、以下のようになった。
+\begin{lstlisting}[caption={mult.cの実行結果},label={mult.cの実行結果}]
+  HELLO
+  NUM=4
+  echo 4
+  16
+  NUM=6
+  echo 6
+  36
+\end{lstlisting}
 
 \subsection{考察}
+\subsubsection{bin2vの追加実装}
+bin2vの追加実装ではコメント追加のほか、命令コードの機能コードがmult,mflo命令のものだった場合のイメージファイルの生成コードを追加した。
+結果に示したように、適切なコメントを挿入していた。
+
+\subsubsection{プロセッサの追加実装}
+cpu.vの追加実装では、クロックとリセット信号をALUに追加した。
+これは、演算結果を保持するHi,Loレジスタの更新、消去のためであると考えられる。
+
+alu.vの追加実装では、コントローラから入力される制御コードとしてmult,mflo命令のものを追加した。
+alu内部では、クロック信号の立ち上がりで、制御コードがmultだった場合、乗算の結果をhiとloの連接に入力し、その他のときは両方のレジスタを同じ値でリライトしている。
+また、リセット信号の立ち下がりでは、Hi,Lo両方を0でリセットしている。
+
+mflo命令の制御コードを受けた場合、結果にはLoレジスタの値を入力している。
+
+main\_ctrl.v、alu\_ctrl.vでは、命令に対応した制御コードを出力している。
+
+\subsubsection{mult.cの実行結果}
+mult.cを実行した結果から、プログラムは乗算命令を正しく実行できていることが分かる。
