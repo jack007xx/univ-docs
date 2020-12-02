@@ -44,7 +44,41 @@ end else begin
   reg_write_enable_tmp = 1'b1;
 end
 \end{lstlisting}
+以下の操作で、論理合成し、FPGAにダウンロードした。
+\begin{lstlisting}[caption={論理合成、ダウンロード},label={論理合成、ダウンロード6-2}]
+$  quartus_sh --flow compile MIPS_Default
+$  quartus_pgm MIPS_Default.cdf
+\end{lstlisting}
+
+実験6-1で予想した点と、キーボードからの入力に対する反応について確認した。
 
 \subsection{実験結果}
+予想した点について結果は、以下のようになった。
+\begin{itemize}
+  \item 最初にPC=0x0074を実行した直後のREG[31]の値
+        \begin{itemize}
+          \item REGWRITED=0x00400080,IDX=0x1f,WEN=1となり、REG[31]にPCの値が退避された
+        \end{itemize}
+  \item 最初にPC=0x0804を実行した直後の，PCの値
+        \begin{itemize}
+          \item PC=0x00400080と、予想通りの結果になった
+        \end{itemize}
+\end{itemize}
+
+画面上には、"HELLO!!"という文字列が表示された。
+キーボードとの入出力の結果、以下のように、キーボードで入力した文字列がそのまま出力された。
+("STRING="の後の文字列がキーボードから入力した文字列である。)
+\begin{lstlisting}[caption={実行結果},label={実行結果6-2}]
+HELLO!!
+STRING=HELLO
+ECHO HELLO
+STRING=BYE
+ECHO BYE
+\end{lstlisting}
 
 \subsection{考察}
+予想した点のjr命令は、最初のjal命令で退避したPCの値を復元して、PC=0x00400080にジャンプした。
+jr命令を実装したことによって、関数から戻って手続きをすすめることができた。
+これにより、画面への出力と、キーボードからの入力を受け取る関数を正しく実行することができた。
+
+この実験で、関数からの復帰時のプロセッサの動作を確認することができた。

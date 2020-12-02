@@ -28,8 +28,6 @@ REG[31]に次のPC値が保存されるようになる
 \subsubsection{論理合成、ダウンロード}
 以下の操作で、論理合成し、FPGAにダウンロードした。
 \begin{lstlisting}[caption={論理合成、ダウンロード},label={論理合成、ダウンロード5-2}]
-$  cp rom8x1024.mif ./mips_de10-lite/
-$  cd ./mips_de10-lite/
 $  quartus_sh --flow compile MIPS_Default
 $  quartus_pgm MIPS_Default.cdf
 \end{lstlisting}

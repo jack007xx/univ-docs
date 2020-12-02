@@ -23,6 +23,9 @@ $  bin2v my_scan.bin
   \item 最初にPC=0x0804を実行した直後の，PCの値
 \end{itemize}
 
+\subsubsection{キーボードの接続}
+今回実行するプログラムでは、キーボードからの入力を必要とするため、FPGAに変換回路を接続して、キーボードを接続した。
+
 \subsubsection{論理合成、ダウンロード}
 以下の操作で、論理合成し、FPGAにダウンロードした。
 \begin{lstlisting}[caption={論理合成、ダウンロード},label={論理合成、ダウンロード6-1}]
@@ -43,9 +46,12 @@ $  quartus_pgm MIPS_Default.cdf
 \begin{itemize}
   \item 最初にPC=0x007cを実行したときの，REG[31]の値
         \begin{itemize}
-          \item 
+          \item PC=0x004004d8
         \end{itemize}
   \item 最初にPC=0x0804を実行した直後の，PCの値
+        \begin{itemize}
+          \item PC=0x00400080
+        \end{itemize}
 \end{itemize}
 
 \subsubsection{FPGAでの実行結果}
@@ -53,11 +59,11 @@ $  quartus_pgm MIPS_Default.cdf
 \begin{itemize}
   \item 最初にPC=0x0074を実行した直後のREG[31]の値
         \begin{itemize}
-          \item REGWRITED=0x00400080,IDX=0x1f,WEN=1となり、\$raにPCの値が退避された
+          \item REGWRITED=0x00400080,IDX=0x1f,WEN=1となり、REG[31]にPCの値が退避された
         \end{itemize}
   \item 最初にPC=0x0804を実行した直後の，PCの値
         \begin{itemize}
-          \item PC=0x00400808
+          \item PC=0x00400808となり、ジャンプしなかった
         \end{itemize}
 \end{itemize}
 
