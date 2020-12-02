@@ -6,7 +6,66 @@
 これによって、現在足りていない機能を確認することを目的とする。
 
 \subsection{実験方法}
+以下のプログラムを配置した。
+\lstinputlisting[caption=my\_scan.c,label=myscan.c6-1]{src/06/my_scan.c}
+
+\subsubsection{クロスコンパイル、メモリイメージファイルの作成}
+以下の操作でクロスコンパイルし、メモリイメージファイルを作成した。
+\begin{lstlisting}[caption={クロスコンパイル、メモリイメージファイルの作成},label={クロスコンパイル、メモリイメージファイルの作成5-1}]
+$  cross_compile.sh my_scan.c
+$  bin2v my_scan.bin
+\end{lstlisting}
+
+\subsubsection{命令列の確認、動作予想}
+生成された、rom8x1024.mifを確認して、以下の点について結果を予測した。
+\begin{itemize}
+  \item 最初にPC=0x007cを実行したときの，REG[31]の値
+  \item 最初にPC=0x0804を実行した直後の，PCの値
+\end{itemize}
+
+\subsubsection{論理合成、ダウンロード}
+以下の操作で、論理合成し、FPGAにダウンロードした。
+\begin{lstlisting}[caption={論理合成、ダウンロード},label={論理合成、ダウンロード6-1}]
+$  cp rom8x1024.mif ./mips_de10-lite/
+$  cd ./mips_de10-lite/
+$  quartus_sh --flow compile MIPS_Default
+$  quartus_pgm MIPS_Default.cdf
+\end{lstlisting}
+
+クロックを手動モードで送り、70個ほどの命令を実行、予想した点と、ディスプレイに表示されるはずの文字について確認した。
 
 \subsection{実験結果}
+\subsubsection{命令列の確認、動作予想}
+メモリイメージファイルが生成された。
+% \lstinputlisting[caption=rom1024.mif,label=rom1024.mif]{src/06/rom8x1024.mif}
+
+生成された命令列を確認して、このような予想をたてた。
+\begin{itemize}
+  \item 最初にPC=0x007cを実行したときの，REG[31]の値
+        \begin{itemize}
+          \item 
+        \end{itemize}
+  \item 最初にPC=0x0804を実行した直後の，PCの値
+\end{itemize}
+
+\subsubsection{FPGAでの実行結果}
+予想した点について結果は、以下のようになった。
+\begin{itemize}
+  \item 最初にPC=0x0074を実行した直後のREG[31]の値
+        \begin{itemize}
+          \item REGWRITED=0x00400080,IDX=0x1f,WEN=1となり、\$raにPCの値が退避された
+        \end{itemize}
+  \item 最初にPC=0x0804を実行した直後の，PCの値
+        \begin{itemize}
+          \item PC=0x00400808
+        \end{itemize}
+\end{itemize}
+
+画面上には、"HELLO！！"のみ表示された。
 
 \subsection{考察}
+予想した点について、PC=0x0074の命令は正しく動作しているが、PC=0x0804の命令については正しく実行できていないということが分かる。
+これは、プロセッサにjr命令が実装されていないためであると考えられる。
+
+このプロセッサには、jal命令は実装されているが、jr命令が実装されていないので、関数に入ることはできても、関数から戻ることができない。
+そのため、プログラム中のmy\_print関数の実行はできるが、戻ることができないため、次の手続きに進むことができないと考えられる。
