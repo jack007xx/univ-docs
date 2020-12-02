@@ -1,4 +1,4 @@
-\documentclass[a4paper,15pt]{jsarticle}
+\documentclass[a4j,15pt,draft]{jsarticle}
 
 % 数式
 \usepackage{amsmath,amsfonts}
@@ -38,19 +38,19 @@
 \maketitle
 
 \section*{はじめに}
-% この実験では、一部の命令が実装されていないプロセッサに、適切な命令を実装して、条件付きループ命令を含む動作を行えるようにする。
+この実験では、一部の命令が実装されていないプロセッサに、適切な命令を実装して、条件付きループ命令を含む動作を行えるようにする。
 
-% また、各実験では，シュミレータや論理合成のソフトウェアを使うために，以下の設定を行う。
-% 端末を終了した場合，再度sourceコマンドを実行する。
-% \begin{lstlisting}[caption={設定の読み込み},label={設定の読み込み}]
-%   $ ln -s /pub1/jikken/eda3/cadsetup.bash.altera ~/
-%   $ source ~/cadsetup.bash.altera
-% \end{lstlisting}
+また、各実験では，シュミレータや論理合成のソフトウェアを使うために，以下の設定を行う。
+端末を終了した場合，再度sourceコマンドを実行する。
+\begin{lstlisting}[caption={設定の読み込み},label={設定の読み込み}]
+  $ ln -s /pub1/jikken/eda3/cadsetup.bash.altera ~/
+  $ source ~/cadsetup.bash.altera
+\end{lstlisting}
 
-% HDLのコンパイルにはQuartus Primeを、機能レベルシュミレーションにはModel Simを使用した。
+HDLのコンパイルにはQuartus Primeを、機能レベルシュミレーションにはModel Simを使用した。
 
-% バイナリファイルの内容は、hexdumpコマンドによる。
-% 一番左のカラムは、hexdumpの行数である。
+バイナリファイルの内容は、hexdumpコマンドによる。
+一番左のカラムは、hexdumpの行数である。
 
 \section*{各実験}
 \input{obj5-1.tex}

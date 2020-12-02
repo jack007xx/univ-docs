@@ -1,0 +1,73 @@
+\documentclass[a4paper,10pt]{jsarticle}
+
+% 数式
+\usepackage{amsmath,amsfonts}
+\usepackage{bm}
+% 画像
+\usepackage[dvipdfmx]{graphicx}
+
+\usepackage{listingsutf8,jlisting} %日本語のコメントアウトをする場合jlistingが必要
+%ここからソースコードの表示に関する設定
+\lstset{
+  basicstyle={\ttfamily},
+  identifierstyle={\small},
+  commentstyle={\smallitshape},
+  keywordstyle={\small\bfseries},
+  ndkeywordstyle={\small},
+  stringstyle={\small\ttfamily},
+  frame={tb},
+  breaklines=true,
+  columns=[l]{fullflexible},
+  numbers=left,
+  xrightmargin=0zw,
+  xleftmargin=3zw,
+  numberstyle={\scriptsize},
+  stepnumber=1,
+  numbersep=1zw,
+  lineskip=-0.5ex
+}
+
+\begin{document}
+
+\title{第6回レポート}
+\author{坪井正太郎（101830245）}
+\date{\today}
+\maketitle
+\section{奥行きを知る手がかり}
+\subsection{両眼手がかり}
+2つの目からそれぞれ得られる像は、両目で異なる。(両眼視差)
+両眼の像の間の、横ズレの大きさで奥行きを推定することができる。
+ズレの角度(視差)が、大きければ大きいほど近く、小さければ遠く感じる。
+
+両眼での視差が生じない位置は、眼球に水平なところでは円状になり、ホロプターという。
+つまり、ホロプター上の物体からは視差が一定で、円周の内側で視差が大きく、外側では小さくなる。
+
+両眼での奥行き知覚は、高精度である一方で、近距離(10m以内)に限られる。
+
+\subsection{単眼手がかり}
+両眼での視差に加えて、単眼でも相対的な奥行き感を得ることができる。
+これは、両眼とは異なり、遠距離で働くものもある。
+
+以下のような複数の手がかりによって、遠近感を得ることができる。
+
+\subsubsection{線透視}
+視界の中で一点に対して引かれた線の構造があると、その点に向かって奥行きが発生する。
+
+\subsubsection{テクスチャ}
+テクスチャの形状、密度が変わることでも遠近感を得る。
+形状が小さく、密度が高くなるほど、遠く感じることになる。
+
+\subsubsection{陰影}
+影のいち、明暗によっても奥行きを感じる。
+光源の位置が固定されているためであり、固定光源に対して影の位置が異なると奥行きの差異が生まれる。
+
+\subsubsection{色}
+色によっても遠近感を感じる。
+赤い色を近く、青い色を遠く感じる。
+例えば、同じ大きさの図形に対しては、赤い色の物体を近く感じる錯視が考えられる。
+
+\subsubsection{重なり合い}
+ある物体が他の物体を隠していると、手前に出ている物体より、隠れている物体のほうが奥にあるように感じる。
+例として、スライド図5．13は、白い三角形が黒い丸と黒線の三角形を隠しているように見えることで、奥行き情報を知覚する。
+
+\end{document}
