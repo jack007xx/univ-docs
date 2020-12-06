@@ -26,6 +26,31 @@ $  bin2v my_scan.bin
 \subsubsection{キーボードの接続}
 今回実行するプログラムでは、キーボードからの入力を必要とするため、FPGAに変換回路を接続して、キーボードを接続した。
 
+まず、FPGAにはシールド基盤を接続して、ブレッドボードにはPS/2コネクタ基盤と変換回路基盤を接続した。
+シールド基盤とブレッドボード上の基盤が、以下の表1を満たすように配線した。
+
+\begin{table}[H]
+  \centering
+  \caption{接続対応表}
+  \begin{tabular}{|l|l|}
+    \hline
+    接続元            & 接続先          \\ \hline \hline
+    シールド基盤GND   & 変換回路GND(HV) \\ \hline
+    シールド基盤5V    & 変換回路HV      \\ \hline
+    シールド基盤3V    & 変換回路LV      \\ \hline
+    シールド基盤IO-0  & 変換回路LV1     \\ \hline
+    シールド基盤IO-1  & 変換回路LV2     \\ \hline
+    変換回路GND(HV)   & 変換回路GND(LV) \\ \hline
+    PS/2コネクタ基盤3 & 変換回路GND(HV) \\ \hline
+    PS/2コネクタ基盤5 & 変換回路HV1     \\ \hline
+    PS/2コネクタ基盤4 & 変換回路HV      \\ \hline
+    PS/2コネクタ基盤1 & 変換回路HV2     \\ \hline
+  \end{tabular}
+\end{table}
+
+接続できたら、キーボードのUSB端子を、変換基盤に接続した。
+
+
 \subsubsection{論理合成、ダウンロード}
 以下の操作で、論理合成し、FPGAにダウンロードした。
 \begin{lstlisting}[caption={論理合成、ダウンロード},label={論理合成、ダウンロード6-1}]
