@@ -11,21 +11,34 @@ typedef enum {
 
 /* 記号表の構造体の宣言 */
 
-typedef struct {
-  char name[256];
+// 表の列
+struct row {
+  char* name;
   int regnum;
   Scope scope;
-} row;
+};
+typedef struct row Row;
 
-typedef struct {
-  row* table;
-  int size;
-} SYMTAB;
+// スタックっぽい感じで表現、FILOなので出力すると下から積み上がる感じになる
+struct symtab {
+  Row row;
+  struct symtab* prev;
+};
+typedef struct symtab Symtab;
 
-/* insert, lookup, deleteのプロトタイプ宣言 */
+// もろもろ初期化
 void init();
+
+// 先頭に挿入
 void insert(char*, int, Scope);
-row* lookup(char*);
-void delete ();
+
+// 失敗したときにNULLを返したいのでポインタにしている。あんまりよくないかも。
+Row* lookup(char*);
+
+// 消したシンボルの数出力
+int delete ();
+
+// いい感じで出力
+void printRow(Row);
 
 #endif

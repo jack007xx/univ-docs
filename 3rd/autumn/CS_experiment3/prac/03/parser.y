@@ -124,10 +124,11 @@ statement
         ;
 
 assignment_statement
-        : IDENT ASSIGN expression
+        : IDENT
         {
                 lookup($1);
-        }
+        } 
+          ASSIGN expression
         ;
 
 if_statement
@@ -234,9 +235,10 @@ id_list
 
 
 %% 
-yyerror(char *s)
+int yyerror(char *s)
 {
   fprintf(stderr, "%s\n", s);
   fprintf(stderr, "%s\n", yytext);
   fprintf(stderr, "%d\n", yylineno);
+  return yylineno;
 }
