@@ -22,12 +22,10 @@ typedef struct {
   int size;
 } SYMTAB;
 
-extern SYMTAB* TABLE;
-
 /* insert, lookup, deleteのプロトタイプ宣言 */
 void init();
-void insert(SYMTAB*, char*, int, Scope);
-row* lookup(SYMTAB*, char*);
-void delete (SYMTAB*);
+void insert(char*, int, Scope);
+row* lookup(char*);
+void delete ();
 
 #endif

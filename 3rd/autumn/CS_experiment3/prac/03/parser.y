@@ -49,7 +49,7 @@ program
                 regnum = 0;
                 scope = GLOBAL_VAR;
                 init();
-                insert(TABLE, $2, regnum, scope);
+                insert($2, regnum, scope);
         }
           outblock PERIOD
         ;
@@ -90,14 +90,14 @@ proc_decl
         : PROCEDURE proc_name SEMICOLON inblock
         {
                 scope = GLOBAL_VAR;
-                delete(TABLE);
+                delete();
         }
         ;
 
 proc_name
         : IDENT
         {
-                insert(TABLE, $1, regnum, PROC_NAME);
+                insert($1, regnum, PROC_NAME);
                 scope = LOCAL_VAR;
         }
         ;
@@ -126,7 +126,7 @@ statement
 assignment_statement
         : IDENT ASSIGN expression
         {
-                lookup(TABLE, $1);
+                lookup($1);
         }
         ;
 
@@ -146,7 +146,7 @@ while_statement
 for_statement
         : FOR IDENT ASSIGN expression TO expression DO statement
         {
-                insert(TABLE, $2, regnum, scope);
+                insert($2, regnum, scope);
         }
         ;
 
@@ -157,7 +157,7 @@ proc_call_statement
 proc_call_name
         : IDENT
         {
-                lookup(TABLE, $1);
+                lookup($1);
         }
         ;
 
@@ -168,7 +168,7 @@ block_statement
 read_statement
         : READ LPAREN IDENT RPAREN
         {
-                lookup(TABLE, $IDENT);
+                lookup($IDENT);
         }
         ;
 
@@ -212,7 +212,7 @@ factor
 var_name
         : IDENT
         {
-                lookup(TABLE, $1);
+                lookup($1);
         }
         ;
 
@@ -224,11 +224,11 @@ arg_list
 id_list
         : IDENT
         {
-                insert(TABLE, $1, regnum, scope);
+                insert($1, regnum, scope);
         }
         | id_list COMMA IDENT
         {
-                insert(TABLE, $3, regnum, scope);
+                insert($3, regnum, scope);
         }
         ;
 

@@ -6,10 +6,9 @@
 #define DEBUG
 /* 記号表の実体をここで作成 */
 /* parser.yからは，以下のinsert/lookup/deleteなどを通してアクセスする */
+SYMTAB* TABLE;
 
 /* insert, lookup, deleteの実装 */
-
-SYMTAB* TABLE;
 
 void init() {
   row tRows[10000];
@@ -22,34 +21,34 @@ void init() {
   TABLE = &table;
 }
 
-void insert(SYMTAB* aTable, char* aName, int aRegnum, Scope aScope) {
-  row tRow = {aName, aRegnum, aScope};
-  aTable->table[aTable->size] = tRow;
+void insert(char* aName, int aRegnum, Scope aScope) {
+  row tRow = {"", aRegnum, aScope};
+  TABLE->table[TABLE->size] = tRow;
 
-  strcpy(aTable->table[aTable->size].name, aName);
+  strcpy(TABLE->table[TABLE->size].name, aName);
 
-  aTable->size++;
+  TABLE->size++;
 
 #ifdef DEBUG
   printf("[DEBUG] inserted\n");
-  for (int i = 0; i < aTable->size; i++) {
-    printf("<var name:%s, reg num:%d, scope:%d>\n", aTable->table[i].name,
-           aTable->table[i].regnum, aTable->table[i].scope);
+  for (int i = 0; i < TABLE->size; i++) {
+    printf("<var name:%s, reg num:%d, scope:%d>\n", TABLE->table[i].name,
+           TABLE->table[i].regnum, TABLE->table[i].scope);
   }
   printf("\n");
 #endif
 }
 
-row* lookup(SYMTAB* aTable, char* aName) {
-  for (int i = 0; i < aTable->size; i++) {
-    if (strcmp(aTable->table[i].name, aName) == 0) {
+row* lookup(char* aName) {
+  for (int i = 0; i < TABLE->size; i++) {
+    if (strcmp(TABLE->table[i].name, aName) == 0) {
 #ifdef DEBUG
       printf("[DEBUG] found\n");
-      printf("<var name:%s, reg num:%d, scope:%d>\n\n", aTable->table[i].name,
-             aTable->table[i].regnum, aTable->table[i].scope);
+      printf("<var name:%s, reg num:%d, scope:%d>\n\n", TABLE->table[i].name,
+             TABLE->table[i].regnum, TABLE->table[i].scope);
 #endif
 
-      return &(aTable->table[i]);
+      return &(TABLE->table[i]);
     }
   }
 
@@ -60,20 +59,20 @@ row* lookup(SYMTAB* aTable, char* aName) {
   return NULL;
 }
 
-void delete (SYMTAB* aTable) {
-  for (int i = aTable->size - 1; i >= 0; i--) {
-    if (aTable->table[i].scope == GLOBAL_VAR ||
-        aTable->table[i].scope == PROC_NAME) {
-      aTable->size = i;
+void delete () {
+  for (int i = TABLE->size - 1; i >= 0; i--) {
+    if (TABLE->table[i].scope == GLOBAL_VAR ||
+        TABLE->table[i].scope == PROC_NAME) {
+      TABLE->size = i;
       break;
     }
   }
 
 #ifdef DEBUG
   printf("[DEBUG] deleted\n");
-  for (int i = 0; i < aTable->size; i++) {
-    printf("<var name:%s, reg num:%d, scope:%d>\n", aTable->table[i].name,
-           aTable->table[i].regnum, aTable->table[i].scope);
+  for (int i = 0; i < TABLE->size; i++) {
+    printf("<var name:%s, reg num:%d, scope:%d>\n", TABLE->table[i].name,
+           TABLE->table[i].regnum, TABLE->table[i].scope);
   }
   printf("\n");
 #endif
