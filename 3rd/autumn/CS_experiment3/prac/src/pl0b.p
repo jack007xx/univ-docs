@@ -2,7 +2,7 @@ program PL0B;
 var n, x;
 procedure prime;
 var m; 
-begin  
+begin
    m := x div 2;
    while x <> (x div m) * m do
       m := m - 1;
