@@ -26,6 +26,7 @@ void insert(char* aName, int aRegnum, Scope aScope) {
   // TODO mallocの例外処理
   Symtab* tTable = (Symtab*)malloc(sizeof(Symtab));
 
+  // 多重にmallocしなくても良いように、Rowは値で渡す。問題ないはず?
   Row tRow = {tName, aRegnum, aScope};
   tTable->row = tRow;
   tTable->prev = TABLE;
@@ -72,6 +73,7 @@ int delete () {
     if (TABLE->row.scope == GLOBAL_VAR || TABLE->row.scope == PROC_NAME) {
       break;
     } else {
+      free(TABLE->row.name);
       free(TABLE);
       TABLE = tPointer;
       tCnt++;

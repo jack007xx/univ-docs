@@ -12,19 +12,19 @@ typedef enum {
 /* 記号表の構造体の宣言 */
 
 // 表の列
+typedef struct row Row;
 struct row {
   char* name;
   int regnum;
   Scope scope;
 };
-typedef struct row Row;
 
-// スタックっぽい感じで表現、FILOなので出力すると下から積み上がる感じになる
+// スタックっぽい感じで表現、FILOなので出力は下から積み上がる感じに出力される
+typedef struct symtab Symtab;
 struct symtab {
   Row row;
   struct symtab* prev;
 };
-typedef struct symtab Symtab;
 
 // もろもろ初期化
 void init();
