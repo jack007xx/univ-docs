@@ -3,7 +3,7 @@
 scanner.Iのルール部を更新し、lexによって字句解析のためのCコードを生成する。
 
 \subsection{実装}
-\begin{lstlisting}[caption={ルールの記述},label={ルールの記述}]
+\begin{lstlisting}[caption={scanner.I(ルールの記述)},label={scanner.I(ルールの記述)}]
   begin           return SBEGIN;
   div             return DIV;
   
@@ -46,7 +46,6 @@ scanner.Iのルール部を更新し、lexによって字句解析のためのC�
   "."             return PERIOD;
   ":="            return ASSIGN;
 \end{lstlisting}
-
 
 \subsection{実験結果}
 
