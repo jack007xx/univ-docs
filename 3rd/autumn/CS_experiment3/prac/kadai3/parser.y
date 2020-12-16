@@ -47,9 +47,8 @@ program
         :PROGRAM IDENT SEMICOLON
         {
                 regnum = 0;
-                scope = GLOBAL_VAR;
                 init();
-                insert($2, regnum, scope);
+                scope = GLOBAL_VAR;
         }
           outblock PERIOD
         ;
