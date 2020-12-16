@@ -81,6 +81,8 @@ scanner.lに、以下のようなルールを追加した。
   ".":    35      RESERVE
 \end{lstlisting}
 
+受理されない文字列が入力された場合には、cannot handle such charactersの文字列と、受理されなかったトークンが出力された。
+
 \subsection{考察}
 scanner.lでは予約語に対して、symbols.hで定義されている列挙体の、対応する要素を返している。
 実際に実験結果では、定義されたものに対応する整数と、予約語であればRESERVE、識別子であればそれが表示される。
