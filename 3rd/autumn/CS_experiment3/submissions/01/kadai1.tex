@@ -1,9 +1,11 @@
 \section{実験課題1}
 \subsection{課題概要}
-scanner.Iのルール部を更新し、lexによって字句解析のためのCコードを生成する。
+scanner.lのルール部を更新し、lexによって字句解析のためのCコードを生成する。
 
 \subsection{実装}
-\begin{lstlisting}[caption={scanner.I(ルールの記述)},label={scanner.I(ルールの記述)}]
+scanner.lに、以下のようなルールを追加した。
+
+\begin{lstlisting}[caption={scanner.l(ルールの記述)},label={scanner.l(ルールの記述)}]
   begin           return SBEGIN;
   div             return DIV;
   
@@ -48,5 +50,37 @@ scanner.Iのルール部を更新し、lexによって字句解析のためのC�
 \end{lstlisting}
 
 \subsection{実験結果}
+\$./scanner ex1.p を実行した結果、以下のような出力となった。
+
+\begin{lstlisting}[caption={./scanner ex1.pの実行結果},label={./scanner ex1.pの実行結果}]
+  "program":      11      RESERVE
+  "EX1":  38      EX1
+  ";":    32      RESERVE
+  "var":  15      RESERVE
+  "x":    38      x
+  ",":    31      RESERVE
+  "y":    38      y
+  ",":    31      RESERVE
+  "z":    38      z
+  ";":    32      RESERVE
+  "begin":        1       RESERVE
+  "x":    38      x
+  ":=":   36      RESERVE
+  "12":   37      12
+  ";":    32      RESERVE
+  "y":    38      y
+  ":=":   36      RESERVE
+  "20":   37      20
+  ";":    32      RESERVE
+  "z":    38      z
+  ":=":   36      RESERVE
+  "x":    38      x
+  "+":    18      RESERVE
+  "y":    38      y
+  "end":  5       RESERVE
+  ".":    35      RESERVE
+\end{lstlisting}
 
 \subsection{考察}
+scanner.lでは予約語に対して、symbols.hで定義されている列挙体の、対応する要素を返している。
+実際に実験結果では、定義されたものに対応する整数と、予約語であればRESERVE、識別子であればそれが表示される。
