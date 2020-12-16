@@ -5,10 +5,123 @@ PL-0の構文解析時に記号表を作成し、管理できるようにsymtab.
 シンボルのスコープや、名前を追加、検索、削除できるようにする。
 
 \subsection{実装}
-\lstinputlisting[caption=symtab.c,label=symtab.c]{../../prac/kadai3/symtab.c}
+線形リストによって記号表を管理するようにsymtabを編集し、各操作をparser.yの受理部分の途中で呼び出すような実装を行なった。
+
+symtab.hでは、記号表のプロパティを持つRow構造体型を定義し、Row型と自身へのポインタを持つ自己参照構造体型としてSymtabを定義した。
+各操作を行う関数としてはinsert、lookup、deleteを用意した。
 \lstinputlisting[caption=symtab.h,label=symtab.h]{../../prac/kadai3/symtab.h}
+
+symtab.cでは、各操作関数から操作するグローバル変数TABLEを定義した。
+\lstinputlisting[caption=symtab.c,label=symtab.c]{../../prac/kadai3/symtab.c}
 \lstinputlisting[caption=parser.y,label=parser.y]{../../prac/kadai3/parser.y}
 
 \subsection{実行結果}
+pl0b.pを受理した結果、記号表の遷移を示した出力は以下のようになる。
+エラー時には、エラー部までは受理された分の記号表を出力し、課題2のようなエラー表示を出力する。
+\begin{lstlisting}[caption={./parser pl0b.pの実行結果},label={./parser pl0b.pの実行結果}]
+  [DEBUG] new symbol table created
+  [DEBUG] inserted
+  <NAME: n, REGNUM: 0, SCOPE: global>
+  
+  [DEBUG] inserted
+  <NAME: x, REGNUM: 0, SCOPE: global>
+  <NAME: n, REGNUM: 0, SCOPE: global>
+  
+  [DEBUG] inserted
+  <NAME: prime, REGNUM: 0, SCOPE: proc>
+  <NAME: x, REGNUM: 0, SCOPE: global>
+  <NAME: n, REGNUM: 0, SCOPE: global>
+  
+  [DEBUG] inserted
+  <NAME: m, REGNUM: 0, SCOPE: local>
+  <NAME: prime, REGNUM: 0, SCOPE: proc>
+  <NAME: x, REGNUM: 0, SCOPE: global>
+  <NAME: n, REGNUM: 0, SCOPE: global>
+  
+  [DEBUG] searching: m
+  [DEBUG] found
+  <NAME: m, REGNUM: 0, SCOPE: local>
+  
+  [DEBUG] searching: x
+  [DEBUG] found
+  <NAME: x, REGNUM: 0, SCOPE: global>
+  
+  [DEBUG] searching: x
+  [DEBUG] found
+  <NAME: x, REGNUM: 0, SCOPE: global>
+  
+  [DEBUG] searching: x
+  [DEBUG] found
+  <NAME: x, REGNUM: 0, SCOPE: global>
+  
+  [DEBUG] searching: m
+  [DEBUG] found
+  <NAME: m, REGNUM: 0, SCOPE: local>
+  
+  [DEBUG] searching: m
+  [DEBUG] found
+  <NAME: m, REGNUM: 0, SCOPE: local>
+  
+  [DEBUG] searching: m
+  [DEBUG] found
+  <NAME: m, REGNUM: 0, SCOPE: local>
+  
+  [DEBUG] searching: m
+  [DEBUG] found
+  <NAME: m, REGNUM: 0, SCOPE: local>
+  
+  [DEBUG] searching: m
+  [DEBUG] found
+  <NAME: m, REGNUM: 0, SCOPE: local>
+  
+  [DEBUG] searching: x
+  [DEBUG] found
+  <NAME: x, REGNUM: 0, SCOPE: global>
+  
+  [DEBUG] deleted: 1 symbols
+  <NAME: prime, REGNUM: 0, SCOPE: proc>
+  <NAME: x, REGNUM: 0, SCOPE: global>
+  <NAME: n, REGNUM: 0, SCOPE: global>
+  
+  [DEBUG] searching: n
+  [DEBUG] found
+  <NAME: n, REGNUM: 0, SCOPE: global>
+  
+  [DEBUG] searching: n
+  [DEBUG] found
+  <NAME: n, REGNUM: 0, SCOPE: global>
+  
+  [DEBUG] searching: x
+  [DEBUG] found
+  <NAME: x, REGNUM: 0, SCOPE: global>
+  
+  [DEBUG] searching: n
+  [DEBUG] found
+  <NAME: n, REGNUM: 0, SCOPE: global>
+  
+  [DEBUG] searching: prime
+  [DEBUG] found
+  <NAME: prime, REGNUM: 0, SCOPE: proc>
+  
+  [DEBUG] searching: n
+  [DEBUG] found
+  <NAME: n, REGNUM: 0, SCOPE: global>
+  
+  [DEBUG] searching: n
+  [DEBUG] found
+  <NAME: n, REGNUM: 0, SCOPE: global>  
+\end{lstlisting}
 
 \subsection{考察}
+\subsubsection{symtabの実装}
+記号表を片方向連結リストとして定義したことによって、insert処理ではポインタの付け替えが最小限で済み、delete、lookupでの検索処理では最新のものから順番に辿って行けるため、効率が良い。
+また、symtab.cでグローバル変数TABLEを用意し、操作は各操作関数を通して行うことで、意図しない操作を防いだ。
+
+実装上の工夫として、ifdefとDEBUGフラグによる制御によって、記号表の出力を切り替えることができるようにした。
+これによって、今後の課題での修正が用意になり、デバッグの効率も上がると考えられる。
+
+\subsubsection{parser.yの追加実装}
+insert、lookupはそれぞれプロセス名と変数名の定義と参照部で呼び出した。
+
+deleteは、構文要素proc\_declの最後で呼び出し、inblock内でのみ使われる局所変数を削除した。
+同時に、変数のscopeをローカルからグローバルに切り替えた。
