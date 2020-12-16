@@ -61,7 +61,7 @@ PL-0の構文規則を参考に、paser.yを編集してyaccによってy.tab.h�
 \end{lstlisting}
 
 \subsection{実行結果}
-正しいプログラムが渡された場合、出力はない。
+正しいプログラムが渡された場合、出力はなかった。
 誤りのあるプログラムpl0a-err.pを入力した場合、出力は以下のようになった。
 \begin{lstlisting}[caption={pl0a-err.pの出力},label={pl0a-err.pの出力}]
 $ ./parser pl0a-err.p
@@ -71,3 +71,7 @@ while
 \end{lstlisting}
 
 \subsection{考察}
+parser.yのエラー出力部では、yytext、yylinenoのグローバル変数を参照して構文解析のエラー結果を出力している。
+
+また、実際に構文解析を行うためには、字句解析の内容をparserにわたす必要がある。
+そのために、scanner.lではyaccで生成されたy.tab.hをインクルードしてyyparse関数によって構文解析部を呼び出した。
