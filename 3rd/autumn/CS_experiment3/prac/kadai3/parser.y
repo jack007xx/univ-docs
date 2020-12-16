@@ -145,10 +145,11 @@ while_statement
         ;
 
 for_statement
-        : FOR IDENT ASSIGN expression TO expression DO statement
+        : FOR IDENT
         {
-                insert($2, regnum, scope);
+                lookup($2);
         }
+          ASSIGN expression TO expression DO statement
         ;
 
 proc_call_statement
