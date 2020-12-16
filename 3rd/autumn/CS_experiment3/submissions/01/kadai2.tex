@@ -3,11 +3,71 @@
 PL-0を受理するような構文解析プログラムを実装する。
 
 PL-0の構文規則を参考に、paser.yを編集してyaccによってy.tab.hとy.tab.cを生成する。
-実際に解析するためには、scanner.Iの中で構文解析部を呼び出すための編集も行う。
+実際に解析するためには、scanner.lの中で構文解析部を呼び出すための編集も行う。
 
 \subsection{実装}
+構文の定義に従い、parser.yには構文要素とその定義を追加した。
+また、エラー時には字句解析部で用意される行番号とエラー時の字句を出力するよう編集を行った。
+
 \lstinputlisting[caption=parser.y,label=parser.y]{../../prac/kadai2/parser.y}
 
-\subsection{実験結果}
+\begin{lstlisting}[caption={scanner.l},label={scanner.l2}]
+  %{
+    /* 
+     * scanner: scanner for PL-*
+     * 
+     */
+    
+    #include <stdio.h>
+    #include <string.h>
+    
+    #define MAXLENGTH 16
+    
+    #include "y.tab.h"
+    
+    %}
+    %option yylineno
+    %%
+    
+    begin           return SBEGIN;
+    div             return DIV;
+    
+    省略
+
+    %%
+    
+    main(int argc, char *argv[]) {
+        FILE *fp;
+        int tok;
+        
+        if (argc != 2) {
+            fprintf(stderr, "usage: %s filename\n", argv[0]);
+            exit(1);
+        }
+    
+        if ((fp = fopen(argv[1], "r")) == NULL) {
+            fprintf(stderr, "cannot open file: %s\n", argv[1]);
+            exit(1);
+        }
+    
+        /*
+         * yyin は lex の内部変数であり，入力のファイルポインタを表す．
+         */
+        yyin = fp;
+    
+        yyparse();
+    }
+    
+\end{lstlisting}
+
+\subsection{実行結果}
+正しいプログラムが渡された場合、出力はない。
+誤りのあるプログラムpl0a-err.pを入力した場合、出力は以下のようになった。
+\begin{lstlisting}[caption={pl0a-err.pの出力},label={pl0a-err.pの出力}]
+$ ./parser pl0a-err.p
+syntax error
+while
+6
+\end{lstlisting}
 
 \subsection{考察}
