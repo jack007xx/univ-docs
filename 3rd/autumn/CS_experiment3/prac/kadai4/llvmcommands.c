@@ -4,14 +4,27 @@
 #include <stdlib.h>
 #include <string.h>
 
-LLVMcode *codehd = NULL; /* 命令列の先頭のアドレスを保持するポインタ */
-LLVMcode *codetl = NULL; /* 命令列の末尾のアドレスを保持するポインタ */
-Fundecl *declhd =
-    NULL; /* 関数定義の線形リストの先頭の要素のアドレスを保持するポインタ */
-Fundecl *decltl =
-    NULL; /* 関数定義の線形リストの末尾の要素のアドレスを保持するポインタ */
+LLVMcode *codehd; /* 命令列の先頭のアドレスを保持するポインタ */
+LLVMcode *codetl; /* 命令列の末尾のアドレスを保持するポインタ */
+Fundecl
+    *declhd; /* 関数定義の線形リストの先頭の要素のアドレスを保持するポインタ */
+Fundecl
+    *decltl; /* 関数定義の線形リストの末尾の要素のアドレスを保持するポインタ */
 
 Factorstack FSTACK; /* 整数もしくはレジスタ番号を保持するスタック */
+void fundecl_init() {
+  // 課題4では関数呼び出しを行わないので、このように定義する。
+  Fundecl *tMain = (Fundecl *)malloc(sizeof(Fundecl));
+  strcpy(tMain->fname, "Main");
+  declhd = tMain;
+  decltl = tMain;
+}
+
+void code_init() {
+  // LLVMcode *tInitialCode = (LLVMcode *)malloc(sizeof(LLVMcode));
+  codehd = NULL;
+  codetl = NULL;
+}
 
 void fstack_init() { /* FSTACKの初期化 */
   FSTACK.top = 0;

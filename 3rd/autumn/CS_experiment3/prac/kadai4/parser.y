@@ -47,11 +47,12 @@ program
         :PROGRAM IDENT SEMICOLON
         {
                 gRegnum = 0;
+                fundecl_init();
+                code_init();
                 fstack_init();
                 symtab_init();
                 gScope = GLOBAL_VAR;
                 symtab_push($2, gRegnum, gScope);
-
         }
           outblock PERIOD
         ;
