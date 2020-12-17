@@ -122,6 +122,6 @@ typedef struct fundecl {
   struct fundecl *next; /* 次の関数定義へのポインタ      */
 } Fundecl;
 
-void add_code(LLVMcode *tmp);
+void add_code(LLVMcode tmp);
 
 #endif

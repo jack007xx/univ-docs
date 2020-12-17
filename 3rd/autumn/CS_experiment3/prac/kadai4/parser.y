@@ -16,9 +16,8 @@ int yyerror(char *);
 extern int yylineno;
 extern char *yytext;
 
-int regnum;
-Scope scope;
-char names[256];
+int gRegnum;
+Scope gScope;
 
 %}
 
@@ -47,10 +46,10 @@ char names[256];
 program
         :PROGRAM IDENT SEMICOLON
         {
-                regnum = 0;
+                gRegnum = 0;
                 init_fstack();
                 init_symtab();
-                scope = GLOBAL_VAR;
+                gScope = GLOBAL_VAR;
         }
           outblock PERIOD
         ;
@@ -90,7 +89,7 @@ subprog_decl
 proc_decl
         : PROCEDURE proc_name SEMICOLON inblock
         {
-                scope = GLOBAL_VAR;
+                gScope = GLOBAL_VAR;
                 delete();
         }
         ;
@@ -98,8 +97,8 @@ proc_decl
 proc_name
         : IDENT
         {
-                insert($1, regnum, PROC_NAME);
-                scope = LOCAL_VAR;
+                insert($1, gRegnum, PROC_NAME);
+                gScope = LOCAL_VAR;
         }
         ;
 
@@ -204,10 +203,19 @@ term
         : factor
         | term MULT factor
         {
-                Factor tArg1 factorpop();
-                Factor tArg2 factorpop();
+                Factor tArg1 = factorpop();
+                Factor tArg2 = factorpop();
+                Factor tRetval;
+                tRetval.type = LOCAL_VAR;
+                tRetval.val = gRegnum;
+
                 LLVMcode tCode;
-                tCode.args
+                tCode.command = Mul;
+                tCode.args.mul.arg1 = tArg1;
+                tCode.args.mul.arg2 = tArg2;
+                tCode.args.mul.retval = tRetval;
+                add_code(tCode);
+                factorpush(tRetval.vname, tRetval.val, tRetval.type);
         }
         | term DIV factor
         ;
@@ -239,11 +247,11 @@ arg_list
 id_list
         : IDENT
         {
-                insert($1, regnum, scope);
+                insert($1, gRegnum, gScope);
         }
         | id_list COMMA IDENT
         {
-                insert($3, regnum, scope);
+                insert($3, gRegnum, gScope);
         }
         ;
 
