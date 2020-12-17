@@ -44,25 +44,16 @@ typedef struct llvmcode {
     struct {           /* alloca */
       Factor retval;
     } alloca;
-    struct { /* store  */
-      Factor arg1;
-      Factor arg2;
-    } store;
+    struct {
+    } global;
     struct { /* load   */
       Factor arg1;
       Factor retval;
     } load;
-    struct { /* br     */
-      int arg1;
-    } bruncond;
-    struct { /* brc    */
+    struct { /* store  */
       Factor arg1;
-      int arg2;
-      int arg3;
-    } brcond;
-    struct { /* label  */
-      int l;
-    } label;
+      Factor arg2;
+    } store;
     struct { /* add    */
       Factor arg1;
       Factor arg2;
@@ -73,15 +64,40 @@ typedef struct llvmcode {
       Factor arg2;
       Factor retval;
     } sub;
+    struct {
+      Factor arg1;
+      Factor arg2;
+      Factor retval;
+    } mul;
+    struct {
+      Factor arg1;
+      Factor arg2;
+      Factor retval;
+    } sdiv;
     struct { /* icmp   */
       Cmptype type;
       Factor arg1;
       Factor arg2;
       Factor retval;
     } icmp;
+    struct { /* br     */
+      int arg1;
+    } bruncond;
+    struct { /* brc    */
+      Factor arg1;
+      int arg2;
+      int arg3;
+    } brcond;
+    struct {
+    } call;
+    struct { /* label  */
+      int l;
+    } label;
     struct { /* ret    */
       Factor arg1;
     } ret;
+    struct {
+    } phi;
   } args;
   /* 次の命令へのポインタ */
   struct llvmcode *next;
