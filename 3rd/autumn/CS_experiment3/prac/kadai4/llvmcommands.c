@@ -18,18 +18,20 @@ void init_fstack() { /* FSTACKの初期化 */
   return;
 }
 
-Factor fuctorpop() {
+Factor factorpop() {
   Factor tmp;
   tmp = FSTACK.element[FSTACK.top];
   FSTACK.top--;
   return tmp;
 }
 
-void fuctorpush(char *aName, int aVal, Scope aType) {
+void factorpush(char *aName, int aVal, Scope aType) {
+  printf("%s, %d, %d\n", aName, aVal, aType);
   FSTACK.top++;
   strcpy(FSTACK.element[FSTACK.top].vname, aName);
   FSTACK.element[FSTACK.top].val = aVal;
   FSTACK.element[FSTACK.top].type = aType;
+  printf("pushed!: %s\n", FSTACK.element[FSTACK.top].vname);
   return;
 }
 

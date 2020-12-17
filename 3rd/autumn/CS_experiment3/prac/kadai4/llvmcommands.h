@@ -25,6 +25,14 @@ typedef enum {
   SLE    /* sle （<=，符号付き）*/
 } Cmptype;
 
+/* 変数もしくは定数の型 */
+// Row型に合わせて順番変更
+typedef struct {
+  char vname[256]; /* 変数の場合の変数名 */
+  int val; /* 整数の場合はその値，変数の場合は割り当てたレジスタ番号 */
+  Scope type; /* 変数（のレジスタ）か整数の区別 */
+} Factor;
+
 typedef struct llvmcode {
   LLVMcommand command; /* 命令名 */
   union {              /* 命令の引数 */
@@ -74,14 +82,6 @@ typedef struct llvmcode {
   struct llvmcode *next;
 } LLVMcode;
 
-/* 変数もしくは定数の型 */
-// Row型に合わせて順番変更
-typedef struct {
-  char vname[256]; /* 変数の場合の変数名 */
-  int val; /* 整数の場合はその値，変数の場合は割り当てたレジスタ番号 */
-  Scope type; /* 変数（のレジスタ）か整数の区別 */
-} Factor;
-
 /* 変数もしくは定数のためのスタック */
 typedef struct {
   Factor element[100]; /* スタック（最大要素数は100まで） */
@@ -89,8 +89,8 @@ typedef struct {
 } Factorstack;
 
 void init_fstack();
-Factor fuctorpop();
-void fuctorpush(char *, int, Scope);
+Factor factorpop();
+void factorpush(char *, int, Scope);
 
 /* LLVMの関数定義 */
 typedef struct fundecl {
