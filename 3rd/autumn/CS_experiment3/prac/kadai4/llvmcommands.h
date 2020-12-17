@@ -3,16 +3,21 @@
 #include "symtab.h"
 /* LLVM命令名の定義 */
 typedef enum {
-  Alloca,   /* alloca */
-  Store,    /* store  */
-  Load,     /* load   */
+  Alloca, /* alloca */
+  Global,
+  Load,  /* load   */
+  Store, /* store  */
+  Add,   /* add    */
+  Sub,   /* sub    */
+  Mul,
+  Sdiv,
+  Icmp,     /* icmp   */
   BrUncond, /* br     */
   BrCond,   /* brc    */
-  Label,    /* label  */
-  Add,      /* add    */
-  Sub,      /* sub    */
-  Icmp,     /* icmp   */
-  Ret       /* ret    */
+  Call,
+  Label, /* label  */
+  Ret,   /* ret    */
+  Phi
 } LLVMcommand;
 
 /* 比較演算子の種類 */
