@@ -8,6 +8,7 @@
 #include <stdio.h>
 #include <string.h>
 #include "symtab.h"
+#include "llvmcommands.h"
 
 int yyparse();
 int yyerror(char *);
@@ -213,7 +214,10 @@ factor
 var_name
         : IDENT
         {
-                lookup($1);
+                Row* tRaw = lookup($1);
+                if (tRaw == NULL){
+                }
+                factorpush(tRaw->name, tRaw->regnum, tRaw->type);
         }
         ;
 
