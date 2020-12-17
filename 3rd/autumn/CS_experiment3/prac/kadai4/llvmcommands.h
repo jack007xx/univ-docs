@@ -44,7 +44,7 @@ typedef struct {
   unsigned int top;    /* スタックのトップの位置         */
 } Factorstack;
 
-void init_fstack();
+void fstack_init();
 Factor factor_pop();
 void factor_push(char *, int, Scope);
 
@@ -113,6 +113,7 @@ typedef struct llvmcode {
   struct llvmcode *next;
 } LLVMcode;
 
+void code_init();
 void code_add(LLVMcode tmp);
 
 /* LLVMの関数定義 */
@@ -123,5 +124,7 @@ typedef struct fundecl {
   LLVMcode *codes;      /* 命令列の線形リストへのポインタ */
   struct fundecl *next; /* 次の関数定義へのポインタ      */
 } Fundecl;
+
+void fundecl_init();
 
 #endif

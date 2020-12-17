@@ -6,12 +6,12 @@
 
 #define DEBUG
 /* 記号表の実体をここで作成 */
-/* parser.yからは，以下のinsert/lookup/deleteなどを通してアクセスする */
+/* parser.yからは，以下のinsert/symtab_lookup/deleteなどを通してアクセスする */
 Symtab* TABLE;
 
-/* insert, lookup, deleteの実装 */
+/* symtab_push, symtab_lookup, deleteの実装 */
 
-void init_symtab() {
+void symtab_init() {
   TABLE = NULL;
 
 #ifdef DEBUG
@@ -19,7 +19,7 @@ void init_symtab() {
 #endif
 }
 
-void insert(char* aName, int aRegnum, Scope aScope) {
+void symtab_push(char* aName, int aRegnum, Scope aScope) {
   // TODO mallocの例外処理
   char* tName = (char*)malloc(sizeof(char) * strlen(aName));
   strcpy(tName, aName);
@@ -42,7 +42,7 @@ void insert(char* aName, int aRegnum, Scope aScope) {
 #endif
 }
 
-Row* lookup(char* aName) {
+Row* symtab_lookup(char* aName) {
 #ifdef DEBUG
   printf("[DEBUG] searching: %s\n", aName);
 #endif
@@ -65,7 +65,7 @@ Row* lookup(char* aName) {
   return NULL;
 }
 
-int delete () {
+int symtab_delete() {
   int tCnt = 0;
   for (Symtab* tPointer = TABLE; tPointer != NULL;) {
     tPointer = tPointer->prev;

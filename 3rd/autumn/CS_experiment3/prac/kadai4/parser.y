@@ -47,10 +47,10 @@ program
         :PROGRAM IDENT SEMICOLON
         {
                 gRegnum = 0;
-                init_fstack();
-                init_symtab();
+                fstack_init();
+                symtab_init();
                 gScope = GLOBAL_VAR;
-                insert($2, gRegnum, gScope);
+                symtab_push($2, gRegnum, gScope);
 
         }
           outblock PERIOD
@@ -92,14 +92,14 @@ proc_decl
         : PROCEDURE proc_name SEMICOLON inblock
         {
                 gScope = GLOBAL_VAR;
-                delete();
+                symtab_delete();
         }
         ;
 
 proc_name
         : IDENT
         {
-                insert($1, gRegnum, PROC_NAME);
+                symtab_push($1, gRegnum, PROC_NAME);
                 gScope = LOCAL_VAR;
         }
         ;
@@ -128,7 +128,7 @@ statement
 assignment_statement
         : IDENT
         {
-                lookup($1);
+                symtab_lookup($1);
         } 
           ASSIGN expression
         ;
@@ -149,7 +149,7 @@ while_statement
 for_statement
         : FOR IDENT
         {
-                lookup($2);
+                symtab_lookup($2);
         }
           ASSIGN expression TO expression DO statement
         ;
@@ -161,7 +161,7 @@ proc_call_statement
 proc_call_name
         : IDENT
         {
-                lookup($1);
+                symtab_lookup($1);
         }
         ;
 
@@ -172,7 +172,7 @@ block_statement
 read_statement
         : READ LPAREN IDENT RPAREN
         {
-                lookup($3);
+                symtab_lookup($3);
         }
         ;
 
@@ -234,7 +234,7 @@ factor
 var_name
         : IDENT
         {
-                Row* tRaw = lookup($1);
+                Row* tRaw = symtab_lookup($1);
                 if (tRaw == NULL){
                 }
                 factor_push(tRaw->name, tRaw->regnum, tRaw->type);
@@ -249,11 +249,11 @@ arg_list
 id_list
         : IDENT
         {
-                insert($1, gRegnum, gScope);
+                symtab_push($1, gRegnum, gScope);
         }
         | id_list COMMA IDENT
         {
-                insert($3, gRegnum, gScope);
+                symtab_push($3, gRegnum, gScope);
         }
         ;
 

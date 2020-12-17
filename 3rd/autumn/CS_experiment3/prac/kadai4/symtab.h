@@ -27,16 +27,16 @@ struct symtab {
 };
 
 // もろもろ初期化
-void init_symtab();
+void symtab_init();
 
 // 先頭に挿入
-void insert(char*, int, Scope);
+void symtab_push(char*, int, Scope);
 
 // 失敗したときにNULLを返したいのでポインタにしている。あんまりよくないかも。
-Row* lookup(char*);
+Row* symtab_lookup(char*);
 
 // 消したシンボルの数出力
-int delete ();
+int symtab_delete();
 
 // いい感じで出力
 void printRow(Row);

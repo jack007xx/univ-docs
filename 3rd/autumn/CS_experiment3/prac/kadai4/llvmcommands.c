@@ -13,7 +13,7 @@ Fundecl *decltl =
 
 Factorstack FSTACK; /* 整数もしくはレジスタ番号を保持するスタック */
 
-void init_fstack() { /* FSTACKの初期化 */
+void fstack_init() { /* FSTACKの初期化 */
   FSTACK.top = 0;
   return;
 }
