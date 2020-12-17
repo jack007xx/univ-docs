@@ -16,7 +16,7 @@ typedef struct row Row;
 struct row {
   char* name;
   int regnum;
-  Scope scope;
+  Scope type;
 };
 
 // スタックっぽい感じで表現、FILOなので出力は下から積み上がる感じに出力される

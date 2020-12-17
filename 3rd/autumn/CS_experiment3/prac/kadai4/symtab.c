@@ -70,7 +70,7 @@ int delete () {
   for (Symtab* tPointer = TABLE; tPointer != NULL;) {
     tPointer = tPointer->prev;
 
-    if (TABLE->row.scope == GLOBAL_VAR || TABLE->row.scope == PROC_NAME) {
+    if (TABLE->row.type == GLOBAL_VAR || TABLE->row.type == PROC_NAME) {
       break;
     } else {
       free(TABLE->row.name);
@@ -94,5 +94,5 @@ int delete () {
 void printRow(Row aRow) {
   char* tScopeTable[] = {"global", "local", "proc", "const"};
   printf("<NAME: %s, REGNUM: %d, SCOPE: %s>\n", aRow.name, aRow.regnum,
-         tScopeTable[aRow.scope]);
+         tScopeTable[aRow.type]);
 }
