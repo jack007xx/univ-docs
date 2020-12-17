@@ -127,11 +127,18 @@ statement
         ;
 
 assignment_statement
-        : IDENT
+        : IDENT ASSIGN expression
         {
-                symtab_lookup($1);
-        } 
-          ASSIGN expression
+                Row* tRow = symtab_lookup($1);
+                factor_push(tRow->name, tRow->regnum, tRow->type);
+                Factor tRetval = factor_pop();
+                Factor tArg1 = factor_pop();
+
+                LLVMcode tCode;
+                tCode.command = Load;
+                tCode.args.load.retval = tRetval;
+                tCode.args.load.arg1 = tArg1;
+        }
         ;
 
 if_statement
