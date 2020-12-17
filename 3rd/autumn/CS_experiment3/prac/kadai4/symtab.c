@@ -11,7 +11,7 @@ Symtab* TABLE;
 
 /* insert, lookup, deleteの実装 */
 
-void init() {
+void init_symtab() {
   TABLE = NULL;
 
 #ifdef DEBUG

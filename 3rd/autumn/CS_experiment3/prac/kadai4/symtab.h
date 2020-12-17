@@ -27,7 +27,7 @@ struct symtab {
 };
 
 // もろもろ初期化
-void init();
+void init_symtab();
 
 // 先頭に挿入
 void insert(char*, int, Scope);
