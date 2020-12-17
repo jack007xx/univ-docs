@@ -48,7 +48,7 @@ void factor_push(char *aName, int aVal, Scope aType) {
 }
 
 void code_add(LLVMcode tmp) {
-  printf("<Factpr poped: command is %d\n>", tmp.command);
+  printf("<Factpr poped: command is %d>\n", tmp.command);
   LLVMcode *tCode = (LLVMcode *)malloc(sizeof(LLVMcode));
   *tCode = tmp;
   if (codetl == NULL) {   /* 解析中の関数の最初の命令の場合 */

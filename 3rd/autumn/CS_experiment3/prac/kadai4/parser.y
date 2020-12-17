@@ -199,7 +199,37 @@ expression
         | PLUS term
         | MINUS term
         | expression PLUS expression
+        {
+                Factor tArg1 = factor_pop();
+                Factor tArg2 = factor_pop();
+                Factor tRetval;
+                tRetval.type = LOCAL_VAR;
+                tRetval.val = gRegnum;
+
+                LLVMcode tCode;
+                tCode.command = Add;
+                tCode.args.mul.arg1 = tArg1;
+                tCode.args.mul.arg2 = tArg2;
+                tCode.args.mul.retval = tRetval;
+                code_add(tCode);
+                factor_push(tRetval.vname, tRetval.val, tRetval.type);
+        }
         | expression MINUS expression
+        {
+                Factor tArg1 = factor_pop();
+                Factor tArg2 = factor_pop();
+                Factor tRetval;
+                tRetval.type = LOCAL_VAR;
+                tRetval.val = gRegnum;
+
+                LLVMcode tCode;
+                tCode.command = Sub;
+                tCode.args.mul.arg1 = tArg1;
+                tCode.args.mul.arg2 = tArg2;
+                tCode.args.mul.retval = tRetval;
+                code_add(tCode);
+                factor_push(tRetval.vname, tRetval.val, tRetval.type);
+        }
         ;
 
 term
@@ -221,6 +251,21 @@ term
                 factor_push(tRetval.vname, tRetval.val, tRetval.type);
         }
         | term DIV factor
+        {
+                Factor tArg1 = factor_pop();
+                Factor tArg2 = factor_pop();
+                Factor tRetval;
+                tRetval.type = LOCAL_VAR;
+                tRetval.val = gRegnum;
+
+                LLVMcode tCode;
+                tCode.command = Sdiv;
+                tCode.args.mul.arg1 = tArg1;
+                tCode.args.mul.arg2 = tArg2;
+                tCode.args.mul.retval = tRetval;
+                code_add(tCode);
+                factor_push(tRetval.vname, tRetval.val, tRetval.type);
+        }
         ;
 
 factor
