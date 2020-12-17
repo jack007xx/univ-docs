@@ -48,7 +48,8 @@ program
         :PROGRAM IDENT SEMICOLON
         {
                 regnum = 0;
-                init();
+                init_fstack();
+                init_symtab();
                 scope = GLOBAL_VAR;
         }
           outblock PERIOD
@@ -170,7 +171,7 @@ block_statement
 read_statement
         : READ LPAREN IDENT RPAREN
         {
-                lookup($IDENT);
+                lookup($3);
         }
         ;
 
@@ -202,12 +203,21 @@ expression
 term
         : factor
         | term MULT factor
+        {
+                Factor tArg1 factorpop();
+                Factor tArg2 factorpop();
+                LLVMcode tCode;
+                tCode.args
+        }
         | term DIV factor
         ;
 
 factor
         : var_name
         | NUMBER
+        {
+                factorpush("const", $1, CONSTANT);
+        }
         | LPAREN expression RPAREN
         ;
 
