@@ -18,15 +18,15 @@ void init_fstack() { /* FSTACKの初期化 */
   return;
 }
 
-Factor factorpop() {
+Factor factor_pop() {
   Factor tmp;
   tmp = FSTACK.element[FSTACK.top];
   FSTACK.top--;
   return tmp;
 }
 
-void factorpush(char *aName, int aVal, Scope aType) {
-  printf("<Factor pushed: %s>\n", aName, aVal, aType);
+void factor_push(char *aName, int aVal, Scope aType) {
+  printf("<Factor pushed: %s>\n", aName);
   FSTACK.top++;
   strcpy(FSTACK.element[FSTACK.top].vname, aName);
   FSTACK.element[FSTACK.top].val = aVal;
@@ -34,7 +34,7 @@ void factorpush(char *aName, int aVal, Scope aType) {
   return;
 }
 
-void add_code(LLVMcode tmp) {
+void code_add(LLVMcode tmp) {
   printf("<Factpr poped: command is %d\n>", tmp.command);
   LLVMcode *tCode = (LLVMcode *)malloc(sizeof(LLVMcode));
   *tCode = tmp;

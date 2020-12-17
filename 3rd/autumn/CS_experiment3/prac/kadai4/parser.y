@@ -50,6 +50,8 @@ program
                 init_fstack();
                 init_symtab();
                 gScope = GLOBAL_VAR;
+                insert($2, gRegnum, gScope);
+
         }
           outblock PERIOD
         ;
@@ -203,8 +205,8 @@ term
         : factor
         | term MULT factor
         {
-                Factor tArg1 = factorpop();
-                Factor tArg2 = factorpop();
+                Factor tArg1 = factor_pop();
+                Factor tArg2 = factor_pop();
                 Factor tRetval;
                 tRetval.type = LOCAL_VAR;
                 tRetval.val = gRegnum;
@@ -214,8 +216,8 @@ term
                 tCode.args.mul.arg1 = tArg1;
                 tCode.args.mul.arg2 = tArg2;
                 tCode.args.mul.retval = tRetval;
-                add_code(tCode);
-                factorpush(tRetval.vname, tRetval.val, tRetval.type);
+                code_add(tCode);
+                factor_push(tRetval.vname, tRetval.val, tRetval.type);
         }
         | term DIV factor
         ;
@@ -224,7 +226,7 @@ factor
         : var_name
         | NUMBER
         {
-                factorpush("const", $1, CONSTANT);
+                factor_push("const", $1, CONSTANT);
         }
         | LPAREN expression RPAREN
         ;
@@ -235,7 +237,7 @@ var_name
                 Row* tRaw = lookup($1);
                 if (tRaw == NULL){
                 }
-                factorpush(tRaw->name, tRaw->regnum, tRaw->type);
+                factor_push(tRaw->name, tRaw->regnum, tRaw->type);
         }
         ;
 

@@ -38,6 +38,16 @@ typedef struct {
   Scope type; /* 変数（のレジスタ）か整数の区別 */
 } Factor;
 
+/* 変数もしくは定数のためのスタック */
+typedef struct {
+  Factor element[100]; /* スタック（最大要素数は100まで） */
+  unsigned int top;    /* スタックのトップの位置         */
+} Factorstack;
+
+void init_fstack();
+Factor factor_pop();
+void factor_push(char *, int, Scope);
+
 typedef struct llvmcode {
   LLVMcommand command; /* 命令名 */
   union {              /* 命令の引数 */
@@ -103,15 +113,7 @@ typedef struct llvmcode {
   struct llvmcode *next;
 } LLVMcode;
 
-/* 変数もしくは定数のためのスタック */
-typedef struct {
-  Factor element[100]; /* スタック（最大要素数は100まで） */
-  unsigned int top;    /* スタックのトップの位置         */
-} Factorstack;
-
-void init_fstack();
-Factor factorpop();
-void factorpush(char *, int, Scope);
+void code_add(LLVMcode tmp);
 
 /* LLVMの関数定義 */
 typedef struct fundecl {
@@ -121,7 +123,5 @@ typedef struct fundecl {
   LLVMcode *codes;      /* 命令列の線形リストへのポインタ */
   struct fundecl *next; /* 次の関数定義へのポインタ      */
 } Fundecl;
-
-void add_code(LLVMcode tmp);
 
 #endif
