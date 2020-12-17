@@ -55,6 +55,7 @@ typedef struct llvmcode {
       Factor retval;
     } alloca;
     struct {
+      Factor retval;
     } global;
     struct { /* load   */
       Factor arg1;
@@ -127,4 +128,5 @@ typedef struct fundecl {
 
 void fundecl_init();
 
+void print_LLVM_code();
 #endif

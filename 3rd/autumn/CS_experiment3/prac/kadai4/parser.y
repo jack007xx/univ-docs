@@ -296,10 +296,28 @@ id_list
         : IDENT
         {
                 symtab_push($1, gRegnum, gScope);
+
+                factor_push($1, gRegnum, gScope);
+                Factor tRetval = factor_pop();
+
+                LLVMcode tCode;
+                tCode.command = Global;
+                tCode.args.global.retval = tRetval;
+
+                code_add(tCode);
         }
         | id_list COMMA IDENT
         {
                 symtab_push($3, gRegnum, gScope);
+
+                factor_push($3, gRegnum, gScope);
+                Factor tRetval = factor_pop();
+
+                LLVMcode tCode;
+                tCode.command = Global;
+                tCode.args.global.retval = tRetval;
+
+                code_add(tCode);
         }
         ;
 

@@ -63,3 +63,12 @@ void code_add(LLVMcode tmp) {
     codetl = tCode;       /* 命令列の末尾の命令として記憶 */
   }
 }
+
+void print_LLVM_code() {
+  for (Fundecl *tFunPointer = declhd; tFunPointer != NULL;
+       tFunPointer = tFunPointer->next) {
+    for (LLVMcode *tCodePointer = codehd; tCodePointer != NULL;
+         tCodePointer = tCodePointer->next) {
+    }
+  }
+};
