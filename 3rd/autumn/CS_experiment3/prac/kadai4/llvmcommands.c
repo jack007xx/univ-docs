@@ -4,6 +4,8 @@
 #include <stdlib.h>
 #include <string.h>
 
+void print_code(LLVMcode *aCode);
+
 LLVMcode *codehd; /* 命令列の先頭のアドレスを保持するポインタ */
 LLVMcode *codetl; /* 命令列の末尾のアドレスを保持するポインタ */
 Fundecl
@@ -40,10 +42,10 @@ Factor factor_pop() {
 
 void factor_push(char *aName, int aVal, Scope aType) {
   printf("<Factor pushed: %s>\n", aName);
-  FSTACK.top++;
   strcpy(FSTACK.element[FSTACK.top].vname, aName);
   FSTACK.element[FSTACK.top].val = aVal;
   FSTACK.element[FSTACK.top].type = aType;
+  FSTACK.top++;
   return;
 }
 
@@ -51,6 +53,7 @@ void code_add(LLVMcode tmp) {
   printf("<Factpr poped: command is %d>\n", tmp.command);
   LLVMcode *tCode = (LLVMcode *)malloc(sizeof(LLVMcode));
   *tCode = tmp;
+  tCode->next = NULL;
   if (codetl == NULL) {   /* 解析中の関数の最初の命令の場合 */
     if (decltl == NULL) { /* 解析中の関数がない場合 */
       /* 関数宣言を処理する段階でリストが作られているので，ありえない */
@@ -67,8 +70,74 @@ void code_add(LLVMcode tmp) {
 void print_LLVM_code() {
   for (Fundecl *tFunPointer = declhd; tFunPointer != NULL;
        tFunPointer = tFunPointer->next) {
-    for (LLVMcode *tCodePointer = codehd; tCodePointer != NULL;
+    LLVMcode *tCodePointer;
+    for (tCodePointer = tFunPointer->codes; tCodePointer != NULL;
          tCodePointer = tCodePointer->next) {
+      print_code(tCodePointer);
     }
   }
 };
+
+char *ito_instruction[] = {"alloca", "global", "load",  "add",  "store",
+                           "add",    "mul",    "sdiv",  "icmp", "br",
+                           "brc",    "call",   "label", "ret",  "phi"};
+
+void factor_format(Factor aFactor, char *aArg) {
+  switch (aFactor.type) {
+    case GLOBAL_VAR:
+      sprintf(aArg, "@%s", aFactor.vname);
+      break;
+    case LOCAL_VAR:
+      sprintf(aArg, "%%%d", aFactor.val);
+      break;
+    default:
+      break;
+  }
+}
+
+void print_code(LLVMcode *aCode) {
+  char *tInstruction[256];
+  char *tArg1[256];
+  char *tArg2[256];
+  char *tRetval[256];
+  char *tType[256];
+  switch (aCode->command) {
+    case Alloca:
+      factor_format(aCode->args.alloca.retval, tRetval);
+      printf("%s = alloca i32 0, align 4\n", tRetval);
+      break;
+    case Global:
+      factor_format(aCode->args.global.retval, tRetval);
+      printf("%s = common global i32 0, align 4\n", tRetval);
+      break;
+    case Load:
+      printf("", aCode->args.load.arg1.val, aCode->args.load.retval.val);
+      break;
+    case Store:
+      break;
+    case Add:
+      break;
+    case Sub:
+      break;
+    case Mul:
+      break;
+    case Sdiv:
+      break;
+    case Icmp:
+      break;
+    case BrUncond:
+      break;
+    case BrCond:
+      break;
+    case Call:
+      break;
+    case Label:
+      break;
+    case Ret:
+      break;
+    case Phi:
+      break;
+    default:
+      break;
+  }
+}

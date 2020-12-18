@@ -55,6 +55,9 @@ program
                 symtab_push($2, gRegnum, gScope);
         }
           outblock PERIOD
+        {
+                print_LLVM_code();
+        }
         ;
 
 outblock

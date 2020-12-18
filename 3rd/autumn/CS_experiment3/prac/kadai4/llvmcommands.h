@@ -2,6 +2,7 @@
 #define __LLVMCOMMANDS_H__
 #include "symtab.h"
 /* LLVM命令名の定義 */
+// 15命令
 typedef enum {
   Alloca, /* alloca */
   Global,
@@ -86,10 +87,10 @@ typedef struct llvmcode {
       Factor retval;
     } sdiv;
     struct { /* icmp   */
-      Cmptype type;
       Factor arg1;
       Factor arg2;
       Factor retval;
+      Cmptype type;
     } icmp;
     struct { /* br     */
       int arg1;
