@@ -36,7 +36,7 @@ void symtab_push(char* aName, int aRegnum, Scope aScope) {
   // デバッグ出力、全部出す
   printf("[DEBUG] inserted\n");
   for (Symtab* tPointer = TABLE; tPointer != NULL; tPointer = tPointer->prev) {
-    printRow(tPointer->row);
+    print_row(tPointer->row);
   }
   printf("\n");
 #endif
@@ -52,7 +52,7 @@ Row* symtab_lookup(char* aName) {
 #ifdef DEBUG
       // デバッグ出力、見つけたもの
       printf("[DEBUG] found\n");
-      printRow(tPointer->row);
+      print_row(tPointer->row);
       printf("\n");
 #endif
       return &tPointer->row;
@@ -73,7 +73,7 @@ int symtab_delete() {
     if (TABLE->row.type == GLOBAL_VAR || TABLE->row.type == PROC_NAME) {
       break;
     } else {
-      free(TABLE->row.name);
+      // free(TABLE->row.name);
       free(TABLE);
       TABLE = tPointer;
       tCnt++;
@@ -84,14 +84,14 @@ int symtab_delete() {
   // デバッグ出力、全部出す
   printf("[DEBUG] deleted: %d symbols\n", tCnt);
   for (Symtab* tPointer = TABLE; tPointer != NULL; tPointer = tPointer->prev)
-    printRow(tPointer->row);
+    print_row(tPointer->row);
   printf("\n");
 #endif
 
   return tCnt;
 }
 
-void printRow(Row aRow) {
+void print_row(Row aRow) {
   char* tScopeTable[] = {"global", "local", "proc", "const"};
   printf("<NAME: %s, REGNUM: %d, SCOPE: %s>\n", aRow.name, aRow.regnum,
          tScopeTable[aRow.type]);

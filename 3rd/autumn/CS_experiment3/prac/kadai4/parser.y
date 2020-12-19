@@ -7,6 +7,7 @@
 
 #include <stdio.h>
 #include <string.h>
+
 #include "symtab.h"
 #include "llvmcommands.h"
 
@@ -132,15 +133,6 @@ statement
 assignment_statement
         : IDENT ASSIGN expression
         {
-                Row* tRow = symtab_lookup($1);
-                factor_push(tRow->name, tRow->regnum, tRow->type);
-                Factor tRetval = factor_pop();
-                Factor tArg1 = factor_pop();
-
-                LLVMcode tCode;
-                tCode.command = Load;
-                tCode.args.load.retval = tRetval;
-                tCode.args.load.arg1 = tArg1;
         }
         ;
 
@@ -210,35 +202,27 @@ expression
         | MINUS term
         | expression PLUS expression
         {
-                Factor tArg1 = factor_pop();
-                Factor tArg2 = factor_pop();
-                Factor tRetval;
-                tRetval.type = LOCAL_VAR;
-                tRetval.val = gRegnum;
+                Factor *tArg2 = factor_pop();
+                Factor *tArg1 = factor_pop();
 
-                LLVMcode tCode;
-                tCode.command = Add;
-                tCode.args.mul.arg1 = tArg1;
-                tCode.args.mul.arg2 = tArg2;
-                tCode.args.mul.retval = tRetval;
+                factor_push("", gRegnum, LOCAL_VAR);
+                Factor *tRetval = factor_pop();
+
+                LLVMcode *tCode = code_create(Add, tArg1, tArg2, tRetval);
+
                 code_add(tCode);
-                factor_push(tRetval.vname, tRetval.val, tRetval.type);
         }
         | expression MINUS expression
         {
-                Factor tArg1 = factor_pop();
-                Factor tArg2 = factor_pop();
-                Factor tRetval;
-                tRetval.type = LOCAL_VAR;
-                tRetval.val = gRegnum;
+                Factor *tArg2 = factor_pop();
+                Factor *tArg1 = factor_pop();
 
-                LLVMcode tCode;
-                tCode.command = Sub;
-                tCode.args.mul.arg1 = tArg1;
-                tCode.args.mul.arg2 = tArg2;
-                tCode.args.mul.retval = tRetval;
+                factor_push("", gRegnum, LOCAL_VAR);
+                Factor *tRetval = factor_pop();
+
+                LLVMcode *tCode = code_create(Sub, tArg1, tArg2, tRetval);
+
                 code_add(tCode);
-                factor_push(tRetval.vname, tRetval.val, tRetval.type);
         }
         ;
 
@@ -246,35 +230,9 @@ term
         : factor
         | term MULT factor
         {
-                Factor tArg1 = factor_pop();
-                Factor tArg2 = factor_pop();
-                Factor tRetval;
-                tRetval.type = LOCAL_VAR;
-                tRetval.val = gRegnum;
-
-                LLVMcode tCode;
-                tCode.command = Mul;
-                tCode.args.mul.arg1 = tArg1;
-                tCode.args.mul.arg2 = tArg2;
-                tCode.args.mul.retval = tRetval;
-                code_add(tCode);
-                factor_push(tRetval.vname, tRetval.val, tRetval.type);
         }
         | term DIV factor
         {
-                Factor tArg1 = factor_pop();
-                Factor tArg2 = factor_pop();
-                Factor tRetval;
-                tRetval.type = LOCAL_VAR;
-                tRetval.val = gRegnum;
-
-                LLVMcode tCode;
-                tCode.command = Sdiv;
-                tCode.args.mul.arg1 = tArg1;
-                tCode.args.mul.arg2 = tArg2;
-                tCode.args.mul.retval = tRetval;
-                code_add(tCode);
-                factor_push(tRetval.vname, tRetval.val, tRetval.type);
         }
         ;
 
@@ -306,26 +264,24 @@ id_list
         : IDENT
         {
                 symtab_push($1, gRegnum, gScope);
+                Row* tRow = symtab_lookup($1);
 
                 factor_push($1, gRegnum, gScope);
-                Factor tRetval = factor_pop();
+                Factor *tRetval = factor_pop();
 
-                LLVMcode tCode;
-                tCode.command = Global;
-                tCode.args.global.retval = tRetval;
+                LLVMcode *tCode = code_create(Global,NULL,NULL,tRetval);
 
                 code_add(tCode);
         }
         | id_list COMMA IDENT
         {
                 symtab_push($3, gRegnum, gScope);
+                Row* tRow = symtab_lookup($3);
 
-                factor_push($3, gRegnum, gScope);
-                Factor tRetval = factor_pop();
-
-                LLVMcode tCode;
-                tCode.command = Global;
-                tCode.args.global.retval = tRetval;
+                factor_push(tRow->name, gRegnum, gScope);
+                Factor *tRetval = factor_pop();
+                
+                LLVMcode *tCode = code_create(Global,NULL,NULL,tRetval);
 
                 code_add(tCode);
         }

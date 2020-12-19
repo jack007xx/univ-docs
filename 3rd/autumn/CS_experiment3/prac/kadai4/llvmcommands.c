@@ -33,37 +33,95 @@ void fstack_init() { /* FSTACKの初期化 */
   return;
 }
 
-Factor factor_pop() {
-  Factor tmp;
-  tmp = FSTACK.element[FSTACK.top];
+void print_factor_stack() {
+  printf("factor stock\n");
+  for (int i = 0; i <= FSTACK.top - 1; i++) {
+    printf("[vname: %s(%d), val: %d, type: %d]\n", FSTACK.element[i]->vname,
+           FSTACK.element[i]->vname, FSTACK.element[i]->val,
+           FSTACK.element[i]->type);
+  }
+  printf("\n");
+}
+
+Factor *factor_pop() {
   FSTACK.top--;
-  return tmp;
+  return FSTACK.element[FSTACK.top];
 }
 
-void factor_push(char *aName, int aVal, Scope aType) {
-  printf("<Factor pushed: %s>\n", aName);
-  strcpy(FSTACK.element[FSTACK.top].vname, aName);
-  FSTACK.element[FSTACK.top].val = aVal;
-  FSTACK.element[FSTACK.top].type = aType;
+Factor *factor_push(char *aName, int aVal, Scope aType) {
+  // printf("<Factor pushed: %s>\n\n", aName);
+  Factor *tFactor = malloc(sizeof(Factor));
+  tFactor->vname = aName;
+  tFactor->val = aVal;
+  tFactor->type = aType;
+  FSTACK.element[FSTACK.top] = tFactor;
   FSTACK.top++;
-  return;
+  print_factor_stack();
+  return tFactor;
 }
 
-void code_add(LLVMcode tmp) {
-  printf("<Factpr poped: command is %d>\n", tmp.command);
-  LLVMcode *tCode = (LLVMcode *)malloc(sizeof(LLVMcode));
-  *tCode = tmp;
-  tCode->next = NULL;
+LLVMcode *code_create(LLVMcommand aCommand, Factor *aArg1, Factor *aArg2,
+                      Factor *aRetval) {
+  LLVMcode *tCode = malloc(sizeof(LLVMcode));
+  tCode->command = aCommand;
+
+  switch (aCommand) {
+    case Alloca:
+      tCode->args.alloca.retval = *aRetval;
+      break;
+    case Global:
+      tCode->args.global.retval = *aRetval;
+      break;
+    case Load:
+      break;
+    case Store:
+      break;
+    case Add:
+      tCode->args.add.arg1 = *aArg1;
+      tCode->args.add.arg2 = *aArg2;
+      tCode->args.add.retval = *aRetval;
+      break;
+    case Sub:
+      break;
+    case Mul:
+      break;
+    case Sdiv:
+      break;
+    case Icmp:
+      break;
+    case BrUncond:
+      break;
+    case BrCond:
+      break;
+    case Call:
+      break;
+    case Label:
+      break;
+    case Ret:
+      break;
+    case Phi:
+      break;
+    default:
+      break;
+  }
+  return tCode;
+}
+
+void code_add(LLVMcode *aCode) {
+  // printf("<Factpr poped: command is %d>\n\n", aCode.command);
+  // aCodeの内容は変更される可能性がある
+
+  aCode->next = NULL;
   if (codetl == NULL) {   /* 解析中の関数の最初の命令の場合 */
     if (decltl == NULL) { /* 解析中の関数がない場合 */
       /* 関数宣言を処理する段階でリストが作られているので，ありえない */
       fprintf(stderr, "unexpected error\n");
     }
-    decltl->codes = tCode; /* 関数定義の命令列の先頭の命令に設定 */
-    codehd = codetl = tCode; /* 生成中の命令列の末尾の命令として記憶 */
+    decltl->codes = aCode; /* 関数定義の命令列の先頭の命令に設定 */
+    codehd = codetl = aCode; /* 生成中の命令列の末尾の命令として記憶 */
   } else { /* 解析中の関数の命令列に1つ以上命令が存在する場合 */
-    codetl->next = tCode; /* 命令列の末尾に追加 */
-    codetl = tCode;       /* 命令列の末尾の命令として記憶 */
+    codetl->next = aCode; /* 命令列の末尾に追加 */
+    codetl = aCode;       /* 命令列の末尾の命令として記憶 */
   }
 }
 
@@ -76,6 +134,7 @@ void print_LLVM_code() {
       print_code(tCodePointer);
     }
   }
+  printf("\n");
 };
 
 char *ito_instruction[] = {"alloca", "global", "load",  "add",  "store",
@@ -93,6 +152,8 @@ void factor_encode(Factor aFactor, char *aArg) {
     case CONSTANT:
       sprintf(aArg, "%d", aFactor.val);
       break;
+    case LABEL:
+      sprintf(aArg, "%d", aFactor.val);
     default:
       break;
   }
@@ -125,7 +186,6 @@ void cmp_type_encode(Cmptype aType, char *aArg) {
 
 void print_code(LLVMcode *aCode) {
   char tInstruction[256], tArg1[256], tArg2[256], tRetval[256], tCmpType[256];
-
   switch (aCode->command) {
     case Alloca:
       factor_encode(aCode->args.alloca.retval, tRetval);
@@ -177,9 +237,11 @@ void print_code(LLVMcode *aCode) {
       printf("br label %d", aCode->args.bruncond.arg1);
       break;
     case BrCond:
+      // condの代わりにretvalに入れてる
+      factor_encode(aCode->args.brcond.cond, tRetval);
       factor_encode(aCode->args.brcond.arg1, tArg1);
-      printf("br i1 %s, label %d, label %d", tArg1, aCode->args.brcond.arg2,
-             aCode->args.brcond.arg3);
+      factor_encode(aCode->args.brcond.arg2, tArg2);
+      printf("br i1 %s, label %d, label %d", tRetval, tArg1, tArg2);
       break;
     case Call:
       break;

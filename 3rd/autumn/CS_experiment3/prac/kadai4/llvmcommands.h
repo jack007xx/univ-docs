@@ -34,20 +34,20 @@ typedef enum {
 /* 変数もしくは定数の型 */
 // Row型に合わせて順番変更
 typedef struct {
-  char vname[256]; /* 変数の場合の変数名 */
+  char *vname; /* 変数の場合の変数名 */
   int val; /* 整数の場合はその値，変数の場合は割り当てたレジスタ番号 */
   Scope type; /* 変数（のレジスタ）か整数の区別 */
 } Factor;
 
 /* 変数もしくは定数のためのスタック */
 typedef struct {
-  Factor element[100]; /* スタック（最大要素数は100まで） */
-  unsigned int top;    /* スタックのトップの位置         */
+  Factor *element[100]; /* スタック（最大要素数は100まで） */
+  unsigned int top;     /* スタックのトップの位置         */
 } Factorstack;
 
 void fstack_init();
-Factor factor_pop();
-void factor_push(char *, int, Scope);
+Factor *factor_pop();
+Factor *factor_push(char *, int, Scope);
 
 typedef struct llvmcode {
   LLVMcommand command; /* 命令名 */
@@ -93,17 +93,17 @@ typedef struct llvmcode {
       Cmptype type;
     } icmp;
     struct { /* br     */
-      int arg1;
+      Factor arg1;
     } bruncond;
     struct { /* brc    */
+      Factor cond;
       Factor arg1;
-      int arg2;
-      int arg3;
+      Factor arg2;
     } brcond;
     struct {
     } call;
     struct { /* label  */
-      int l;
+      Factor l;
     } label;
     struct { /* ret    */
       Factor arg1;
@@ -116,7 +116,8 @@ typedef struct llvmcode {
 } LLVMcode;
 
 void code_init();
-void code_add(LLVMcode tmp);
+LLVMcode *code_create(LLVMcommand, Factor *, Factor *, Factor *);
+void code_add(LLVMcode *);
 
 /* LLVMの関数定義 */
 typedef struct fundecl {
