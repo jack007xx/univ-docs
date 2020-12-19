@@ -126,15 +126,20 @@ void code_add(LLVMcode *aCode) {
 }
 
 void print_LLVM_code() {
+  int tIsInMain = 0;
   for (Fundecl *tFunPointer = declhd; tFunPointer != NULL;
        tFunPointer = tFunPointer->next) {
     LLVMcode *tCodePointer;
     for (tCodePointer = tFunPointer->codes; tCodePointer != NULL;
          tCodePointer = tCodePointer->next) {
+      if (!tIsInMain && tCodePointer->command != Global) {
+        printf("define i32 @main(){\n");
+        tIsInMain = 1;
+      }
       print_code(tCodePointer);
     }
   }
-  printf("\n");
+  printf("}\n");
 };
 
 char *ito_instruction[] = {"alloca", "global", "load",  "add",  "store",
@@ -198,55 +203,55 @@ void print_code(LLVMcode *aCode) {
     case Load:
       factor_encode(aCode->args.load.arg1, tArg1);
       factor_encode(aCode->args.load.retval, tRetval);
-      printf("%s = load i32, i32* %s, align 4", tArg1, tRetval);
+      printf("%s = load i32, i32* %s, align 4\n", tArg1, tRetval);
       break;
     case Store:
       factor_encode(aCode->args.store.arg1, tArg1);
       factor_encode(aCode->args.store.arg2, tArg2);
-      printf("store i32 %s, i32* %s, align 4", tArg1, tArg2);
+      printf("store i32 %s, i32* %s, align 4\n", tArg1, tArg2);
       break;
     case Add:
       factor_encode(aCode->args.add.arg1, tArg1);
       factor_encode(aCode->args.add.arg2, tArg2);
       factor_encode(aCode->args.add.retval, tRetval);
-      printf("%s = add nsw i32 %s, %s", tRetval, tArg1, tArg2);
+      printf("%s = add nsw i32 %s, %s\n", tRetval, tArg1, tArg2);
       break;
     case Sub:
       factor_encode(aCode->args.sub.arg1, tArg1);
       factor_encode(aCode->args.sub.arg2, tArg2);
       factor_encode(aCode->args.sub.retval, tRetval);
-      printf("%s = sub nsw i32 %s, %s", tRetval, tArg1, tArg2);
+      printf("%s = sub nsw i32 %s, %s\n", tRetval, tArg1, tArg2);
       break;
     case Mul:
       factor_encode(aCode->args.mul.arg1, tArg1);
       factor_encode(aCode->args.mul.arg2, tArg2);
       factor_encode(aCode->args.mul.retval, tRetval);
-      printf("%s = mul nsw i32 %s, %s", tRetval, tArg1, tArg2);
+      printf("%s = mul nsw i32 %s, %s\n", tRetval, tArg1, tArg2);
       break;
     case Sdiv:
       factor_encode(aCode->args.sdiv.arg1, tArg1);
       factor_encode(aCode->args.sdiv.arg2, tArg2);
       factor_encode(aCode->args.sdiv.retval, tRetval);
-      printf("%s = sdiv i32 %s, %s", tRetval, tArg1, tArg2);
+      printf("%s = sdiv i32 %s, %s\n", tRetval, tArg1, tArg2);
       break;
     case Icmp:
-      printf("%s = icmp %d i32 %s, %s", tRetval, aCode->args.icmp.type, tArg1,
+      printf("%s = icmp %d i32 %s, %s\n", tRetval, aCode->args.icmp.type, tArg1,
              tArg2);
       break;
     case BrUncond:
-      printf("br label %d", aCode->args.bruncond.arg1);
+      printf("br label %d\n", aCode->args.bruncond.arg1);
       break;
     case BrCond:
       // condの代わりにretvalに入れてる
       factor_encode(aCode->args.brcond.cond, tRetval);
       factor_encode(aCode->args.brcond.arg1, tArg1);
       factor_encode(aCode->args.brcond.arg2, tArg2);
-      printf("br i1 %s, label %d, label %d", tRetval, tArg1, tArg2);
+      printf("br i1 %s, label %d, label %d\n", tRetval, tArg1, tArg2);
       break;
     case Call:
       break;
     case Label:
-      printf("; <label>:%d:", aCode->args.label.arg1);
+      printf("; <label>:%d:\n", aCode->args.label.arg1);
       break;
     case Ret:
       break;
