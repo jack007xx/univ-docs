@@ -130,5 +130,4 @@ typedef struct fundecl {
 
 void fundecl_init();
 
-void print_LLVM_code();
 #endif

@@ -4,6 +4,8 @@
 #include <stdlib.h>
 #include <string.h>
 
+#define DEBUG
+
 void print_code(LLVMcode *aCode);
 
 LLVMcode *codehd; /* 命令列の先頭のアドレスを保持するポインタ */
@@ -33,18 +35,27 @@ void fstack_init() { /* FSTACKの初期化 */
   return;
 }
 
+void print_factor(Factor *aFactor) {
+  printf("[vname: %s, val: %d, type: %d]\n", aFactor->vname, aFactor->val,
+         aFactor->type);
+}
+
 void print_factor_stack() {
   printf("factor stock\n");
   for (int i = 0; i <= FSTACK.top - 1; i++) {
-    printf("[vname: %s(%d), val: %d, type: %d]\n", FSTACK.element[i]->vname,
-           FSTACK.element[i]->vname, FSTACK.element[i]->val,
-           FSTACK.element[i]->type);
+    print_factor(FSTACK.element[i]);
   }
   printf("\n");
 }
 
 Factor *factor_pop() {
+  // .topは、挿入する位置を示すので、先にデクリメントしてもおk
   FSTACK.top--;
+#ifdef DEBUG
+  printf("[DEBUG] Factor stack poped\n");
+  print_factor(FSTACK.element[FSTACK.top]);
+  printf("\n");
+#endif
   return FSTACK.element[FSTACK.top];
 }
 
@@ -56,8 +67,11 @@ Factor *factor_push(char *aName, int aVal, Scope aType) {
   tFactor->type = aType;
   FSTACK.element[FSTACK.top] = tFactor;
   FSTACK.top++;
+#ifdef DEBUG
+  printf("[DEBUG] Factor stack pushed\n");
   print_factor_stack();
   print_LLVM_code();
+#endif
   return tFactor;
 }
 
@@ -143,7 +157,7 @@ void print_LLVM_code() {
       print_code(tCodePointer);
     }
   }
-  printf("}\n");
+  printf("}\n\n");
 };
 
 char *ito_instruction[] = {"alloca", "global", "load",  "add",  "store",
