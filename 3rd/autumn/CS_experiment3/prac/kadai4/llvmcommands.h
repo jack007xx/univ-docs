@@ -103,7 +103,7 @@ typedef struct llvmcode {
     struct {
     } call;
     struct { /* label  */
-      Factor l;
+      Factor arg1;
     } label;
     struct { /* ret    */
       Factor arg1;

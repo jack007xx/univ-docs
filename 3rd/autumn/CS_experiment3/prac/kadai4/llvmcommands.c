@@ -246,7 +246,7 @@ void print_code(LLVMcode *aCode) {
     case Call:
       break;
     case Label:
-      printf("; <label>:%d:", aCode->args.label.l);
+      printf("; <label>:%d:", aCode->args.label.arg1);
       break;
     case Ret:
       break;
