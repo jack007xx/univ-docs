@@ -138,8 +138,7 @@ assignment_statement
                 Factor *tArg2 = factor_pop();
                 Factor *tArg1 = factor_pop();
 
-                LLVMcode *tCode = code_create(Store, tArg1, tArg2, NULL);
-                code_add(tCode);
+                code_add(code_create(Store, tArg1, tArg2, NULL));
         }
         ;
 
@@ -214,9 +213,7 @@ expression
 
                 Factor *tRetval = factor_push("", gRegnum, LOCAL_VAR);
 
-                LLVMcode *tCode = code_create(Add, tArg1, tArg2, tRetval);
-
-                code_add(tCode);
+                code_add(code_create(Add, tArg1, tArg2, tRetval));
         }
         | expression MINUS expression
         {
@@ -225,9 +222,7 @@ expression
 
                 Factor *tRetval = factor_push("", gRegnum, LOCAL_VAR);
 
-                LLVMcode *tCode = code_create(Sub, tArg1, tArg2, tRetval);
-
-                code_add(tCode);
+                code_add(code_create(Sub, tArg1, tArg2, tRetval));
         }
         ;
 
@@ -259,8 +254,7 @@ var_name
                 Factor *tArg1 = factor_pop();
                 Factor *tRetval = factor_push("", gRegnum, LOCAL_VAR);
 
-                LLVMcode *tCode = code_create(Load, tArg1, NULL, tRetval);
-                code_add(tCode);
+                code_add(code_create(Load, tArg1, NULL, tRetval));
         }
         ;
 
@@ -278,9 +272,7 @@ id_list
                 factor_push($1, gRegnum, gScope);
                 Factor *tRetval = factor_pop();
 
-                LLVMcode *tCode = code_create(Global,NULL,NULL,tRetval);
-
-                code_add(tCode);
+                code_add(code_create(Global,NULL,NULL,tRetval));
         }
         | id_list COMMA IDENT
         {
@@ -290,9 +282,7 @@ id_list
                 factor_push(tRow->name, gRegnum, gScope);
                 Factor *tRetval = factor_pop();
 
-                LLVMcode *tCode = code_create(Global,NULL,NULL,tRetval);
-
-                code_add(tCode);
+                code_add(code_create(Global,NULL,NULL,tRetval));
         }
         ;
 

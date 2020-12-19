@@ -134,8 +134,7 @@ void print_LLVM_code() {
   int tIsInMain = 0;
   for (Fundecl *tFunPointer = declhd; tFunPointer != NULL;
        tFunPointer = tFunPointer->next) {
-    LLVMcode *tCodePointer;
-    for (tCodePointer = tFunPointer->codes; tCodePointer != NULL;
+    for (LLVMcode *tCodePointer = tFunPointer->codes; tCodePointer != NULL;
          tCodePointer = tCodePointer->next) {
       if (!tIsInMain && tCodePointer->command != Global) {
         printf("define i32 @main(){\n");
