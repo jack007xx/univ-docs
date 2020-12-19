@@ -57,6 +57,7 @@ Factor *factor_push(char *aName, int aVal, Scope aType) {
   FSTACK.element[FSTACK.top] = tFactor;
   FSTACK.top++;
   print_factor_stack();
+  print_LLVM_code();
   return tFactor;
 }
 
@@ -73,8 +74,12 @@ LLVMcode *code_create(LLVMcommand aCommand, Factor *aArg1, Factor *aArg2,
       tCode->args.global.retval = *aRetval;
       break;
     case Load:
+      tCode->args.load.arg1 = *aArg1;
+      tCode->args.load.retval = *aRetval;
       break;
     case Store:
+      tCode->args.store.arg1 = *aArg1;
+      tCode->args.store.arg2 = *aArg2;
       break;
     case Add:
       tCode->args.add.arg1 = *aArg1;

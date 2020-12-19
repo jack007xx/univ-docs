@@ -133,6 +133,13 @@ statement
 assignment_statement
         : IDENT ASSIGN expression
         {
+                Row *tRow = symtab_lookup($1);
+                factor_push(tRow->name, tRow->regnum, tRow->type);
+                Factor *tArg2 = factor_pop();
+                Factor *tArg1 = factor_pop();
+
+                LLVMcode *tCode = code_create(Store, tArg1, tArg2, NULL);
+                code_add(tCode);
         }
         ;
 
@@ -205,8 +212,7 @@ expression
                 Factor *tArg2 = factor_pop();
                 Factor *tArg1 = factor_pop();
 
-                factor_push("", gRegnum, LOCAL_VAR);
-                Factor *tRetval = factor_pop();
+                Factor *tRetval = factor_push("", gRegnum, LOCAL_VAR);
 
                 LLVMcode *tCode = code_create(Add, tArg1, tArg2, tRetval);
 
@@ -217,8 +223,7 @@ expression
                 Factor *tArg2 = factor_pop();
                 Factor *tArg1 = factor_pop();
 
-                factor_push("", gRegnum, LOCAL_VAR);
-                Factor *tRetval = factor_pop();
+                Factor *tRetval = factor_push("", gRegnum, LOCAL_VAR);
 
                 LLVMcode *tCode = code_create(Sub, tArg1, tArg2, tRetval);
 
@@ -249,9 +254,13 @@ var_name
         : IDENT
         {
                 Row* tRaw = symtab_lookup($1);
-                if (tRaw == NULL){
-                }
+
                 factor_push(tRaw->name, tRaw->regnum, tRaw->type);
+                Factor *tArg1 = factor_pop();
+                Factor *tRetval = factor_push("", gRegnum, LOCAL_VAR);
+
+                LLVMcode *tCode = code_create(Load, tArg1, NULL, tRetval);
+                code_add(tCode);
         }
         ;
 
@@ -264,7 +273,7 @@ id_list
         : IDENT
         {
                 symtab_push($1, gRegnum, gScope);
-                Row* tRow = symtab_lookup($1);
+                Row *tRow = symtab_lookup($1);
 
                 factor_push($1, gRegnum, gScope);
                 Factor *tRetval = factor_pop();
@@ -276,11 +285,11 @@ id_list
         | id_list COMMA IDENT
         {
                 symtab_push($3, gRegnum, gScope);
-                Row* tRow = symtab_lookup($3);
+                Row *tRow = symtab_lookup($3);
 
                 factor_push(tRow->name, gRegnum, gScope);
                 Factor *tRetval = factor_pop();
-                
+
                 LLVMcode *tCode = code_create(Global,NULL,NULL,tRetval);
 
                 code_add(tCode);
