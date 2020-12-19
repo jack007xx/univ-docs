@@ -146,6 +146,8 @@ char *ito_instruction[] = {"alloca", "global", "load",  "add",  "store",
                            "add",    "mul",    "sdiv",  "icmp", "br",
                            "brc",    "call",   "label", "ret",  "phi"};
 
+char *ito_cmp_type[] = {"eq", "ne", "sgt", "sge", "slt", "sle"};
+
 void factor_encode(Factor aFactor, char *aArg) {
   switch (aFactor.type) {
     case GLOBAL_VAR:
@@ -164,33 +166,8 @@ void factor_encode(Factor aFactor, char *aArg) {
   }
 }
 
-void cmp_type_encode(Cmptype aType, char *aArg) {
-  switch (aType) {
-    case EQUAL:
-      strcpy(aArg, "eq");
-      break;
-    case NE:
-      strcpy(aArg, "ne");
-      break;
-    case SGT:
-      strcpy(aArg, "sgt");
-      break;
-    case SGE:
-      strcpy(aArg, "sge");
-      break;
-    case SLT:
-      strcpy(aArg, "slt");
-      break;
-    case SLE:
-      strcpy(aArg, "sle");
-      break;
-    default:
-      break;
-  }
-}
-
 void print_code(LLVMcode *aCode) {
-  char tInstruction[256], tArg1[256], tArg2[256], tRetval[256], tCmpType[256];
+  char tInstruction[256], tArg1[256], tArg2[256], tRetval[256];
   switch (aCode->command) {
     case Alloca:
       factor_encode(aCode->args.alloca.retval, tRetval);
@@ -203,7 +180,7 @@ void print_code(LLVMcode *aCode) {
     case Load:
       factor_encode(aCode->args.load.arg1, tArg1);
       factor_encode(aCode->args.load.retval, tRetval);
-      printf("%s = load i32, i32* %s, align 4\n", tArg1, tRetval);
+      printf("%s = load i32, i32* %s, align 4\n", tRetval, tArg1);
       break;
     case Store:
       factor_encode(aCode->args.store.arg1, tArg1);
@@ -235,8 +212,11 @@ void print_code(LLVMcode *aCode) {
       printf("%s = sdiv i32 %s, %s\n", tRetval, tArg1, tArg2);
       break;
     case Icmp:
-      printf("%s = icmp %d i32 %s, %s\n", tRetval, aCode->args.icmp.type, tArg1,
-             tArg2);
+      factor_encode(aCode->args.icmp.arg1, tArg1);
+      factor_encode(aCode->args.icmp.arg2, tArg2);
+      factor_encode(aCode->args.icmp.retval, tRetval);
+      printf("%s = icmp %d i32 %s, %s\n", tRetval,
+             ito_cmp_type[aCode->args.icmp.type], tArg1, tArg2);
       break;
     case BrUncond:
       printf("br label %d\n", aCode->args.bruncond.arg1);
