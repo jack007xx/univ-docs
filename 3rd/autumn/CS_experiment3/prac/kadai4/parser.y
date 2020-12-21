@@ -218,7 +218,7 @@ expression
                 Factor *tRetval = factor_push("", gRegnum, LOCAL_VAR);
                 gRegnum++;
 
-                Factorからのコード生成と追加を同時に行う
+                // Factorからのコード生成と追加を同時に行う
                 code_add(code_create(Add, tArg1, tArg2, tRetval));
         }
         | expression MINUS expression
