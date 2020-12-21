@@ -77,6 +77,8 @@ Factor *factor_push(char *aName, int aVal, Scope aType) {
   return tFactor;
 }
 
+// Factorのポインタを投げて、コマンドを指定するとコードを生成してくれる
+//
 LLVMcode *code_create(LLVMcommand aCommand, Factor *aArg1, Factor *aArg2,
                       Factor *aRetval) {
   LLVMcode *tCode = malloc(sizeof(LLVMcode));
@@ -103,10 +105,19 @@ LLVMcode *code_create(LLVMcommand aCommand, Factor *aArg1, Factor *aArg2,
       tCode->args.add.retval = *aRetval;
       break;
     case Sub:
+      tCode->args.sub.arg1 = *aArg1;
+      tCode->args.sub.arg2 = *aArg2;
+      tCode->args.sub.retval = *aRetval;
       break;
     case Mul:
+      tCode->args.mul.arg1 = *aArg1;
+      tCode->args.mul.arg2 = *aArg2;
+      tCode->args.mul.retval = *aRetval;
       break;
     case Sdiv:
+      tCode->args.sdiv.arg1 = *aArg1;
+      tCode->args.sdiv.arg2 = *aArg2;
+      tCode->args.sdiv.retval = *aRetval;
       break;
     case Icmp:
       break;

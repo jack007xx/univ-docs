@@ -208,12 +208,17 @@ expression
         | MINUS term
         | expression PLUS expression
         {
+                // 四則演算は、全部これと一緒
+
+                // オペランドをポップする(順番に注意)
                 Factor *tArg2 = factor_pop();
                 Factor *tArg1 = factor_pop();
 
+                // 代入先として局所変数を用意、popしないことで、次のオペランドとしてもそのまま使える
                 Factor *tRetval = factor_push("", gRegnum, LOCAL_VAR);
                 gRegnum++;
 
+                Factorからのコード生成と追加を同時に行う
                 code_add(code_create(Add, tArg1, tArg2, tRetval));
         }
         | expression MINUS expression
@@ -232,9 +237,23 @@ term
         : factor
         | term MULT factor
         {
+                Factor *tArg2 = factor_pop();
+                Factor *tArg1 = factor_pop();
+
+                Factor *tRetval = factor_push("", gRegnum, LOCAL_VAR);
+                gRegnum++;
+
+                code_add(code_create(Mul, tArg1, tArg2, tRetval));
         }
         | term DIV factor
         {
+                Factor *tArg2 = factor_pop();
+                Factor *tArg1 = factor_pop();
+
+                Factor *tRetval = factor_push("", gRegnum, LOCAL_VAR);
+                gRegnum++;
+
+                code_add(code_create(Sdiv, tArg1, tArg2, tRetval));
         }
         ;
 
