@@ -230,23 +230,25 @@ void print_code(LLVMcode *aCode) {
       factor_encode(aCode->args.icmp.arg1, tArg1);
       factor_encode(aCode->args.icmp.arg2, tArg2);
       factor_encode(aCode->args.icmp.retval, tRetval);
-      printf("%s = icmp %d i32 %s, %s\n", tRetval,
+      printf("%s = icmp %s i32 %s, %s\n", tRetval,
              ito_cmp_type[aCode->args.icmp.type], tArg1, tArg2);
       break;
     case BrUncond:
-      printf("br label %d\n", aCode->args.bruncond.arg1);
+      factor_encode(aCode->args.bruncond.arg1, tArg1);
+      printf("br label %s\n", tArg1);
       break;
     case BrCond:
       // condの代わりにretvalに入れてる
       factor_encode(aCode->args.brcond.cond, tRetval);
       factor_encode(aCode->args.brcond.arg1, tArg1);
       factor_encode(aCode->args.brcond.arg2, tArg2);
-      printf("br i1 %s, label %d, label %d\n", tRetval, tArg1, tArg2);
+      printf("br i1 %s, label %s, label %s\n", tRetval, tArg1, tArg2);
       break;
     case Call:
       break;
     case Label:
-      printf("; <label>:%d:\n", aCode->args.label.arg1);
+      factor_encode(aCode->args.label.arg1, tArg1);
+      printf("; <label>:%s:\n", tArg1);
       break;
     case Ret:
       break;

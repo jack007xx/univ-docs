@@ -118,6 +118,7 @@ typedef struct llvmcode {
 void code_init();
 LLVMcode *code_create(LLVMcommand, Factor *, Factor *, Factor *);
 void code_add(LLVMcode *);
+void print_LLVM_code();
 
 /* LLVMの関数定義 */
 typedef struct fundecl {
