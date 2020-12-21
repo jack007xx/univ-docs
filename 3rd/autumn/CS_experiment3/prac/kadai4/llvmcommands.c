@@ -4,7 +4,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#define DEBUG
+// #define DEBUG
 
 void print_code(LLVMcode *aCode);
 
@@ -48,6 +48,7 @@ void print_factor_stack() {
   printf("\n");
 }
 
+// ポップしてもメモリを開放しない(コード生成に使い回すため)
 Factor *factor_pop() {
   // .topは、挿入する位置を示すので、先にデクリメントしてもおk
   FSTACK.top--;
@@ -59,12 +60,14 @@ Factor *factor_pop() {
   return FSTACK.element[FSTACK.top];
 }
 
+// プッシュするたびにメモリ確保、変数名はRow構造体に入っているポインタを流用する想定
 Factor *factor_push(char *aName, int aVal, Scope aType) {
   // printf("<Factor pushed: %s>\n\n", aName);
   Factor *tFactor = malloc(sizeof(Factor));
-  tFactor->vname = aName;
-  tFactor->val = aVal;
-  tFactor->type = aType;
+  *tFactor = (Factor){aName, aVal, aType};
+  // tFactor->vname = aName;
+  // tFactor->val = aVal;
+  // tFactor->type = aType;
   FSTACK.element[FSTACK.top] = tFactor;
   FSTACK.top++;
 #ifdef DEBUG
@@ -143,24 +146,6 @@ void code_add(LLVMcode *aCode) {
     codetl = aCode;       /* 命令列の末尾の命令として記憶 */
   }
 }
-
-void print_LLVM_code() {
-  int tIsInMain = 0;
-  for (Fundecl *tFunPointer = declhd; tFunPointer != NULL;
-       tFunPointer = tFunPointer->next) {
-    for (LLVMcode *tCodePointer = tFunPointer->codes; tCodePointer != NULL;
-         tCodePointer = tCodePointer->next) {
-      if (!tIsInMain && tCodePointer->command != Global) {
-        printf("define i32 @main(){\n");
-        tIsInMain = 1;
-      }
-
-      if (tIsInMain) printf("\t");
-      print_code(tCodePointer);
-    }
-    printf("\tret i32 0\n}\n\n");
-  }
-};
 
 char *ito_instruction[] = {"alloca", "global", "load",  "add",  "store",
                            "add",    "mul",    "sdiv",  "icmp", "br",
@@ -261,3 +246,22 @@ void print_code(LLVMcode *aCode) {
       break;
   }
 }
+
+void print_LLVM_code() {
+  int tIsInMain = 0;
+  for (Fundecl *tFunPointer = declhd; tFunPointer != NULL;
+       tFunPointer = tFunPointer->next) {
+    for (LLVMcode *tCodePointer = tFunPointer->codes; tCodePointer != NULL;
+         tCodePointer = tCodePointer->next) {
+      if (!tIsInMain && tCodePointer->command != Global) {
+        printf("define i32 @main(){\n");
+        printf("\t%%1 = alloca i32, align 4\n");
+        tIsInMain = 1;
+      }
+
+      if (tIsInMain) printf("\t");
+      print_code(tCodePointer);
+    }
+    printf("\tret i32 0\n}\n\n");
+  }
+};

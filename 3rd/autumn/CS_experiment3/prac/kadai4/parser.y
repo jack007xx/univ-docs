@@ -47,12 +47,12 @@ Scope gScope;
 program
         :PROGRAM IDENT SEMICOLON
         {
-                gRegnum = 0;
                 fundecl_init();
                 code_init();
                 fstack_init();
                 symtab_init();
                 gScope = GLOBAL_VAR;
+                gRegnum = 2;
                 symtab_push($2, gRegnum, gScope);
         }
           outblock PERIOD
@@ -212,6 +212,7 @@ expression
                 Factor *tArg1 = factor_pop();
 
                 Factor *tRetval = factor_push("", gRegnum, LOCAL_VAR);
+                gRegnum++;
 
                 code_add(code_create(Add, tArg1, tArg2, tRetval));
         }
@@ -221,6 +222,7 @@ expression
                 Factor *tArg1 = factor_pop();
 
                 Factor *tRetval = factor_push("", gRegnum, LOCAL_VAR);
+                gRegnum++;
 
                 code_add(code_create(Sub, tArg1, tArg2, tRetval));
         }
@@ -253,6 +255,7 @@ var_name
                 factor_push(tRaw->name, tRaw->regnum, tRaw->type);
                 Factor *tArg1 = factor_pop();
                 Factor *tRetval = factor_push("", gRegnum, LOCAL_VAR);
+                gRegnum++;
 
                 code_add(code_create(Load, tArg1, NULL, tRetval));
         }
