@@ -154,10 +154,12 @@ void print_LLVM_code() {
         printf("define i32 @main(){\n");
         tIsInMain = 1;
       }
+
+      if (tIsInMain) printf("\t");
       print_code(tCodePointer);
     }
+    printf("\tret i32 0\n}\n\n");
   }
-  printf("}\n\n");
 };
 
 char *ito_instruction[] = {"alloca", "global", "load",  "add",  "store",
