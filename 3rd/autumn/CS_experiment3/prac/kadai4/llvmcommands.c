@@ -41,7 +41,6 @@ void print_factor(Factor *aFactor) {
 }
 
 void print_factor_stack() {
-  printf("factor stock\n");
   for (int i = 0; i <= FSTACK.top - 1; i++) {
     print_factor(FSTACK.element[i]);
   }
@@ -53,7 +52,7 @@ Factor *factor_pop() {
   // .topは、挿入する位置を示すので、先にデクリメントしてもおk
   FSTACK.top--;
 #ifdef DEBUG
-  printf("[DEBUG] Factor stack poped\n");
+  printf("[DEBUG] Factor stack POPED\n");
   print_factor(FSTACK.element[FSTACK.top]);
   printf("\n");
 #endif
@@ -71,7 +70,7 @@ Factor *factor_push(char *aName, int aVal, Scope aType) {
   FSTACK.element[FSTACK.top] = tFactor;
   FSTACK.top++;
 #ifdef DEBUG
-  printf("[DEBUG] Factor stack pushed\n");
+  printf("[DEBUG] Factor stack PUSHED\n");
   print_factor_stack();
   print_LLVM_code();
 #endif
@@ -172,7 +171,7 @@ void factor_encode(Factor aFactor, char *aArg) {
 }
 
 void print_code(LLVMcode *aCode) {
-  char tInstruction[256], tArg1[256], tArg2[256], tRetval[256];
+  char tArg1[256], tArg2[256], tRetval[256];
   switch (aCode->command) {
     case Alloca:
       factor_encode(aCode->args.alloca.retval, tRetval);

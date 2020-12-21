@@ -272,7 +272,7 @@ id_list
                 symtab_push($1, gRegnum, gScope);
                 Row *tRow = symtab_lookup($1);
 
-                factor_push($1, gRegnum, gScope);
+                factor_push(tRow->name, gRegnum, gScope);
                 Factor *tRetval = factor_pop();
 
                 code_add(code_create(Global,NULL,NULL,tRetval));
