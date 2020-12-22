@@ -288,23 +288,43 @@ arg_list
 id_list
         : IDENT
         {
-                symtab_push($1, gRegnum, gScope);
+                // 大域変数と局所変数の場合で処理分けた
+                // 局所だと、レジスタ番号をSSAで管理する必要がある
+                LLVMcommand tCommand;
+                if(gScope == GLOBAL_VAR){
+                        tCommand = Global;
+                        symtab_push($1, 0, gScope);
+                } else{
+                        tCommand = Alloca;
+                        symtab_push($1, gRegnum, gScope);
+                        gRegnum++;
+                }
+
                 Row *tRow = symtab_lookup($1);
 
-                factor_push(tRow->name, gRegnum, gScope);
+                factor_push(tRow->name, tRow->regnum, gScope);
                 Factor *tRetval = factor_pop();
 
-                code_add(code_create(Global,NULL,NULL,tRetval));
+                code_add(code_create(tCommand,NULL,NULL,tRetval));
         }
         | id_list COMMA IDENT
         {
-                symtab_push($3, gRegnum, gScope);
+                LLVMcommand tCommand;
+                if(gScope == GLOBAL_VAR){
+                        tCommand = Global;
+                        symtab_push($3, 0, gScope);
+                } else{
+                        tCommand = Alloca;
+                        symtab_push($3, gRegnum, gScope);
+                        gRegnum++;
+                }
+
                 Row *tRow = symtab_lookup($3);
 
-                factor_push(tRow->name, gRegnum, gScope);
+                factor_push(tRow->name, tRow->regnum, gScope);
                 Factor *tRetval = factor_pop();
 
-                code_add(code_create(Global,NULL,NULL,tRetval));
+                code_add(code_create(tCommand,NULL,NULL,tRetval));
         }
         ;
 
