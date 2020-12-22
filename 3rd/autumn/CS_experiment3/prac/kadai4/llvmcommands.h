@@ -53,60 +53,60 @@ typedef struct llvmcode {
   LLVMcommand command; /* 命令名 */
   union {              /* 命令の引数 */
     struct {           /* alloca */
-      Factor retval;
+      Factor *retval;
     } alloca;
     struct {
-      Factor retval;
+      Factor *retval;
     } global;
     struct { /* load   */
-      Factor arg1;
-      Factor retval;
+      Factor *arg1;
+      Factor *retval;
     } load;
     struct { /* store  */
-      Factor arg1;
-      Factor arg2;
+      Factor *arg1;
+      Factor *arg2;
     } store;
     struct { /* add    */
-      Factor arg1;
-      Factor arg2;
-      Factor retval;
+      Factor *arg1;
+      Factor *arg2;
+      Factor *retval;
     } add;
     struct { /* sub    */
-      Factor arg1;
-      Factor arg2;
-      Factor retval;
+      Factor *arg1;
+      Factor *arg2;
+      Factor *retval;
     } sub;
     struct {
-      Factor arg1;
-      Factor arg2;
-      Factor retval;
+      Factor *arg1;
+      Factor *arg2;
+      Factor *retval;
     } mul;
     struct {
-      Factor arg1;
-      Factor arg2;
-      Factor retval;
+      Factor *arg1;
+      Factor *arg2;
+      Factor *retval;
     } sdiv;
     struct { /* icmp   */
-      Factor arg1;
-      Factor arg2;
-      Factor retval;
+      Factor *arg1;
+      Factor *arg2;
+      Factor *retval;
       Cmptype type;
     } icmp;
     struct { /* br     */
-      Factor arg1;
+      Factor *arg1;
     } bruncond;
     struct { /* brc    */
-      Factor cond;
-      Factor arg1;
-      Factor arg2;
+      Factor *cond;
+      Factor *arg1;
+      Factor *arg2;
     } brcond;
     struct {
     } call;
     struct { /* label  */
-      Factor arg1;
+      Factor *arg1;
     } label;
     struct { /* ret    */
-      Factor arg1;
+      Factor *arg1;
     } ret;
     struct {
     } phi;

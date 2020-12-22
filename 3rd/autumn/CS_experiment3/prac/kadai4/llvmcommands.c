@@ -86,38 +86,38 @@ LLVMcode *code_create(LLVMcommand aCommand, Factor *aArg1, Factor *aArg2,
 
   switch (aCommand) {
     case Alloca:
-      tCode->args.alloca.retval = *aRetval;
+      tCode->args.alloca.retval = aRetval;
       break;
     case Global:
-      tCode->args.global.retval = *aRetval;
+      tCode->args.global.retval = aRetval;
       break;
     case Load:
-      tCode->args.load.arg1 = *aArg1;
-      tCode->args.load.retval = *aRetval;
+      tCode->args.load.arg1 = aArg1;
+      tCode->args.load.retval = aRetval;
       break;
     case Store:
-      tCode->args.store.arg1 = *aArg1;
-      tCode->args.store.arg2 = *aArg2;
+      tCode->args.store.arg1 = aArg1;
+      tCode->args.store.arg2 = aArg2;
       break;
     case Add:
-      tCode->args.add.arg1 = *aArg1;
-      tCode->args.add.arg2 = *aArg2;
-      tCode->args.add.retval = *aRetval;
+      tCode->args.add.arg1 = aArg1;
+      tCode->args.add.arg2 = aArg2;
+      tCode->args.add.retval = aRetval;
       break;
     case Sub:
-      tCode->args.sub.arg1 = *aArg1;
-      tCode->args.sub.arg2 = *aArg2;
-      tCode->args.sub.retval = *aRetval;
+      tCode->args.sub.arg1 = aArg1;
+      tCode->args.sub.arg2 = aArg2;
+      tCode->args.sub.retval = aRetval;
       break;
     case Mul:
-      tCode->args.mul.arg1 = *aArg1;
-      tCode->args.mul.arg2 = *aArg2;
-      tCode->args.mul.retval = *aRetval;
+      tCode->args.mul.arg1 = aArg1;
+      tCode->args.mul.arg2 = aArg2;
+      tCode->args.mul.retval = aRetval;
       break;
     case Sdiv:
-      tCode->args.sdiv.arg1 = *aArg1;
-      tCode->args.sdiv.arg2 = *aArg2;
-      tCode->args.sdiv.retval = *aRetval;
+      tCode->args.sdiv.arg1 = aArg1;
+      tCode->args.sdiv.arg2 = aArg2;
+      tCode->args.sdiv.retval = aRetval;
       break;
     case Icmp:
       break;
@@ -163,19 +163,19 @@ char *ito_instruction[] = {"alloca", "global", "load",  "add",  "store",
 
 char *ito_cmp_type[] = {"eq", "ne", "sgt", "sge", "slt", "sle"};
 
-void factor_encode(Factor aFactor, char *aArg) {
-  switch (aFactor.type) {
+void factor_encode(Factor *aFactor, char *aArg) {
+  switch (aFactor->type) {
     case GLOBAL_VAR:
-      sprintf(aArg, "@%s", aFactor.vname);
+      sprintf(aArg, "@%s", aFactor->vname);
       break;
     case LOCAL_VAR:
-      sprintf(aArg, "%%%d", aFactor.val);
+      sprintf(aArg, "%%%d", aFactor->val);
       break;
     case CONSTANT:
-      sprintf(aArg, "%d", aFactor.val);
+      sprintf(aArg, "%d", aFactor->val);
       break;
     case LABEL:
-      sprintf(aArg, "%d", aFactor.val);
+      sprintf(aArg, "%d", aFactor->val);
     default:
       break;
   }
