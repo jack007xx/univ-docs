@@ -5,6 +5,7 @@
 #include <string.h>
 
 // #define DEBUG
+// #define TOFILE
 
 void print_code(LLVMcode *aCode);
 
@@ -16,6 +17,9 @@ Fundecl
     *decltl; /* 関数定義の線形リストの末尾の要素のアドレスを保持するポインタ */
 
 Factorstack FSTACK; /* 整数もしくはレジスタ番号を保持するスタック */
+
+FILE *gFile;
+
 void fundecl_init() {
   // 課題4では関数呼び出しを行わないので、このように定義する。
   Fundecl *tMain = (Fundecl *)malloc(sizeof(Fundecl));
@@ -186,63 +190,63 @@ void print_code(LLVMcode *aCode) {
   switch (aCode->command) {
     case Alloca:
       factor_encode(aCode->args.alloca.retval, tRetval);
-      printf("%s = alloca i32 0, align 4\n", tRetval);
+      fprintf(gFile, "%s = alloca i32 0, align 4\n", tRetval);
       break;
     case Global:
       factor_encode(aCode->args.global.retval, tRetval);
-      printf("%s = common global i32 0, align 4\n", tRetval);
+      fprintf(gFile, "%s = common global i32 0, align 4\n", tRetval);
       break;
     case Load:
       factor_encode(aCode->args.load.arg1, tArg1);
       factor_encode(aCode->args.load.retval, tRetval);
-      printf("%s = load i32, i32* %s, align 4\n", tRetval, tArg1);
+      fprintf(gFile, "%s = load i32, i32* %s, align 4\n", tRetval, tArg1);
       break;
     case Store:
       factor_encode(aCode->args.store.arg1, tArg1);
       factor_encode(aCode->args.store.arg2, tArg2);
-      printf("store i32 %s, i32* %s, align 4\n", tArg1, tArg2);
+      fprintf(gFile, "store i32 %s, i32* %s, align 4\n", tArg1, tArg2);
       break;
     case Add:
       factor_encode(aCode->args.add.arg1, tArg1);
       factor_encode(aCode->args.add.arg2, tArg2);
       factor_encode(aCode->args.add.retval, tRetval);
-      printf("%s = add nsw i32 %s, %s\n", tRetval, tArg1, tArg2);
+      fprintf(gFile, "%s = add nsw i32 %s, %s\n", tRetval, tArg1, tArg2);
       break;
     case Sub:
       factor_encode(aCode->args.sub.arg1, tArg1);
       factor_encode(aCode->args.sub.arg2, tArg2);
       factor_encode(aCode->args.sub.retval, tRetval);
-      printf("%s = sub nsw i32 %s, %s\n", tRetval, tArg1, tArg2);
+      fprintf(gFile, "%s = sub nsw i32 %s, %s\n", tRetval, tArg1, tArg2);
       break;
     case Mul:
       factor_encode(aCode->args.mul.arg1, tArg1);
       factor_encode(aCode->args.mul.arg2, tArg2);
       factor_encode(aCode->args.mul.retval, tRetval);
-      printf("%s = mul nsw i32 %s, %s\n", tRetval, tArg1, tArg2);
+      fprintf(gFile, "%s = mul nsw i32 %s, %s\n", tRetval, tArg1, tArg2);
       break;
     case Sdiv:
       factor_encode(aCode->args.sdiv.arg1, tArg1);
       factor_encode(aCode->args.sdiv.arg2, tArg2);
       factor_encode(aCode->args.sdiv.retval, tRetval);
-      printf("%s = sdiv i32 %s, %s\n", tRetval, tArg1, tArg2);
+      fprintf(gFile, "%s = sdiv i32 %s, %s\n", tRetval, tArg1, tArg2);
       break;
     case Icmp:
       factor_encode(aCode->args.icmp.arg1, tArg1);
       factor_encode(aCode->args.icmp.arg2, tArg2);
       factor_encode(aCode->args.icmp.retval, tRetval);
-      printf("%s = icmp %s i32 %s, %s\n", tRetval,
-             ito_cmp_type[aCode->args.icmp.type], tArg1, tArg2);
+      fprintf(gFile, "%s = icmp %s i32 %s, %s\n", tRetval,
+              ito_cmp_type[aCode->args.icmp.type], tArg1, tArg2);
       break;
     case BrUncond:
       factor_encode(aCode->args.bruncond.arg1, tArg1);
-      printf("br label %s\n", tArg1);
+      fprintf(gFile, "br label %s\n", tArg1);
       break;
     case BrCond:
       // condの代わりにretvalに入れてる
       factor_encode(aCode->args.brcond.cond, tRetval);
       factor_encode(aCode->args.brcond.arg1, tArg1);
       factor_encode(aCode->args.brcond.arg2, tArg2);
-      printf("br i1 %s, label %s, label %s\n", tRetval, tArg1, tArg2);
+      fprintf(gFile, "br i1 %s, label %s, label %s\n", tRetval, tArg1, tArg2);
       break;
     case Call:
       break;
@@ -260,20 +264,29 @@ void print_code(LLVMcode *aCode) {
 }
 
 void print_LLVM_code() {
+  gFile = stdout;
+#ifdef TOFILE
+  gFile = fopen("result.ll", "w");
+#endif
+
   int tIsInMain = 0;
   for (Fundecl *tFunPointer = declhd; tFunPointer != NULL;
        tFunPointer = tFunPointer->next) {
     for (LLVMcode *tCodePointer = tFunPointer->codes; tCodePointer != NULL;
          tCodePointer = tCodePointer->next) {
       if (!tIsInMain && tCodePointer->command != Global) {
-        printf("define i32 @main(){\n");
-        printf("\t%%1 = alloca i32, align 4\n");
+        fprintf(gFile, "define i32 @main(){\n");
+        fprintf(gFile, "\t%%1 = alloca i32, align 4\n");
         tIsInMain = 1;
       }
 
-      if (tIsInMain) printf("\t");
+      if (tIsInMain) fprintf(gFile, "\t");
       print_code(tCodePointer);
     }
-    printf("\tret i32 0\n}\n\n");
+    fprintf(gFile, "\tret i32 0\n}\n\n");
   }
+
+#ifdef TOFILE
+  fclose(gFile);
+#endif
 };

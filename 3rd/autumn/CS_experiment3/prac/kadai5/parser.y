@@ -225,10 +225,8 @@ expression
         {
                 Factor *tArg2 = factor_pop();
                 Factor *tArg1 = factor_pop();
-
                 Factor *tRetval = factor_push("", gRegnum, LOCAL_VAR);
                 gRegnum++;
-
                 code_add(code_create(Sub, tArg1, tArg2, tRetval));
         }
         ;
@@ -239,20 +237,16 @@ term
         {
                 Factor *tArg2 = factor_pop();
                 Factor *tArg1 = factor_pop();
-
                 Factor *tRetval = factor_push("", gRegnum, LOCAL_VAR);
                 gRegnum++;
-
                 code_add(code_create(Mul, tArg1, tArg2, tRetval));
         }
         | term DIV factor
         {
                 Factor *tArg2 = factor_pop();
                 Factor *tArg1 = factor_pop();
-
                 Factor *tRetval = factor_push("", gRegnum, LOCAL_VAR);
                 gRegnum++;
-
                 code_add(code_create(Sdiv, tArg1, tArg2, tRetval));
         }
         ;
