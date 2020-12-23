@@ -21,17 +21,25 @@ Factorstack FSTACK; /* 整数もしくはレジスタ番号を保持するスタ
 FILE *gFile;
 
 void fundecl_init() {
-  // 課題4では関数呼び出しを行わないので、このように定義する。
-  Fundecl *tMain = (Fundecl *)malloc(sizeof(Fundecl));
-  strcpy(tMain->fname, "Main");
-  declhd = tMain;
-  decltl = tMain;
+  declhd = NULL;
+  decltl = NULL;
 }
 
-void code_init() {
-  // LLVMcode *tInitialCode = (LLVMcode *)malloc(sizeof(LLVMcode));
-  codehd = NULL;
-  codetl = NULL;
+void fundecl_add(char *aName, unsigned aArity) {
+  Fundecl *tFun = malloc(sizeof(Fundecl));
+  strcpy(tFun->fname, aName);
+  tFun->arity = aArity;
+
+  tFun->codes = codehd;
+  code_init();
+
+  if (declhd == NULL) {
+    declhd = tFun;
+    decltl = tFun;
+  } else {
+    decltl->next = tFun;
+    decltl = tFun;
+  }
 }
 
 void fstack_init() { /* FSTACKの初期化 */
@@ -81,13 +89,18 @@ Factor *factor_push(char *aName, int aVal, Scope aType) {
   return tFactor;
 }
 
+void code_init() {
+  // LLVMcode *tInitialCode = (LLVMcode *)malloc(sizeof(LLVMcode));
+  codehd = NULL;
+  codetl = NULL;
+}
+
 // Factorのポインタを投げて、コマンドを指定するとコードを生成してくれる
 //
 LLVMcode *code_create(LLVMcommand aCommand, Factor *aArg1, Factor *aArg2,
                       Factor *aRetval, Cmptype aIcmpType) {
   LLVMcode *tCode = malloc(sizeof(LLVMcode));
   tCode->command = aCommand;
-
   switch (aCommand) {
     case Alloca:
       tCode->args.alloca.retval = aRetval;
@@ -160,7 +173,7 @@ void code_add(LLVMcode *aCode) {
   if (codetl == NULL) {   /* 解析中の関数の最初の命令の場合 */
     if (decltl == NULL) { /* 解析中の関数がない場合 */
       /* 関数宣言を処理する段階でリストが作られているので，ありえない */
-      fprintf(stderr, "unexpected error\n");
+      fprintf(stderr, "[ERROR] unexpected error\n");
     }
     decltl->codes = aCode; /* 関数定義の命令列の先頭の命令に設定 */
     codehd = codetl = aCode; /* 生成中の命令列の末尾の命令として記憶 */
@@ -278,21 +291,21 @@ void print_LLVM_code() {
   gFile = fopen("result.ll", "w");
 #endif
 
-  int tIsInMain = 0;
   for (Fundecl *tFunPointer = declhd; tFunPointer != NULL;
        tFunPointer = tFunPointer->next) {
+    if (tFunPointer != declhd) {
+      // 初回のfundeclは大域変数の定義に当てられる
+      fprintf(gFile, "define i32 @%s(){\n", tFunPointer->fname);
+      fprintf(gFile, "\t%%1 = alloca i32, align 4\n");
+    }
+
     for (LLVMcode *tCodePointer = tFunPointer->codes; tCodePointer != NULL;
          tCodePointer = tCodePointer->next) {
-      if (!tIsInMain && tCodePointer->command != Global) {
-        fprintf(gFile, "define i32 @main(){\n");
-        fprintf(gFile, "\t%%1 = alloca i32, align 4\n");
-        tIsInMain = 1;
-      }
-
-      if (tIsInMain) fprintf(gFile, "\t");
+      if (tFunPointer != declhd) printf("\t");
       print_code(tCodePointer);
     }
-    fprintf(gFile, "\tret i32 0\n}\n\n");
+
+    if (tFunPointer != declhd) fprintf(gFile, "\tret i32 0\n}\n\n");
   }
 
 #ifdef TOFILE

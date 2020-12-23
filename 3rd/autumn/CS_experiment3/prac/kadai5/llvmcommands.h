@@ -130,5 +130,6 @@ typedef struct fundecl {
 } Fundecl;
 
 void fundecl_init();
+void fundecl_add(char *, unsigned);
 
 #endif

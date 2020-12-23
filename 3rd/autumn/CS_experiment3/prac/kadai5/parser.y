@@ -54,6 +54,8 @@ program
                 gScope = GLOBAL_VAR;
                 gRegnum = 2;
                 symtab_push($2, gRegnum, gScope);
+
+                fundecl_add("__GlobalDecl", 0);
         }
           outblock PERIOD
         {
@@ -62,7 +64,11 @@ program
         ;
 
 outblock
-        : var_decl_part subprog_decl_part statement
+        : var_decl_part subprog_decl_part
+        {
+                fundecl_add("main", 0);
+        }
+         statement
         ;
 
 var_decl_part
@@ -105,6 +111,10 @@ proc_name
         : IDENT
         {
                 symtab_push($1, gRegnum, PROC_NAME);
+                Row *tRow = symtab_lookup($1);
+
+                fundecl_add(tRow->name, 0);
+
                 gScope = LOCAL_VAR;
         }
         ;
@@ -138,7 +148,7 @@ assignment_statement
                 Factor *tArg2 = factor_pop();
                 Factor *tArg1 = factor_pop();
 
-                code_add(code_create(Store, tArg1, tArg2, NULL));
+                code_add(code_create(Store, tArg1, tArg2, NULL, 0));
         }
         ;
 
@@ -219,7 +229,7 @@ expression
                 gRegnum++;
 
                 // Factorからのコード生成と追加を同時に行う
-                code_add(code_create(Add, tArg1, tArg2, tRetval));
+                code_add(code_create(Add, tArg1, tArg2, tRetval, 0));
         }
         | expression MINUS expression
         {
@@ -227,7 +237,7 @@ expression
                 Factor *tArg1 = factor_pop();
                 Factor *tRetval = factor_push("", gRegnum, LOCAL_VAR);
                 gRegnum++;
-                code_add(code_create(Sub, tArg1, tArg2, tRetval));
+                code_add(code_create(Sub, tArg1, tArg2, tRetval, 0));
         }
         ;
 
@@ -239,7 +249,7 @@ term
                 Factor *tArg1 = factor_pop();
                 Factor *tRetval = factor_push("", gRegnum, LOCAL_VAR);
                 gRegnum++;
-                code_add(code_create(Mul, tArg1, tArg2, tRetval));
+                code_add(code_create(Mul, tArg1, tArg2, tRetval, 0));
         }
         | term DIV factor
         {
@@ -247,7 +257,7 @@ term
                 Factor *tArg1 = factor_pop();
                 Factor *tRetval = factor_push("", gRegnum, LOCAL_VAR);
                 gRegnum++;
-                code_add(code_create(Sdiv, tArg1, tArg2, tRetval));
+                code_add(code_create(Sdiv, tArg1, tArg2, tRetval, 0));
         }
         ;
 
@@ -270,7 +280,7 @@ var_name
                 Factor *tRetval = factor_push("", gRegnum, LOCAL_VAR);
                 gRegnum++;
 
-                code_add(code_create(Load, tArg1, NULL, tRetval));
+                code_add(code_create(Load, tArg1, NULL, tRetval, 0));
         }
         ;
 
@@ -299,7 +309,7 @@ id_list
                 factor_push(tRow->name, tRow->regnum, gScope);
                 Factor *tRetval = factor_pop();
 
-                code_add(code_create(tCommand,NULL,NULL,tRetval));
+                code_add(code_create(tCommand,NULL,NULL,tRetval, 0));
         }
         | id_list COMMA IDENT
         {
@@ -318,7 +328,7 @@ id_list
                 factor_push(tRow->name, tRow->regnum, gScope);
                 Factor *tRetval = factor_pop();
 
-                code_add(code_create(tCommand,NULL,NULL,tRetval));
+                code_add(code_create(tCommand,NULL,NULL,tRetval, 0));
         }
         ;
 
