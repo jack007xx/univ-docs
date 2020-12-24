@@ -258,7 +258,24 @@ condition
 expression
         : term
         | PLUS term
+        {
+                Factor *tArg2 = factor_pop();
+                // 単項演算はゼロからの足し引きで表現。
+                factor_push("", 0, CONSTANT);
+                Factor *tArg1 = factor_pop();
+                Factor *tRetval = factor_push("", gRegnum, LOCAL_VAR);
+                gRegnum++;
+                code_add(code_create(Add, tArg1, tArg2, tRetval, 0));
+        }
         | MINUS term
+        {
+                Factor *tArg2 = factor_pop();
+                factor_push("", 0, CONSTANT);
+                Factor *tArg1 = factor_pop();
+                Factor *tRetval = factor_push("", gRegnum, LOCAL_VAR);
+                gRegnum++;
+                code_add(code_create(Sub, tArg1, tArg2, tRetval, 0));
+        }
         | expression PLUS expression
         {
                 // 四則演算は、全部これと一緒
