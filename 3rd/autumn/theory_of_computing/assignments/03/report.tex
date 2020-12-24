@@ -1,0 +1,67 @@
+\documentclass[a4paper,10pt]{jsarticle}
+
+% 数式
+\usepackage{amsmath,amsfonts}
+\usepackage{bm}
+% 画像
+\usepackage[dvipdfmx]{graphicx}
+\usepackage{here}
+
+\usepackage{listingsutf8,jlisting} %日本語のコメントアウトをする場合jlistingが必要
+%ここからソースコードの表示に関する設定
+\lstset{
+  basicstyle={\ttfamily},
+  identifierstyle={\small},
+  commentstyle={\smallitshape},
+  keywordstyle={\small\bfseries},
+  ndkeywordstyle={\small},
+  stringstyle={\small\ttfamily},
+  frame={tb},
+  breaklines=true,
+  columns=[l]{fullflexible},
+  numbers=left,
+  xrightmargin=0zw,
+  xleftmargin=3zw,
+  numberstyle={\scriptsize},
+  stepnumber=1,
+  numbersep=1zw,
+  lineskip=-0.5ex
+}
+
+\begin{document}
+
+\title{計算理論第3回レポート}
+\author{坪井正太郎（101830245）}
+\date{\today}
+\maketitle
+\section{積集合}
+$M_1, M_2$を一般のDTMとする。$L(M_1)\cap L(M_2)$を認識するDTMは以下のようにして構成することができる。
+\begin{itemize}
+  \item $M^\prime は入力wに対してM_1を模倣する。$
+  \item $M_1がwを受理すれば、同じ入力wに対してM_2を模倣する。$
+  \item $M_2が受理すれば、M^\prime も受理して停止。$
+\end{itemize}
+
+\section{連接}
+以下のようなサブルーチンを定義する。
+これは区切り位置がわかっている連接に対するDTMである。
+\subsection{サブルーチン}
+$M_1, M_2$を一般のDTMとする。$l_1l_2(l_1\in L(M_1), l_2\in L(M_2))$を認識するDTMは以下のようにして構成することができる。
+入力については、区切り位置が何らかの方法でわかっているものとする。(位置記号、オフセット等)
+\begin{itemize}
+  \item $M^\prime は入力開始から区切り位置までを入力としたM_1を模倣する。$
+  \item $M_1が入力を受理して停止すれば、区切り位置から入力終端までを入力としたM_2を模倣する。$
+  \item $M_2が入力を受理して停止すれば、M^\prime も受理して停止する。$
+\end{itemize}
+
+\subsection{メインルーチン}
+以下のような多テープDTMを構成する。
+第1テープは入力を、第2テープは各サブルーチンの状態を保持する。
+\begin{itemize}
+  \item $M^{\prime\prime} は入力に対して、開始位置から終端までの任意の場所に区切りを入れた記号列を入力としたサブルーチンを、考えられる区切り位置の数だけ呼び出す$
+  \item $各サブルーチンは1実行ステップずつ実行して、それらの状態は第2テープに保持しておく。$
+  \item $すべてのサブルーチンがnステップ実行したら、n+1ステップ目を実行する。$
+  \item $サブルーチンのうちどれかが入力を受理して停止すれば、M^{\prime\prime}も入力を受理して停止する。$
+\end{itemize}
+
+\end{document}
