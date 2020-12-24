@@ -19,6 +19,7 @@ extern char *yytext;
 
 int gRegnum;
 Scope gScope;
+int gLabelNum;
 
 %}
 
@@ -51,8 +52,11 @@ program
                 code_init();
                 fstack_init();
                 symtab_init();
+
                 gScope = GLOBAL_VAR;
                 gRegnum = 2;
+                gLabelNum = 0;
+
                 symtab_push($2, gRegnum, gScope);
 
                 fundecl_add("__GlobalDecl", 0);
@@ -153,7 +157,45 @@ assignment_statement
         ;
 
 if_statement
-        : IF condition THEN statement else_statement
+        : IF condition THEN
+        {
+                Factor *tCondition = factor_pop();
+                factor_push("", 0, LABEL);
+                Factor *tLabel1 = factor_pop();
+                factor_push("", gLabelNum, LABEL);
+                gLabelNum++;
+                Factor *tLabel2 = factor_pop(); // 捨てラベル
+
+                LLVMcode *tCode = code_create(BrCond, tLabel1, tLabel2, tCondition, 0);
+                br_push(tCode);
+                code_add(tCode);
+                code_add(code_create(Label, tLabel2, NULL, NULL, 0));
+        }
+         statement
+        {
+                factor_push("", 0, LABEL);
+                Factor *tLabel1 = factor_pop();
+                LLVMcode *tBrCode = code_create(BrUncond, tLabel1, NULL, NULL, 0);
+
+                br_back_patch(gLabelNum);
+                factor_push("", gLabelNum, LABEL);
+                Factor *tLabel2 = factor_pop();
+                gLabelNum++;
+
+                br_push(tBrCode);
+
+                code_add(tBrCode);
+                code_add(code_create(Label, tLabel2, NULL, NULL, 0));
+        }
+         else_statement
+        {
+                br_back_patch(gLabelNum);
+                factor_push("", gLabelNum, LABEL);
+                Factor *tLabel = factor_pop();
+                gLabelNum++;
+
+                code_add(code_create(Label, tLabel, NULL, NULL, 0));
+        }
         ;
 
 else_statement
@@ -211,7 +253,7 @@ condition
                 Factor *tArg1 = factor_pop();
                 Factor *tRetval = factor_push("", gRegnum, LOCAL_VAR);
                 gRegnum++;
-                code_add(code_create(Icmp, tArg1, tArg2, tRetval, EQ));
+                code_add(code_create(Icmp, tArg1, tArg2, tRetval, EQUAL));
         }
         | expression NEQ expression
         {
@@ -219,7 +261,7 @@ condition
                 Factor *tArg1 = factor_pop();
                 Factor *tRetval = factor_push("", gRegnum, LOCAL_VAR);
                 gRegnum++;
-                code_add(code_create(Icmp, tArg1, tArg2, tRetval, NEQ));
+                code_add(code_create(Icmp, tArg1, tArg2, tRetval, NE));
         }
         | expression GT expression
         {
@@ -227,7 +269,7 @@ condition
                 Factor *tArg1 = factor_pop();
                 Factor *tRetval = factor_push("", gRegnum, LOCAL_VAR);
                 gRegnum++;
-                code_add(code_create(Icmp, tArg1, tArg2, tRetval, GT));
+                code_add(code_create(Icmp, tArg1, tArg2, tRetval, SGT));
         }
         | expression GE expression
         {
@@ -235,7 +277,7 @@ condition
                 Factor *tArg1 = factor_pop();
                 Factor *tRetval = factor_push("", gRegnum, LOCAL_VAR);
                 gRegnum++;
-                code_add(code_create(Icmp, tArg1, tArg2, tRetval, GE));
+                code_add(code_create(Icmp, tArg1, tArg2, tRetval, SGE));
         }
         | expression LT expression
         {
@@ -243,7 +285,7 @@ condition
                 Factor *tArg1 = factor_pop();
                 Factor *tRetval = factor_push("", gRegnum, LOCAL_VAR);
                 gRegnum++;
-                code_add(code_create(Icmp, tArg1, tArg2, tRetval, LT));
+                code_add(code_create(Icmp, tArg1, tArg2, tRetval, SLT));
         }
         | expression LE expression
         {
@@ -251,7 +293,7 @@ condition
                 Factor *tArg1 = factor_pop();
                 Factor *tRetval = factor_push("", gRegnum, LOCAL_VAR);
                 gRegnum++;
-                code_add(code_create(Icmp, tArg1, tArg2, tRetval, LE));
+                code_add(code_create(Icmp, tArg1, tArg2, tRetval, SLE));
         }
         ;
 

@@ -132,4 +132,13 @@ typedef struct fundecl {
 void fundecl_init();
 void fundecl_add(char *, unsigned);
 
+// バックパッチ専用
+typedef struct brStack {
+  LLVMcode *code;
+  struct brStack *next;
+} BrStack;
+
+void br_push(LLVMcode *);
+void br_back_patch(int);
+
 #endif

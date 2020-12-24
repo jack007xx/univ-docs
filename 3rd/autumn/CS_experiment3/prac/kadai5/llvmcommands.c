@@ -18,6 +18,8 @@ Fundecl
 
 Factorstack FSTACK; /* 整数もしくはレジスタ番号を保持するスタック */
 
+BrStack *gBrStack;
+
 FILE *gFile;
 
 void fundecl_init() {
@@ -312,3 +314,19 @@ void print_LLVM_code() {
   fclose(gFile);
 #endif
 };
+
+void br_push(LLVMcode *aCode) {
+  BrStack *tTop = malloc(sizeof(BrStack));
+  tTop->code = aCode;
+  tTop->next = gBrStack;
+  gBrStack = tTop;
+}
+void br_back_patch(int aLabel) {
+  if (gBrStack->code->command == BrCond) {
+    gBrStack->code->args.brcond.arg1->val = aLabel;
+    gBrStack = gBrStack->next;
+  } else if (gBrStack->code->command == BrUncond) {
+    gBrStack->code->args.bruncond.arg1->val = aLabel;
+    gBrStack = gBrStack->next;
+  }
+}
