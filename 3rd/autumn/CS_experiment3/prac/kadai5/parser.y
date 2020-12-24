@@ -160,16 +160,18 @@ if_statement
         : IF condition THEN
         {
                 Factor *tCondition = factor_pop();
+
                 factor_push("", 0, LABEL);
-                Factor *tLabel1 = factor_pop();
+                Factor *tLabel1 = factor_pop(); // バックパッチであとで正しい値をつける
+
                 factor_push("", gLabelNum, LABEL);
+                Factor *tLabel2 = factor_pop(); // 捨てラベル(icmpのfalseのときに飛ぶラベルを直後に置く)
                 gLabelNum++;
-                Factor *tLabel2 = factor_pop(); // 捨てラベル
 
                 LLVMcode *tCode = code_create(BrCond, tLabel1, tLabel2, tCondition, 0);
-                br_push(tCode);
+                br_push(tCode); // あとでバックパッチするためのbr命令スタックに積む
                 code_add(tCode);
-                code_add(code_create(Label, tLabel2, NULL, NULL, 0));
+                code_add(code_create(Label, tLabel2, NULL, NULL, 0)); // 捨てラベルコード生成
         }
          statement
         {
@@ -177,7 +179,7 @@ if_statement
                 Factor *tLabel1 = factor_pop();
                 LLVMcode *tBrCode = code_create(BrUncond, tLabel1, NULL, NULL, 0);
 
-                br_back_patch(gLabelNum);
+                br_back_patch(gLabelNum); // 今回のBr命令を積むより先にthenから飛んでくるやつをバックパッチ
                 factor_push("", gLabelNum, LABEL);
                 Factor *tLabel2 = factor_pop();
                 gLabelNum++;
