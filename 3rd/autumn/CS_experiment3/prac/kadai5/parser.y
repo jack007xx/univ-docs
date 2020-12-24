@@ -205,11 +205,54 @@ null_statement
 
 condition
         : expression EQ expression
+        {
+                // 四則演算と大体一緒
+                Factor *tArg2 = factor_pop();
+                Factor *tArg1 = factor_pop();
+                Factor *tRetval = factor_push("", gRegnum, LOCAL_VAR);
+                gRegnum++;
+                code_add(code_create(Icmp, tArg1, tArg2, tRetval, EQ));
+        }
         | expression NEQ expression
+        {
+                Factor *tArg2 = factor_pop();
+                Factor *tArg1 = factor_pop();
+                Factor *tRetval = factor_push("", gRegnum, LOCAL_VAR);
+                gRegnum++;
+                code_add(code_create(Icmp, tArg1, tArg2, tRetval, NEQ));
+        }
         | expression GT expression
+        {
+                Factor *tArg2 = factor_pop();
+                Factor *tArg1 = factor_pop();
+                Factor *tRetval = factor_push("", gRegnum, LOCAL_VAR);
+                gRegnum++;
+                code_add(code_create(Icmp, tArg1, tArg2, tRetval, GT));
+        }
         | expression GE expression
+        {
+                Factor *tArg2 = factor_pop();
+                Factor *tArg1 = factor_pop();
+                Factor *tRetval = factor_push("", gRegnum, LOCAL_VAR);
+                gRegnum++;
+                code_add(code_create(Icmp, tArg1, tArg2, tRetval, GE));
+        }
         | expression LT expression
+        {
+                Factor *tArg2 = factor_pop();
+                Factor *tArg1 = factor_pop();
+                Factor *tRetval = factor_push("", gRegnum, LOCAL_VAR);
+                gRegnum++;
+                code_add(code_create(Icmp, tArg1, tArg2, tRetval, LT));
+        }
         | expression LE expression
+        {
+                Factor *tArg2 = factor_pop();
+                Factor *tArg1 = factor_pop();
+                Factor *tRetval = factor_push("", gRegnum, LOCAL_VAR);
+                gRegnum++;
+                code_add(code_create(Icmp, tArg1, tArg2, tRetval, LE));
+        }
         ;
 
 expression
