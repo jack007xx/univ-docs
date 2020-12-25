@@ -188,9 +188,9 @@ void code_add(LLVMcode *aCode) {
   }
 }
 
-char *ito_instruction[] = {"alloca", "global", "load",  "add",  "store",
-                           "add",    "mul",    "sdiv",  "icmp", "br",
-                           "brc",    "call",   "label", "ret",  "phi"};
+char *ito_instruction[] = {"alloca", "global", "load", "store", "add", "sub",
+                           "mul",    "sdiv",   "icmp", "br",    "brc", "call",
+                           "label",  "ret",    "phi",  "write"};
 
 char *ito_cmp_type[] = {"eq", "ne", "sgt", "sge", "slt", "sle"};
 
@@ -280,7 +280,7 @@ void print_code(LLVMcode *aCode) {
       break;
     case Label:
       factor_encode(aCode->args.label.arg1, tArg1);
-      fprintf(gFile, "; <label>:%s:\n", tArg1);
+      fprintf(gFile, "; <label>:%s:\n\n", tArg1);
       break;
     case Ret:
       break;

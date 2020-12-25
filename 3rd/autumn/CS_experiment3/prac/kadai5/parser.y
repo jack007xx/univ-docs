@@ -265,7 +265,24 @@ for_statement
                 Factor *tDo = factor_push("", gRegnum, LABEL);  // ループで戻ってくる場所、あとからpopしてbr命令を書く
                 gRegnum++;
 
+                code_add(code_create(BrUncond, tDo, NULL, NULL, 0));
                 code_add(code_create(Label, tDo, NULL, NULL, 0));
+
+                if(tCnt->type == GLOBAL_VAR){
+                        factor_push("", gRegnum, LOCAL_VAR);
+                        Factor *tCntLocal = factor_pop();
+                        gRegnum++;
+                        code_add(code_create(Load, tCnt, NULL, tCntLocal, 0)); // カウンタをレジスタに持ってくる
+                        tCnt = tCntLocal;
+                }
+
+                if(tTo->type == GLOBAL_VAR){
+                        factor_push("", gRegnum, LOCAL_VAR);
+                        Factor *tToLocal = factor_pop();
+                        gRegnum++;
+                        code_add(code_create(Load, tTo, NULL, tToLocal, 0)); // 比較先をレジスタに持ってくる
+                        tTo = tToLocal;
+                }
 
                 factor_push("", gRegnum, LOCAL_VAR);
                 Factor *tCond = factor_pop(); // 条件を用意する
@@ -288,14 +305,25 @@ for_statement
         }
          statement
         {
-                {
-                factor_push("", 1, CONSTANT);
-                Factor *tOne = factor_pop();
-
                 Factor *tDo = factor_pop();
                 Factor *tCnt = factor_pop();
 
-                code_add(code_create(Add, tCnt, tOne, tCnt, 0));
+                // cntインクリメント部ここから
+                factor_push("", gRegnum, LOCAL_VAR);
+                Factor *tCntLocal = factor_pop();
+                gRegnum++;
+                code_add(code_create(Load, tCnt, NULL, tCntLocal, 0)); // カウンタをレジスタに持ってくる
+
+                factor_push("", 1, CONSTANT);
+                Factor *tOne = factor_pop();
+
+                factor_push("", gRegnum, LOCAL_VAR);
+                Factor *tRetval = factor_pop();
+                gRegnum++;
+                code_add(code_create(Add, tCntLocal, tOne, tRetval, 0));
+
+                code_add(code_create(Store, tRetval, tCnt, NULL, 0));
+                // インクリメント部ここまで
 
                 code_add(code_create(BrUncond, tDo, NULL, NULL, 0));
 
@@ -305,7 +333,6 @@ for_statement
                 Factor *tBreak = factor_pop();
 
                 code_add(code_create(Label, tBreak, NULL, NULL, 0));
-                }
         }
         ;
 
@@ -336,6 +363,7 @@ write_statement
         {
                 Factor *tArg = factor_pop();
                 code_add(code_create(Write, tArg, NULL, NULL, 0));
+                gRegnum++; // print文は返り値を使わないけど、レジスタ番号は一応確保しないとエラー
         }
         ;
 
