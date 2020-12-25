@@ -212,7 +212,40 @@ else_statement
         ;
 
 while_statement
-        : WHILE condition DO statement
+        : WHILE condition DO
+        {
+                Factor *tCondition = factor_pop();
+
+                Factor *tWhile = factor_push("", gRegnum, LABEL); // あとでここに戻ってくるためにプッシュしたままにしておく
+                gRegnum++;
+
+                factor_push("", gRegnum, LABEL);
+                Factor *tDo = factor_pop(); // 捨てラベル
+                gRegnum++;
+
+                factor_push("", 0, LABEL);
+                Factor *tBreak = factor_pop(); // バックパッチであとで正しい値をつける(whileを抜ける)
+
+                LLVMcode *tCode = code_create(BrCond, tDo, tBreak, tCondition, 0);
+                br_push(tCode); // あとでバックパッチするためのbr命令スタックに積む
+
+                code_add(code_create(Label, tWhile, NULL, NULL, 0));
+                code_add(tCode);
+                code_add(code_create(Label, tDo, NULL, NULL, 0));
+        }
+         statement
+        {
+                Factor *tWhile = factor_pop(); // ステートメント内ではFactorのスタックは必ず使い切られる
+                code_add(code_create(BrUncond, tWhile, NULL, NULL, 0));
+
+                
+                factor_push("", gRegnum, LABEL);
+                Factor *tBreak = factor_pop();
+                br_back_patch(gRegnum); // バックパッチで↑のtBreakを書き換える
+                gRegnum++;
+
+                code_add(code_create(Label, tBreak, NULL, NULL, 0));
+        }
         ;
 
 for_statement
