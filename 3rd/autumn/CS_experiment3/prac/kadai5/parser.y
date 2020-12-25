@@ -255,6 +255,7 @@ for_statement
                 Factor *tTo = factor_pop(); // tFromからtToまで
                 Factor *tFrom = factor_pop();
 
+                // TODO グローバルのときに、tCntが参照できない
                 Factor *tCnt = factor_push(tRow->name, tRow->regnum, tRow->type);
                 // カウンタ(インクリメントしていく変数)
                 //popせずにとっておく
@@ -264,6 +265,14 @@ for_statement
                 Factor *tDo = factor_push("", gRegnum, LABEL);  // ループで戻ってくる場所、あとからpopしてbr命令を書く
                 gRegnum++;
 
+                code_add(code_create(Label, tDo, NULL, NULL, 0));
+
+                factor_push("", gRegnum, LOCAL_VAR);
+                Factor *tCond = factor_pop(); // 条件を用意する
+                gRegnum++;
+
+                code_add(code_create(Icmp, tCnt, tTo, tCond, SLE));
+
                 factor_push("", gRegnum, LABEL);
                 Factor *tLabel = factor_pop(); // 捨てラベル(条件でブレークしないときにここに飛ぶ)
                 gRegnum++;
@@ -271,13 +280,7 @@ for_statement
                 factor_push("", 0, LABEL);
                 Factor *tBreak = factor_pop(); // バックパッチであとから割当
 
-                code_add(code_create(Label, tDo, NULL, NULL, 0));
-
-                factor_push("", gRegnum, LOCAL_VAR);
-                Factor *tCond = factor_pop();
-                code_add(code_create(Icmp, tCnt, tTo, tCond, SLE));
-
-                LLVMcode *tBr = code_create(BrCond, tCond, tLabel, tBreak, 0);  
+                LLVMcode *tBr = code_create(BrCond, tLabel, tBreak, tCond, 0);  
                 br_push(tBr);
                 code_add(tBr);
 
@@ -286,23 +289,22 @@ for_statement
          statement
         {
                 {
-                        factor_push("", 1, CONSTANT);
-                        Factor *tOne = factor_pop();
+                factor_push("", 1, CONSTANT);
+                Factor *tOne = factor_pop();
 
-                        Factor *tCnt = factor_pop();
+                Factor *tDo = factor_pop();
+                Factor *tCnt = factor_pop();
 
-                        code_add(code_create(Add, tCnt, tOne, tCnt, 0));
-                }
-                {
-                        Factor *tDo = factor_pop();
-                        code_add(code_create(BrUncond, tDo, NULL, NULL, 0));
+                code_add(code_create(Add, tCnt, tOne, tCnt, 0));
 
-                        factor_push("", gRegnum, LABEL);
-                        br_back_patch(gRegnum);
-                        gRegnum++;
-                        Factor *tBreak = factor_pop();
+                code_add(code_create(BrUncond, tDo, NULL, NULL, 0));
 
-                        code_add(code_create(Label, tBreak, NULL, NULL, 0));
+                factor_push("", gRegnum, LABEL);
+                br_back_patch(gRegnum);
+                gRegnum++;
+                Factor *tBreak = factor_pop();
+
+                code_add(code_create(Label, tBreak, NULL, NULL, 0));
                 }
         }
         ;
