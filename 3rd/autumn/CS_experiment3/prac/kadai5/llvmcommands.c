@@ -161,6 +161,9 @@ LLVMcode *code_create(LLVMcommand aCommand, Factor *aArg1, Factor *aArg2,
       break;
     case Phi:
       break;
+    case Write:
+      tCode->args.write.arg1 = aArg1;
+      break;
     default:
       break;
   }
@@ -277,11 +280,18 @@ void print_code(LLVMcode *aCode) {
       break;
     case Label:
       factor_encode(aCode->args.label.arg1, tArg1);
-      printf("; <label>:%s:\n", tArg1);
+      fprintf(gFile, "; <label>:%s:\n", tArg1);
       break;
     case Ret:
       break;
     case Phi:
+      break;
+    case Write:
+      factor_encode(aCode->args.write.arg1, tArg1);
+      fprintf(gFile,
+              "call i32 (i8*, ...) @printf(i8* getelementptr inbounds"
+              " ([4 x i8], [4 x i8]* @.str, i64 0, i64 0), i32 %s)\n",
+              tArg1);
       break;
     default:
       break;
@@ -293,6 +303,10 @@ void print_LLVM_code() {
 #ifdef TOFILE
   gFile = fopen("result.ll", "w");
 #endif
+  fprintf(gFile,
+          "@.str = private unnamed_addr constant [4 x i8] c\"%%d\\0A\\00\", "
+          "align 1\n");
+  fprintf(gFile, "declare  i32 @printf(i8*, ...)\n\n");
 
   for (Fundecl *tFunPointer = declhd; tFunPointer != NULL;
        tFunPointer = tFunPointer->next) {

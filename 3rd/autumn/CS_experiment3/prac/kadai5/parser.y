@@ -280,6 +280,10 @@ read_statement
 
 write_statement
         : WRITE LPAREN expression RPAREN
+        {
+                Factor *tArg = factor_pop();
+                code_add(code_create(Write, tArg, NULL, NULL, 0));
+        }
         ;
 
 null_statement
