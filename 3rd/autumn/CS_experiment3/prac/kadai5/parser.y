@@ -354,7 +354,11 @@ block_statement
 read_statement
         : READ LPAREN IDENT RPAREN
         {
-                symtab_lookup($3);
+                Row *tRow = symtab_lookup($3);
+                factor_push(tRow->name, tRow->regnum, tRow->type);
+                Factor *tArg = factor_pop();
+                gRegnum++;
+                code_add(code_create(Read, tArg, NULL, NULL, 0));
         }
         ;
 
