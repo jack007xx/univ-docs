@@ -263,14 +263,15 @@ void print_code(LLVMcode *aCode) {
       break;
     case BrUncond:
       factor_encode(aCode->args.bruncond.arg1, tArg1);
-      fprintf(gFile, "br label %s\n", tArg1);
+      fprintf(gFile, "br label %%%s\n", tArg1);
       break;
     case BrCond:
       // condの代わりにretvalに入れてる
       factor_encode(aCode->args.brcond.cond, tRetval);
       factor_encode(aCode->args.brcond.arg1, tArg1);
       factor_encode(aCode->args.brcond.arg2, tArg2);
-      fprintf(gFile, "br i1 %s, label %s, label %s\n", tRetval, tArg1, tArg2);
+      fprintf(gFile, "br i1 %s, label %%%s, label %%%s\n", tRetval, tArg1,
+              tArg2);
       break;
     case Call:
       break;
@@ -323,7 +324,11 @@ void br_push(LLVMcode *aCode) {
 }
 void br_back_patch(int aLabel) {
   if (gBrStack->code->command == BrCond) {
-    gBrStack->code->args.brcond.arg1->val = aLabel;
+    if (gBrStack->code->args.brcond.arg1->val == 0) {
+      gBrStack->code->args.brcond.arg1->val = aLabel;
+    } else if (gBrStack->code->args.brcond.arg2->val == 0) {
+      gBrStack->code->args.brcond.arg2->val = aLabel;
+    }
     gBrStack = gBrStack->next;
   } else if (gBrStack->code->command == BrUncond) {
     gBrStack->code->args.bruncond.arg1->val = aLabel;

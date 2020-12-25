@@ -19,8 +19,6 @@ extern char *yytext;
 
 int gRegnum;
 Scope gScope;
-int gLabelNum;
-
 %}
 
 %union {
@@ -55,7 +53,6 @@ program
 
                 gScope = GLOBAL_VAR;
                 gRegnum = 2;
-                gLabelNum = 0;
 
                 symtab_push($2, gRegnum, gScope);
 
@@ -162,11 +159,11 @@ if_statement
                 Factor *tCondition = factor_pop();
 
                 factor_push("", 0, LABEL);
-                Factor *tLabel1 = factor_pop(); // バックパッチであとで正しい値をつける
+                Factor *tLabel2 = factor_pop(); // バックパッチであとで正しい値をつける
 
-                factor_push("", gLabelNum, LABEL);
-                Factor *tLabel2 = factor_pop(); // 捨てラベル(icmpのfalseのときに飛ぶラベルを直後に置く)
-                gLabelNum++;
+                factor_push("", gRegnum, LABEL);
+                Factor *tLabel1 = factor_pop(); // 捨てラベル(icmpのtrueのときに飛ぶラベルを直後に置く)
+                gRegnum++;
 
                 LLVMcode *tCode = code_create(BrCond, tLabel1, tLabel2, tCondition, 0);
                 br_push(tCode); // あとでバックパッチするためのbr命令スタックに積む
@@ -179,10 +176,10 @@ if_statement
                 Factor *tLabel1 = factor_pop();
                 LLVMcode *tBrCode = code_create(BrUncond, tLabel1, NULL, NULL, 0);
 
-                br_back_patch(gLabelNum); // 今回のBr命令を積むより先にthenから飛んでくるやつをバックパッチ
-                factor_push("", gLabelNum, LABEL);
+                br_back_patch(gRegnum); // 今回のBr命令を積むより先にthenから飛んでくるやつをバックパッチ
+                factor_push("", gRegnum, LABEL);
                 Factor *tLabel2 = factor_pop();
-                gLabelNum++;
+                gRegnum++;
 
                 br_push(tBrCode);
 
@@ -191,11 +188,12 @@ if_statement
         }
          else_statement
         {
-                br_back_patch(gLabelNum);
-                factor_push("", gLabelNum, LABEL);
+                br_back_patch(gRegnum);
+                factor_push("", gRegnum, LABEL);
                 Factor *tLabel = factor_pop();
-                gLabelNum++;
+                gRegnum++;
 
+                code_add(code_create(BrUncond, tLabel, NULL, NULL, 0));
                 code_add(code_create(Label, tLabel, NULL, NULL, 0));
         }
         ;
