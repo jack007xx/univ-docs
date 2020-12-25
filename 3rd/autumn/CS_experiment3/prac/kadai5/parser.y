@@ -249,11 +249,62 @@ while_statement
         ;
 
 for_statement
-        : FOR IDENT
+        : FOR IDENT ASSIGN expression TO expression DO
         {
-                symtab_lookup($2);
+                Row *tRow = symtab_lookup($2);
+                Factor *tTo = factor_pop(); // tFromからtToまで
+                Factor *tFrom = factor_pop();
+
+                Factor *tCnt = factor_push(tRow->name, tRow->regnum, tRow->type);
+                // カウンタ(インクリメントしていく変数)
+                //popせずにとっておく
+
+                code_add(code_create(Store, tFrom, tCnt, NULL, 0));
+
+                Factor *tDo = factor_push("", gRegnum, LABEL);  // ループで戻ってくる場所、あとからpopしてbr命令を書く
+                gRegnum++;
+
+                factor_push("", gRegnum, LABEL);
+                Factor *tLabel = factor_pop(); // 捨てラベル(条件でブレークしないときにここに飛ぶ)
+                gRegnum++;
+
+                factor_push("", 0, LABEL);
+                Factor *tBreak = factor_pop(); // バックパッチであとから割当
+
+                code_add(code_create(Label, tDo, NULL, NULL, 0));
+
+                factor_push("", gRegnum, LOCAL_VAR);
+                Factor *tCond = factor_pop();
+                code_add(code_create(Icmp, tCnt, tTo, tCond, SLE));
+
+                LLVMcode *tBr = code_create(BrCond, tCond, tLabel, tBreak, 0);  
+                br_push(tBr);
+                code_add(tBr);
+
+                code_add(code_create(Label, tLabel, NULL, NULL, 0));
         }
-          ASSIGN expression TO expression DO statement
+         statement
+        {
+                {
+                        factor_push("", 1, CONSTANT);
+                        Factor *tOne = factor_pop();
+
+                        Factor *tCnt = factor_pop();
+
+                        code_add(code_create(Add, tCnt, tOne, tCnt, 0));
+                }
+                {
+                        Factor *tDo = factor_pop();
+                        code_add(code_create(BrUncond, tDo, NULL, NULL, 0));
+
+                        factor_push("", gRegnum, LABEL);
+                        br_back_patch(gRegnum);
+                        gRegnum++;
+                        Factor *tBreak = factor_pop();
+
+                        code_add(code_create(Label, tBreak, NULL, NULL, 0));
+                }
+        }
         ;
 
 proc_call_statement
