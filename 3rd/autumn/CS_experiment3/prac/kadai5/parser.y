@@ -158,17 +158,17 @@ if_statement
         {
                 Factor *tCondition = factor_pop();
 
-                factor_push("", 0, LABEL);
-                Factor *tThen = factor_pop(); // バックパッチであとで正しい値をつける(elseの前に来る)
+                factor_push("if.else.end", 0, LABEL);
+                Factor *tElseEnd = factor_pop(); // バックパッチであとで正しい値をつける(elseの前に来る)
 
-                factor_push("", gRegnum, LABEL);
-                Factor *tLabel = factor_pop(); // 捨てラベル(icmpのtrueのときに飛ぶラベルを直後に置く)
+                factor_push("if.then", gRegnum, LABEL);
+                Factor *tThen = factor_pop(); // 捨てラベル(icmpのtrueのときに飛ぶラベルを直後に置く)
                 gRegnum++;
 
-                LLVMcode *tCode = code_create(BrCond, tLabel, tThen, tCondition, 0);
+                LLVMcode *tCode = code_create(BrCond, tThen, tElseEnd, tCondition, 0);
                 br_push(tCode); // あとでバックパッチするためのbr命令スタックに積む
                 code_add(tCode);
-                code_add(code_create(Label, tLabel, NULL, NULL, 0)); // 捨てラベルコード生成
+                code_add(code_create(Label, tThen, NULL, NULL, 0)); // 捨てラベルコード生成
         }
          statement else_statement
         ;
@@ -177,37 +177,37 @@ else_statement
         : /* empty */
         {
                 br_back_patch(gRegnum); // thenから飛んでくるやつをバックパッチ
-                factor_push("", gRegnum, LABEL);
-                Factor *tThen = factor_pop();
+                factor_push("if.end", gRegnum, LABEL);
+                Factor *tEnd = factor_pop();
                 gRegnum++;
 
-                code_add(code_create(Label, tThen, NULL, NULL, 0));
+                code_add(code_create(Label, tEnd, NULL, NULL, 0));
         }
         | ELSE
         {
                 br_back_patch(gRegnum); // 今回のBr命令を積むより先にthenから飛んでくるやつをバックパッチ
-                factor_push("", gRegnum, LABEL);
-                Factor *tThen = factor_pop();
+                factor_push("if.else", gRegnum, LABEL);
+                Factor *tElse = factor_pop();
                 gRegnum++;
 
-                factor_push("", 0, LABEL);
-                Factor *tLabel = factor_pop();
-                LLVMcode *tBrCode = code_create(BrUncond, tLabel, NULL, NULL, 0); // else節をスキップするためのコード
+                factor_push("if.end", 0, LABEL);
+                Factor *tEnd = factor_pop();
+                LLVMcode *tBrCode = code_create(BrUncond, tEnd, NULL, NULL, 0); // else節をスキップするためのコード
 
                 br_push(tBrCode);
 
                 code_add(tBrCode); // then節を経由してきたやつはtElseまでスキップ
-                code_add(code_create(Label, tThen, NULL, NULL, 0));
+                code_add(code_create(Label, tElse, NULL, NULL, 0));
         }
          statement
         {
                 br_back_patch(gRegnum);
-                factor_push("", gRegnum, LABEL);
-                Factor *tElse = factor_pop();
+                factor_push("if.end", gRegnum, LABEL);
+                Factor *tEnd = factor_pop();
                 gRegnum++;
 
-                code_add(code_create(BrUncond, tElse, NULL, NULL, 0)); // Labelの前にはそれに対するジャンプがないとダメっぽい?
-                code_add(code_create(Label, tElse, NULL, NULL, 0));
+                code_add(code_create(BrUncond, tEnd, NULL, NULL, 0)); // Labelの前にはそれに対するジャンプがないとダメっぽい?
+                code_add(code_create(Label, tEnd, NULL, NULL, 0));
         }
         ;
 
