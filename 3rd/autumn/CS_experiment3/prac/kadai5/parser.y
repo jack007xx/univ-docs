@@ -212,14 +212,20 @@ else_statement
         ;
 
 while_statement
-        : WHILE condition DO
+        : WHILE
+        {
+                Factor *tLoop = factor_push("while.loop", gRegnum, LABEL); // あとでここに戻ってくるためにプッシュしたままにしておく
+                gRegnum++;
+
+                code_add(code_create(BrUncond, tLoop, NULL, NULL, 0));
+
+                code_add(code_create(Label, tLoop, NULL, NULL, 0));
+        }
+         condition DO
         {
                 Factor *tCondition = factor_pop();
 
-                Factor *tWhile = factor_push("", gRegnum, LABEL); // あとでここに戻ってくるためにプッシュしたままにしておく
-                gRegnum++;
-
-                factor_push("", gRegnum, LABEL);
+                factor_push("while.do", gRegnum, LABEL);
                 Factor *tDo = factor_pop(); // 捨てラベル
                 gRegnum++;
 
@@ -229,17 +235,16 @@ while_statement
                 LLVMcode *tCode = code_create(BrCond, tDo, tBreak, tCondition, 0);
                 br_push(tCode); // あとでバックパッチするためのbr命令スタックに積む
 
-                code_add(code_create(Label, tWhile, NULL, NULL, 0));
                 code_add(tCode);
                 code_add(code_create(Label, tDo, NULL, NULL, 0));
         }
          statement
         {
-                Factor *tWhile = factor_pop(); // ステートメント内ではFactorのスタックは必ず使い切られる
-                code_add(code_create(BrUncond, tWhile, NULL, NULL, 0));
+                Factor *tLoop= factor_pop(); // ステートメント内ではFactorのスタックは必ず使い切られる
+                code_add(code_create(BrUncond, tLoop, NULL, NULL, 0));
 
-                
-                factor_push("", gRegnum, LABEL);
+
+                factor_push("while.break", gRegnum, LABEL);
                 Factor *tBreak = factor_pop();
                 br_back_patch(gRegnum); // バックパッチで↑のtBreakを書き換える
                 gRegnum++;
@@ -255,18 +260,17 @@ for_statement
                 Factor *tTo = factor_pop(); // tFromからtToまで
                 Factor *tFrom = factor_pop();
 
-                // TODO グローバルのときに、tCntが参照できない
                 Factor *tCnt = factor_push(tRow->name, tRow->regnum, tRow->type);
                 // カウンタ(インクリメントしていく変数)
                 //popせずにとっておく
 
                 code_add(code_create(Store, tFrom, tCnt, NULL, 0));
 
-                Factor *tDo = factor_push("", gRegnum, LABEL);  // ループで戻ってくる場所、あとからpopしてbr命令を書く
+                Factor *tLoop = factor_push("for.loop", gRegnum, LABEL);  // ループで戻ってくる場所、あとからpopしてbr命令を書く
                 gRegnum++;
 
-                code_add(code_create(BrUncond, tDo, NULL, NULL, 0));
-                code_add(code_create(Label, tDo, NULL, NULL, 0));
+                code_add(code_create(BrUncond, tLoop, NULL, NULL, 0));
+                code_add(code_create(Label, tLoop, NULL, NULL, 0));
 
                 if(tCnt->type == GLOBAL_VAR){
                         factor_push("", gRegnum, LOCAL_VAR);
@@ -290,23 +294,28 @@ for_statement
 
                 code_add(code_create(Icmp, tCnt, tTo, tCond, SLE));
 
-                factor_push("", gRegnum, LABEL);
-                Factor *tLabel = factor_pop(); // 捨てラベル(条件でブレークしないときにここに飛ぶ)
+                factor_push("for.do", gRegnum, LABEL);
+                Factor *tDo = factor_pop(); // 条件でブレークしないときにここに飛ぶ
                 gRegnum++;
 
                 factor_push("", 0, LABEL);
                 Factor *tBreak = factor_pop(); // バックパッチであとから割当
 
-                LLVMcode *tBr = code_create(BrCond, tLabel, tBreak, tCond, 0);  
+                LLVMcode *tBr = code_create(BrCond, tDo, tBreak, tCond, 0);  
                 br_push(tBr);
                 code_add(tBr);
 
-                code_add(code_create(Label, tLabel, NULL, NULL, 0));
+                code_add(code_create(Label, tDo, NULL, NULL, 0));
         }
          statement
         {
-                Factor *tDo = factor_pop();
+                Factor *tLoop = factor_pop();
                 Factor *tCnt = factor_pop();
+
+                // ラベルでブロックを切る
+                code_add(code_create(BrUncond, factor_push("for.increment", gRegnum, LABEL), NULL, NULL, 0));
+                code_add(code_create(Label, factor_pop(), NULL, NULL, 0));
+                gRegnum++;
 
                 // cntインクリメント部ここから
                 factor_push("", gRegnum, LOCAL_VAR);
@@ -325,12 +334,12 @@ for_statement
                 code_add(code_create(Store, tRetval, tCnt, NULL, 0));
                 // インクリメント部ここまで
 
-                code_add(code_create(BrUncond, tDo, NULL, NULL, 0));
+                code_add(code_create(BrUncond, tLoop, NULL, NULL, 0));
 
-                factor_push("", gRegnum, LABEL);
+                factor_push("for.break", gRegnum, LABEL);
+                Factor *tBreak = factor_pop();
                 br_back_patch(gRegnum);
                 gRegnum++;
-                Factor *tBreak = factor_pop();
 
                 code_add(code_create(Label, tBreak, NULL, NULL, 0));
         }
