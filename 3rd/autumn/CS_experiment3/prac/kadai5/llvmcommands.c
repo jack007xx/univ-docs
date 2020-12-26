@@ -220,7 +220,7 @@ void print_code(LLVMcode *aCode) {
   switch (aCode->command) {
     case Alloca:
       factor_encode(aCode->args.alloca.retval, tRetval);
-      fprintf(gFile, "\t%s = alloca i32 0, align 4\n", tRetval);
+      fprintf(gFile, "\t%s = alloca i32, align 4\n", tRetval);
       break;
     case Global:
       factor_encode(aCode->args.global.retval, tRetval);
@@ -329,7 +329,6 @@ void print_LLVM_code() {
     if (tFunPointer != declhd) {
       // 初回のfundeclは大域変数の定義に当てられる
       fprintf(gFile, "define i32 @%s(){\n", tFunPointer->fname);
-      fprintf(gFile, "\t%%1 = alloca i32, align 4\n");
     }
 
     for (LLVMcode *tCodePointer = tFunPointer->codes; tCodePointer != NULL;
@@ -351,6 +350,7 @@ void br_push(LLVMcode *aCode) {
   tTop->next = gBrStack;
   gBrStack = tTop;
 }
+
 void br_back_patch(int aLabel) {
   if (gBrStack->code->command == BrCond) {
     if (gBrStack->code->args.brcond.arg1->val == 0) {
