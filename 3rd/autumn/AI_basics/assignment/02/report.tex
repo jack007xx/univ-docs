@@ -1,0 +1,73 @@
+\documentclass[a4paper,10pt]{jsarticle}
+
+% 数式
+\usepackage{amsmath,amsfonts}
+\usepackage{bm}
+% 画像
+\usepackage[dvipdfmx]{graphicx}
+\usepackage{here}
+
+\usepackage{listingsutf8,jlisting} %日本語のコメントアウトをする場合jlistingが必要
+%ここからソースコードの表示に関する設定
+\lstset{
+  basicstyle={\ttfamily},
+  identifierstyle={\small},
+  commentstyle={\smallitshape},
+  keywordstyle={\small\bfseries},
+  ndkeywordstyle={\small},
+  stringstyle={\small\ttfamily},
+  frame={tb},
+  breaklines=true,
+  columns=[l]{fullflexible},
+  numbers=left,
+  xrightmargin=0zw,
+  xleftmargin=3zw,
+  numberstyle={\scriptsize},
+  stepnumber=1,
+  numbersep=1zw,
+  lineskip=-0.5ex
+}
+
+\begin{document}
+
+\title{人工知能基礎レポート課題\\VR空間でのAIモデル評価、デモンストレーションシステム\\(自動運転システムの判断を評価するためのシステム)}
+\author{坪井正太郎（101830245）}
+\date{\today}
+\maketitle
+\section{概要}
+私は、VR空間でAIモデルの性能について評価するためのシステムについて考察した。
+このシステムでは、現実を模したデータセットから導出された機械学習モデルを、現実で利用する前段階でVR空間上で人間がテストを安全に行うことができる。
+
+デモンストレーションが危険なものや、失敗時のリスクやコストが高いものには特に効果的である。
+
+アイデア自体は様々応用することができるが、全体を通して「機械学習による自動運転システムの評価」を挙げる。
+
+\section{システムの詳細}
+VR空間で現実世界を模したフィールドを用意する。
+そこに、自動運転システムによって動作する車のモデルを導入する。
+この自動運転車には、周囲の空間をそのまま入力する。
+
+利用者(テストの実施者)はVR空間内で、車にとってイレギュラーな動作を行う。
+このときの動作を観察する。
+
+\section{システムの特徴}
+\begin{itemize}
+  \item 判断モデルについて、純粋なモデル自体を評価できる
+        \begin{itemize}
+          \item 例えば、センサや認識モデルの性能や車自体の特性によって起こるミスを無視することができる
+        \end{itemize}
+  \item 安全なデモンストレーションを行うことができる
+  \begin{itemize}
+    \item 現在車の販売店で行われているような衝突被害軽減ブレーキのデモンストレーションを、機械学習による自動運転システムで行った場合、失敗時の危険が大きいが、VR空間上であれば、そのような危険を回避することができる
+  \end{itemize}
+  \item デモンストレーションにかかるコストを抑えることができる
+  \item モデルのデバッグに利用することができる
+\end{itemize}
+
+\section{まとめ}
+現在利用されている、カメラによる認識情報をもとにした制御に加えて、AIによる運転判断が実用化された場合、そのモデルのテスト、デモンストレーション方法が問題になると予想できる。
+このシステムは、モデルの修正はできないが、問題やバグの発見を安全かつ低コストで行うことができる。
+
+車のテスト以外に、配達ロボットや接客ロボット、災害救助ロボットなど、現実でのエラーで発生する損害が大きいAIのデモやデバッグに応用することができると考えた。
+
+\end{document}
