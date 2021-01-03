@@ -1,0 +1,205 @@
+\documentclass[a4paper,10pt]{jsarticle}
+
+% 数式
+\usepackage{amsmath,amsfonts}
+\usepackage{bm}
+% 画像
+\usepackage[dvipdfmx]{graphicx}
+\usepackage{here}
+
+\usepackage{listingsutf8,jlisting} %日本語のコメントアウトをする場合jlistingが必要
+%ここからソースコードの表示に関する設定
+\lstset{
+  basicstyle={\ttfamily},
+  identifierstyle={\small},
+  commentstyle={\smallitshape},
+  keywordstyle={\small\bfseries},
+  ndkeywordstyle={\small},
+  stringstyle={\small\ttfamily},
+  frame={tb},
+  breaklines=true,
+  columns=[l]{fullflexible},
+  numbers=left,
+  xrightmargin=0zw,
+  xleftmargin=3zw,
+  numberstyle={\scriptsize},
+  stepnumber=1,
+  numbersep=1zw,
+  lineskip=-0.5ex
+}
+
+\begin{document}
+
+\title{OS演習課題第3回}
+\author{坪井正太郎（101830245）}
+\date{\today}
+\maketitle
+\section*{問題1}
+
+\subsection*{1}
+
+\subsubsection*{(a)}
+応答時間
+\begin{itemize}
+  \item A:13
+  \item B:20
+  \item C:23
+\end{itemize}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\linewidth]{./01.drawio.png}
+  \caption{到着順タイムチャート}
+  \label{到着順タイムチャート}
+\end{figure}
+
+\subsubsection*{(b)}
+応答時間
+\begin{itemize}
+  \item A:18
+  \item B:25
+  \item C:5
+\end{itemize}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\linewidth]{./02.drawio.png}
+  \caption{実行時間最短タイムチャート}
+  \label{実行時間最短タイムチャート}
+\end{figure}
+
+
+\subsubsection*{(c)}
+応答時間
+\begin{itemize}
+  \item A:27
+  \item B:25
+  \item C:15
+\end{itemize}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\linewidth]{./03.drawio.png}
+  \caption{ラウンドロビンタイムチャート}
+  \label{ラウンドロビンタイムチャート}
+\end{figure}
+
+\subsection*{1}
+\begin{itemize}
+  \item 到着順
+        \begin{itemize}
+          \item 単純な制御で、オーバーヘッドがないが、実行に時間がかかるプロセスが合った場合、その後に入るプロセスの応答が悪化する。
+          \item それぞれのプロセスの実行時間が短い場合に、実装が単純なため有利である。
+        \end{itemize}
+  \item 実行時間最短
+        \begin{itemize}
+          \item プロセスの実行が完了するまでの時間が平均して最小になるが、それぞれのプロセスの実行時間を事前に知ることが難しい。
+          \item 各プロセスの実行時間が分かっている機器の制御では有利にはたらく。
+        \end{itemize}
+  \item ラウンドロビン
+        \begin{itemize}
+          \item 公平に実行されるが、プロセスの切替によるオーバーヘッドが大きい。
+          \item 多数の利用者が利用するシステムでは、リソースを公平に分配できるので都合がいい。
+        \end{itemize}
+\end{itemize}
+
+\section*{問題2}
+\subsection*{(a)}
+\lstinputlisting[caption=fifo.c,label=fifo.c]{./fifo.c}
+
+実行コマンドとその結果
+\begin{lstlisting}[caption={fifo.c実行結果},label={fifo.c実行結果}]
+  $ gcc fifo.c
+  $ ./a.out
+  $ 3
+  $ 13 0
+  $ 10 3
+  $ 5 5
+  process start
+  0 : processing 0, remain 12
+  1 : processing 0, remain 11
+  2 : processing 0, remain 10
+  3 : processing 0, remain 9
+  4 : processing 0, remain 8
+  5 : processing 0, remain 7
+  6 : processing 0, remain 6
+  7 : processing 0, remain 5
+  8 : processing 0, remain 4
+  9 : processing 0, remain 3
+  10 : processing 0, remain 2
+  11 : processing 0, remain 1
+  12 : processing 0, remain 0
+  13 : processing 1, remain 9
+  14 : processing 1, remain 8
+  15 : processing 1, remain 7
+  16 : processing 1, remain 6
+  17 : processing 1, remain 5
+  18 : processing 1, remain 4
+  19 : processing 1, remain 3
+  20 : processing 1, remain 2
+  21 : processing 1, remain 1
+  22 : processing 1, remain 0
+  23 : processing 2, remain 4
+  24 : processing 2, remain 3
+  25 : processing 2, remain 2
+  26 : processing 2, remain 1
+  27 : processing 2, remain 0
+  
+  process 0 : 13
+  process 1 : 20
+  process 2 : 23
+  
+  total : 28
+\end{lstlisting}
+
+\subsection*{(c)}
+\lstinputlisting[caption=roundrobin.c,label=roundrobin.c]{./roundrobin.c}
+
+
+\begin{lstlisting}[caption={roundrobin.c実行結果},label={roundrobin.c実行結果}]
+  $ gcc roundrobin.c
+  $ ./a.out
+  $ 3
+  $ 13 0
+  $ 10 3
+  $ 5 5
+  process start
+  0 : processing 0, remain 12
+  1 : processing 0, remain 11
+  2 : processing 0, remain 10
+  3 : processing 0, remain 9
+  4 : processing 1, remain 9
+  5 : processing 0, remain 8
+  6 : processing 1, remain 8
+  7 : processing 2, remain 4
+  8 : processing 0, remain 7
+  9 : processing 1, remain 7
+  10 : processing 2, remain 3
+  11 : processing 0, remain 6
+  12 : processing 1, remain 6
+  13 : processing 2, remain 2
+  14 : processing 0, remain 5
+  15 : processing 1, remain 5
+  16 : processing 2, remain 1
+  17 : processing 0, remain 4
+  18 : processing 1, remain 4
+  19 : processing 2, remain 0
+  20 : processing 0, remain 3
+  21 : processing 1, remain 3
+  22 : processing 0, remain 2
+  23 : processing 1, remain 2
+  24 : processing 0, remain 1
+  25 : processing 1, remain 1
+  26 : processing 0, remain 0
+  27 : processing 1, remain 0
+
+  process 0 : 27
+  process 1 : 25
+  process 2 : 15
+
+  total : 28
+\end{lstlisting}
+
+問題1の結果と比較しても、正しく出力されている
+
+\end{document}
