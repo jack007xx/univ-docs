@@ -169,7 +169,7 @@ block_statement
 read_statement
         : READ LPAREN IDENT RPAREN
         {
-                lookup($IDENT);
+                lookup($3);
         }
         ;
 

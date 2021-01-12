@@ -1,0 +1,60 @@
+\documentclass[a4paper,10pt]{jsarticle}
+
+% 数式
+\usepackage{amsmath,amsfonts}
+\usepackage{bm}
+% 画像
+\usepackage[dvipdfmx]{graphicx}
+\usepackage{here}
+
+\usepackage{listingsutf8,jlisting} %日本語のコメントアウトをする場合jlistingが必要
+%ここからソースコードの表示に関する設定
+\lstset{
+  basicstyle={\ttfamily},
+  identifierstyle={\small},
+  commentstyle={\smallitshape},
+  keywordstyle={\small\bfseries},
+  ndkeywordstyle={\small},
+  stringstyle={\small\ttfamily},
+  frame={tb},
+  breaklines=true,
+  columns=[l]{fullflexible},
+  numbers=left,
+  xrightmargin=0zw,
+  xleftmargin=3zw,
+  numberstyle={\scriptsize},
+  stepnumber=1,
+  numbersep=1zw,
+  lineskip=-0.5ex
+}
+
+\begin{document}
+
+\title{ネットワークセキュリティ課題レポート}
+\author{坪井正太郎（101830245）\\情報学部コンピュータ科学科3年}
+\date{\today}
+\maketitle
+\section{普段から利用しているインターネットサービスとそのサービス品質について}
+\subsection{普段から利用するサービス}
+\begin{itemize}
+  \item discord
+  \item oVice
+  \item Line通話
+\end{itemize}
+
+\subsection{サービス品質について不満を感じるもの}
+oViceはweb会議やボイスチャットのために、2次元バーチャルオフィスでアバターを配置し、自由に動くことができるサービスである。
+近くのアバター同士では声が聞こえ、遠くの声は聞こえないなどの実際のコミュニケーションに近いこと、フィールドの画像を好きに設定できるため、オフィス環境を再現しやすいことが特徴である。
+
+oViceはリリースされたばかりのサービスなので、安定性に欠けることがある。
+特に、同じボイスチャットサービスのdiscordに比べ、音声が途切れる、数秒間聞こえなくなる現象が発生しやすいと感じている。
+
+これらの不具合は、相手方との間でのパケットロスとが起きた場合の隠蔽処理が間に合っていないために起こると考えられる。
+ピッチのコピーによって途切れが、完全に脱落することによって聞こえなくなる現象が発生すると考えられる。
+
+\section{今後、企業からの講師に聞きたいトピック}
+新人の教育について聞きたいです。
+メーカーの中でも、先輩社員のメンターがつく、研修がある、いきなり業務に飛び込んで身につけるなど、様々だと思います。
+特に、新入社員と在社員との間でコミュニケーションを図るための仕組みがあれば知りたいです。
+
+\end{document}
