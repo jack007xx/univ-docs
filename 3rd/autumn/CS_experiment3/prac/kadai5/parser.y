@@ -68,6 +68,7 @@ outblock
         : var_decl_part subprog_decl_part
         {
                 fundecl_add("main", 0);
+                gRegnum = 1; // 手続きごとにレジスタ番号はリセットされる
                 factor_push("", gRegnum++, LOCAL_VAR);
                 Factor *tFunRet = factor_pop();
                 code_add(code_create(Alloca, NULL, NULL, tFunRet, 0));
@@ -119,6 +120,7 @@ proc_name
                 Row *tRow = symtab_lookup($1);
 
                 fundecl_add(tRow->name, 0);
+                gRegnum = 1; // 手続きごとにレジスタ番号はリセットされる
 
                 gScope = LOCAL_VAR;
         }
@@ -162,6 +164,7 @@ if_statement
         {
                 Factor *tCondition = factor_pop();
 
+                // TODO if.endをいい感じの名前にしたい。if.break?while.breakをかえてもいいけど。
                 factor_push("if.else.end", 0, LABEL);
                 Factor *tElseEnd = factor_pop(); // バックパッチであとで正しい値をつける(elseの前に来る)
 
@@ -183,6 +186,8 @@ else_statement
                 factor_push("if.end", gRegnum++, LABEL);
                 Factor *tEnd = factor_pop();
 
+                code_add(code_create(BrUncond, tEnd, NULL, NULL, 0));
+                
                 code_add(code_create(Label, tEnd, NULL, NULL, 0));
         }
         | ELSE
@@ -195,7 +200,7 @@ else_statement
                 Factor *tEnd = factor_pop();
                 LLVMcode *tBrCode = code_create(BrUncond, tEnd, NULL, NULL, 0); // else節をスキップするためのコード
 
-                br_push(tBrCode);
+                br_push(tBrCode); // あとでif.endを正しく置き換える
 
                 code_add(tBrCode); // then節を経由してきたやつはtElseまでスキップ
                 code_add(code_create(Label, tElse, NULL, NULL, 0));
@@ -344,7 +349,8 @@ proc_call_statement
 proc_call_name
         : IDENT
         {
-                symtab_lookup($1);
+                Row *tRow = symtab_lookup($1);
+                // TODO 関数のコール処理
         }
         ;
 
