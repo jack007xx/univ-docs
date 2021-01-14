@@ -2,7 +2,6 @@
 #define __LLVMCOMMANDS_H__
 #include "symtab.h"
 /* LLVM命令名の定義 */
-// 15命令
 typedef enum {
   Alloca, /* alloca */
   Global,
@@ -20,7 +19,8 @@ typedef enum {
   Ret,   /* ret    */
   Phi,
   Write,
-  Read
+  Read,
+  Comment
 } LLVMcommand;
 
 /* 比較演算子の種類 */
@@ -120,6 +120,9 @@ typedef struct llvmcode {
     struct {
       Factor *arg1;
     } read;
+    struct {
+      Factor *arg1;
+    } comment;
   } args;
   /* 次の命令へのポインタ */
   struct llvmcode *next;

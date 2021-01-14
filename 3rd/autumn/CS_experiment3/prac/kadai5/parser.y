@@ -310,8 +310,10 @@ for_statement
                 Factor *tLoop = factor_pop();
                 Factor *tCnt = factor_pop();
 
-                // TODO コメント書けるようにする
                 // cntインクリメント部ここから
+                factor_push("incremant block", 0, 0);
+                code_add(code_create(Comment, factor_pop(), NULL, NULL, 0));
+
                 factor_push("", gRegnum++, LOCAL_VAR);
                 Factor *tCntLocal = factor_pop();
 

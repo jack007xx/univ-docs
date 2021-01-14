@@ -168,6 +168,9 @@ LLVMcode *code_create(LLVMcommand aCommand, Factor *aArg1, Factor *aArg2,
     case Read:
       tCode->args.read.arg1 = aArg1;
       break;
+    case Comment:
+      tCode->args.comment.arg1 = aArg1;
+      break;
     default:
       break;
   }
@@ -312,6 +315,9 @@ void print_code(LLVMcode *aCode) {
           "([3 x i8], [3 x i8]* @.str.read, i64 0, i64 0), i32* %s)\n",
           tArg1);
       break;
+    case Comment:
+      fprintf(gFile, "\t; %s\n", aCode->args.comment.arg1->vname);
+      break;
     default:
       break;
   }
@@ -322,6 +328,7 @@ void print_LLVM_code() {
 #ifdef TOFILE
   gFile = fopen("result.ll", "w");
 #endif
+  // read,writeに必要な定義
   fprintf(
       gFile,
       "@.str.write = private unnamed_addr constant [4 x i8] c\"%%d\\0A\\00\", "
@@ -336,7 +343,7 @@ void print_LLVM_code() {
        tFunPointer = tFunPointer->next) {
     if (tFunPointer != declhd) {
       // 初回のfundeclは大域変数の定義に当てられる
-      fprintf(gFile, "define i32 @%s(){\n", tFunPointer->fname);
+      fprintf(gFile, "\ndefine i32 @%s(){\n", tFunPointer->fname);
     }
 
     for (LLVMcode *tCodePointer = tFunPointer->codes; tCodePointer != NULL;
@@ -344,7 +351,7 @@ void print_LLVM_code() {
       print_code(tCodePointer);
     }
 
-    if (tFunPointer != declhd) fprintf(gFile, "\tret i32 0\n}\n\n");
+    if (tFunPointer != declhd) fprintf(gFile, "\tret i32 0\n}\n");
   }
 
 #ifdef TOFILE
