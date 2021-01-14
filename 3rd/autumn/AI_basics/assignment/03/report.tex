@@ -1,0 +1,88 @@
+\documentclass[a4paper,10pt]{jsarticle}
+
+% 数式
+\usepackage{amsmath,amsfonts}
+\usepackage{bm}
+% 画像
+\usepackage[dvipdfmx]{graphicx}
+\usepackage{here}
+
+\usepackage{listingsutf8,jlisting} %日本語のコメントアウトをする場合jlistingが必要
+%ここからソースコードの表示に関する設定
+\lstset{
+  basicstyle={\ttfamily},
+  identifierstyle={\small},
+  commentstyle={\smallitshape},
+  keywordstyle={\small\bfseries},
+  ndkeywordstyle={\small},
+  stringstyle={\small\ttfamily},
+  frame={tb},
+  breaklines=true,
+  columns=[l]{fullflexible},
+  numbers=left,
+  xrightmargin=0zw,
+  xleftmargin=3zw,
+  numberstyle={\scriptsize},
+  stepnumber=1,
+  numbersep=1zw,
+  lineskip=-0.5ex
+}
+
+\begin{document}
+
+\title{人工知能基礎第3回レポート}
+\author{坪井正太郎（101830245）}
+\date{\today}
+\maketitle
+\section{自律移動ロボット（人間型とは限らない）が人間社会と共存するために必要な機能とその実現方法}
+\subsection{必要な機能}
+\begin{itemize}
+  \item 目的のために移動するべき場所を判断できる
+  \item 目的地に移動することができる
+        \begin{itemize}
+          \item 目的地までのルートがわかる
+        \end{itemize}
+  \item 動かない物体にぶつかることなく移動できる
+  \item 動く物体にぶつかることなく移動できる
+        \begin{itemize}
+          \item 人間や他のロボットにぶつかることがない
+        \end{itemize}
+  \item 動作の意図が周囲の人間にわかる
+        \begin{itemize}
+          \item 周りから見て正常に動作しているのか分からない、ロボットの動きが予想できないため、事故リスクが高まる
+          \item 人間が運転するトラックでさえ、バック時の音声がないと危険
+          \item 特に、複数種のロボットが活動する場合、それぞれの意図が分からないと判断にも影響を与える
+        \end{itemize}
+  \item その環境でのルールを守ることができる
+        \begin{itemize}
+          \item 信号無視をしない、スピード違反をしないなどの社会的なルール
+        \end{itemize}
+\end{itemize}
+
+\subsection{実現機能}
+\subsubsection{目的のために移動するべき場所を判断できる}
+現在状態から目的状態までのプランを、プランナーで作成して、それに従った場所を目的地に設定する。
+
+\subsubsection{目的地に移動することができる}
+環境地図が判明している場合、目的地までの経路を探索し、そのとおりに移動する。
+環境地図が分からない場合、環境をスキャンして地図を作りながら目的地を探す。
+
+また、ロボットは環境に適した移動方法を持つ。
+
+\subsubsection{動かない物体にぶつかることなく移動できる}
+全方位のレーザーセンサーや、環境地図によって、周囲の静止物を認識する。
+回避路を生成して対象の障害物の衝突危険領域を避けながら移動する。
+
+\subsubsection{動く物体にぶつかることなく移動できる}
+周囲環境の計測結果の時間差分から、移動障害物を認識する。
+ロボットは静止物の回避と同じように回避路を生成して、移動する。
+
+\subsubsection{動作の意図が周囲の人間にわかる}
+プランナーによって目的と、そのための中間動作が分かる。
+それを使えば、周囲に自分の目的地や動作を音声やディスプレイで伝えることができる。
+
+その他に、ロボットのコスチュームからも意図を伝えることができる。
+
+また、ロボットは周辺のロボットから意図、プランを受け取り、それを元にプランを作成する。
+
+\end{document}
