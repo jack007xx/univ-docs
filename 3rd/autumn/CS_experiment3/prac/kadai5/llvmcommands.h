@@ -19,7 +19,8 @@ typedef enum {
   Label, /* label  */
   Ret,   /* ret    */
   Phi,
-  Write
+  Write,
+  Read
 } LLVMcommand;
 
 /* 比較演算子の種類 */
@@ -114,6 +115,9 @@ typedef struct llvmcode {
     struct {
       Factor *arg1;
     } write;
+    struct {
+      Factor *arg1;
+    } read;
   } args;
   /* 次の命令へのポインタ */
   struct llvmcode *next;

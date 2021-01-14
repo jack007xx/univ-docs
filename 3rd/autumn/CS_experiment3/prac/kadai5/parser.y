@@ -52,9 +52,9 @@ program
                 symtab_init();
 
                 gScope = GLOBAL_VAR;
-                gRegnum = 2;
+                gRegnum = 1;
 
-                symtab_push($2, gRegnum, gScope);
+                symtab_push($2, 0, gScope);
 
                 fundecl_add("__GlobalDecl", 0);
         }
@@ -68,6 +68,9 @@ outblock
         : var_decl_part subprog_decl_part
         {
                 fundecl_add("main", 0);
+                factor_push("", gRegnum++, LOCAL_VAR);
+                Factor *tFunRet = factor_pop();
+                code_add(code_create(Alloca, NULL, NULL, tFunRet, 0));
         }
          statement
         ;
@@ -111,6 +114,7 @@ proc_decl
 proc_name
         : IDENT
         {
+                // TODO プロセス呼び出しについて調査
                 symtab_push($1, gRegnum, PROC_NAME);
                 Row *tRow = symtab_lookup($1);
 
@@ -158,17 +162,16 @@ if_statement
         {
                 Factor *tCondition = factor_pop();
 
-                factor_push("", 0, LABEL);
-                Factor *tThen = factor_pop(); // バックパッチであとで正しい値をつける(elseの前に来る)
+                factor_push("if.else.end", 0, LABEL);
+                Factor *tElseEnd = factor_pop(); // バックパッチであとで正しい値をつける(elseの前に来る)
 
-                factor_push("", gRegnum, LABEL);
-                Factor *tLabel = factor_pop(); // 捨てラベル(icmpのtrueのときに飛ぶラベルを直後に置く)
-                gRegnum++;
+                factor_push("if.then", gRegnum++, LABEL);
+                Factor *tThen = factor_pop(); // 捨てラベル(icmpのtrueのときに飛ぶラベルを直後に置く)
 
-                LLVMcode *tCode = code_create(BrCond, tLabel, tThen, tCondition, 0);
+                LLVMcode *tCode = code_create(BrCond, tThen, tElseEnd, tCondition, 0);
                 br_push(tCode); // あとでバックパッチするためのbr命令スタックに積む
                 code_add(tCode);
-                code_add(code_create(Label, tLabel, NULL, NULL, 0)); // 捨てラベルコード生成
+                code_add(code_create(Label, tThen, NULL, NULL, 0)); // 捨てラベルコード生成
         }
          statement else_statement
         ;
@@ -177,51 +180,52 @@ else_statement
         : /* empty */
         {
                 br_back_patch(gRegnum); // thenから飛んでくるやつをバックパッチ
-                factor_push("", gRegnum, LABEL);
-                Factor *tThen = factor_pop();
-                gRegnum++;
+                factor_push("if.end", gRegnum++, LABEL);
+                Factor *tEnd = factor_pop();
 
-                code_add(code_create(Label, tThen, NULL, NULL, 0));
+                code_add(code_create(Label, tEnd, NULL, NULL, 0));
         }
         | ELSE
         {
                 br_back_patch(gRegnum); // 今回のBr命令を積むより先にthenから飛んでくるやつをバックパッチ
-                factor_push("", gRegnum, LABEL);
-                Factor *tThen = factor_pop();
-                gRegnum++;
+                factor_push("if.else", gRegnum++, LABEL);
+                Factor *tElse = factor_pop();
 
-                factor_push("", 0, LABEL);
-                Factor *tLabel = factor_pop();
-                LLVMcode *tBrCode = code_create(BrUncond, tLabel, NULL, NULL, 0); // else節をスキップするためのコード
+                factor_push("if.end", 0, LABEL);
+                Factor *tEnd = factor_pop();
+                LLVMcode *tBrCode = code_create(BrUncond, tEnd, NULL, NULL, 0); // else節をスキップするためのコード
 
                 br_push(tBrCode);
 
                 code_add(tBrCode); // then節を経由してきたやつはtElseまでスキップ
-                code_add(code_create(Label, tThen, NULL, NULL, 0));
+                code_add(code_create(Label, tElse, NULL, NULL, 0));
         }
          statement
         {
                 br_back_patch(gRegnum);
-                factor_push("", gRegnum, LABEL);
-                Factor *tElse = factor_pop();
-                gRegnum++;
+                factor_push("if.end", gRegnum++, LABEL);
+                Factor *tEnd = factor_pop();
 
-                code_add(code_create(BrUncond, tElse, NULL, NULL, 0)); // Labelの前にはそれに対するジャンプがないとダメっぽい?
-                code_add(code_create(Label, tElse, NULL, NULL, 0));
+                code_add(code_create(BrUncond, tEnd, NULL, NULL, 0)); // Labelの前にはそれに対するジャンプがないとダメっぽい?
+                code_add(code_create(Label, tEnd, NULL, NULL, 0));
         }
         ;
 
 while_statement
-        : WHILE condition DO
+        : WHILE
+        {
+                Factor *tLoop = factor_push("while.loop", gRegnum++, LABEL); // あとでここに戻ってくるためにプッシュしたままにしておく
+
+                code_add(code_create(BrUncond, tLoop, NULL, NULL, 0));
+
+                code_add(code_create(Label, tLoop, NULL, NULL, 0));
+        }
+         condition DO
         {
                 Factor *tCondition = factor_pop();
 
-                Factor *tWhile = factor_push("", gRegnum, LABEL); // あとでここに戻ってくるためにプッシュしたままにしておく
-                gRegnum++;
-
-                factor_push("", gRegnum, LABEL);
+                factor_push("while.do", gRegnum++, LABEL);
                 Factor *tDo = factor_pop(); // 捨てラベル
-                gRegnum++;
 
                 factor_push("", 0, LABEL);
                 Factor *tBreak = factor_pop(); // バックパッチであとで正しい値をつける(whileを抜ける)
@@ -229,20 +233,18 @@ while_statement
                 LLVMcode *tCode = code_create(BrCond, tDo, tBreak, tCondition, 0);
                 br_push(tCode); // あとでバックパッチするためのbr命令スタックに積む
 
-                code_add(code_create(Label, tWhile, NULL, NULL, 0));
                 code_add(tCode);
                 code_add(code_create(Label, tDo, NULL, NULL, 0));
         }
          statement
         {
-                Factor *tWhile = factor_pop(); // ステートメント内ではFactorのスタックは必ず使い切られる
-                code_add(code_create(BrUncond, tWhile, NULL, NULL, 0));
+                Factor *tLoop= factor_pop(); // ステートメント内ではFactorのスタックは必ず使い切られる
+                code_add(code_create(BrUncond, tLoop, NULL, NULL, 0));
 
-                
-                factor_push("", gRegnum, LABEL);
+
+                factor_push("while.break", gRegnum, LABEL);
                 Factor *tBreak = factor_pop();
-                br_back_patch(gRegnum); // バックパッチで↑のtBreakを書き換える
-                gRegnum++;
+                br_back_patch(gRegnum++); // バックパッチで↑のtBreakを書き換える
 
                 code_add(code_create(Label, tBreak, NULL, NULL, 0));
         }
@@ -255,57 +257,83 @@ for_statement
                 Factor *tTo = factor_pop(); // tFromからtToまで
                 Factor *tFrom = factor_pop();
 
-                // TODO グローバルのときに、tCntが参照できない
                 Factor *tCnt = factor_push(tRow->name, tRow->regnum, tRow->type);
                 // カウンタ(インクリメントしていく変数)
                 //popせずにとっておく
 
                 code_add(code_create(Store, tFrom, tCnt, NULL, 0));
 
-                Factor *tDo = factor_push("", gRegnum, LABEL);  // ループで戻ってくる場所、あとからpopしてbr命令を書く
-                gRegnum++;
+                Factor *tLoop = factor_push("for.loop", gRegnum++, LABEL);  // ループで戻ってくる場所、あとからpopしてbr命令を書く
 
-                code_add(code_create(Label, tDo, NULL, NULL, 0));
+                code_add(code_create(BrUncond, tLoop, NULL, NULL, 0));
+                code_add(code_create(Label, tLoop, NULL, NULL, 0));
 
-                factor_push("", gRegnum, LOCAL_VAR);
+                if(tCnt->type == GLOBAL_VAR){
+                        factor_push("", gRegnum++, LOCAL_VAR);
+                        Factor *tCntLocal = factor_pop();
+
+                        code_add(code_create(Load, tCnt, NULL, tCntLocal, 0)); // カウンタをレジスタに持ってくる
+                        tCnt = tCntLocal;
+                }
+
+                if(tTo->type == GLOBAL_VAR){
+                        factor_push("", gRegnum++, LOCAL_VAR);
+                        Factor *tToLocal = factor_pop();
+
+                        code_add(code_create(Load, tTo, NULL, tToLocal, 0)); // 比較先をレジスタに持ってくる
+                        tTo = tToLocal;
+                }
+
+                factor_push("", gRegnum++, LOCAL_VAR);
                 Factor *tCond = factor_pop(); // 条件を用意する
-                gRegnum++;
 
                 code_add(code_create(Icmp, tCnt, tTo, tCond, SLE));
 
-                factor_push("", gRegnum, LABEL);
-                Factor *tLabel = factor_pop(); // 捨てラベル(条件でブレークしないときにここに飛ぶ)
-                gRegnum++;
+                factor_push("for.do", gRegnum++, LABEL);
+                Factor *tDo = factor_pop(); // 条件でブレークしないときにここに飛ぶ
 
                 factor_push("", 0, LABEL);
                 Factor *tBreak = factor_pop(); // バックパッチであとから割当
 
-                LLVMcode *tBr = code_create(BrCond, tLabel, tBreak, tCond, 0);  
+                LLVMcode *tBr = code_create(BrCond, tDo, tBreak, tCond, 0);  
                 br_push(tBr);
                 code_add(tBr);
 
-                code_add(code_create(Label, tLabel, NULL, NULL, 0));
+                code_add(code_create(Label, tDo, NULL, NULL, 0));
         }
          statement
         {
-                {
+                Factor *tLoop = factor_pop();
+                Factor *tCnt = factor_pop();
+
+                // ラベルでブロックを切る
+                code_add(code_create(BrUncond, factor_push("for.increment", gRegnum++, LABEL), NULL, NULL, 0));
+                code_add(code_create(Label, factor_pop(), NULL, NULL, 0));
+
+                // cntインクリメント部ここから
+                factor_push("", gRegnum++, LOCAL_VAR);
+                Factor *tCntLocal = factor_pop();
+
+                code_add(code_create(Load, tCnt, NULL, tCntLocal, 0)); // カウンタをレジスタに持ってくる
+
                 factor_push("", 1, CONSTANT);
                 Factor *tOne = factor_pop();
 
-                Factor *tDo = factor_pop();
-                Factor *tCnt = factor_pop();
+                factor_push("", gRegnum++, LOCAL_VAR);
+                Factor *tRetval = factor_pop();
 
-                code_add(code_create(Add, tCnt, tOne, tCnt, 0));
+                code_add(code_create(Add, tCntLocal, tOne, tRetval, 0));
 
-                code_add(code_create(BrUncond, tDo, NULL, NULL, 0));
+                code_add(code_create(Store, tRetval, tCnt, NULL, 0));
+                // インクリメント部ここまで
 
-                factor_push("", gRegnum, LABEL);
-                br_back_patch(gRegnum);
-                gRegnum++;
+                code_add(code_create(BrUncond, tLoop, NULL, NULL, 0));
+
+                factor_push("for.break", gRegnum, LABEL);
                 Factor *tBreak = factor_pop();
+                br_back_patch(gRegnum++);
 
                 code_add(code_create(Label, tBreak, NULL, NULL, 0));
-                }
         }
         ;
 
@@ -327,7 +355,11 @@ block_statement
 read_statement
         : READ LPAREN IDENT RPAREN
         {
-                symtab_lookup($3);
+                Row *tRow = symtab_lookup($3);
+                factor_push(tRow->name, tRow->regnum, tRow->type);
+                Factor *tArg = factor_pop();
+                gRegnum++; // 本当は返り値を持っとく分
+                code_add(code_create(Read, tArg, NULL, NULL, 0));
         }
         ;
 
@@ -336,6 +368,7 @@ write_statement
         {
                 Factor *tArg = factor_pop();
                 code_add(code_create(Write, tArg, NULL, NULL, 0));
+                gRegnum++; // print文は返り値を使わないけど、レジスタ番号は一応確保しないとエラー
         }
         ;
 
@@ -349,48 +382,48 @@ condition
                 // 四則演算と大体一緒
                 Factor *tArg2 = factor_pop();
                 Factor *tArg1 = factor_pop();
-                Factor *tRetval = factor_push("", gRegnum, LOCAL_VAR);
-                gRegnum++;
+                Factor *tRetval = factor_push("", gRegnum++, LOCAL_VAR);
+
                 code_add(code_create(Icmp, tArg1, tArg2, tRetval, EQUAL));
         }
         | expression NEQ expression
         {
                 Factor *tArg2 = factor_pop();
                 Factor *tArg1 = factor_pop();
-                Factor *tRetval = factor_push("", gRegnum, LOCAL_VAR);
-                gRegnum++;
+                Factor *tRetval = factor_push("", gRegnum++, LOCAL_VAR);
+
                 code_add(code_create(Icmp, tArg1, tArg2, tRetval, NE));
         }
         | expression GT expression
         {
                 Factor *tArg2 = factor_pop();
                 Factor *tArg1 = factor_pop();
-                Factor *tRetval = factor_push("", gRegnum, LOCAL_VAR);
-                gRegnum++;
+                Factor *tRetval = factor_push("", gRegnum++, LOCAL_VAR);
+
                 code_add(code_create(Icmp, tArg1, tArg2, tRetval, SGT));
         }
         | expression GE expression
         {
                 Factor *tArg2 = factor_pop();
                 Factor *tArg1 = factor_pop();
-                Factor *tRetval = factor_push("", gRegnum, LOCAL_VAR);
-                gRegnum++;
+                Factor *tRetval = factor_push("", gRegnum++, LOCAL_VAR);
+
                 code_add(code_create(Icmp, tArg1, tArg2, tRetval, SGE));
         }
         | expression LT expression
         {
                 Factor *tArg2 = factor_pop();
                 Factor *tArg1 = factor_pop();
-                Factor *tRetval = factor_push("", gRegnum, LOCAL_VAR);
-                gRegnum++;
+                Factor *tRetval = factor_push("", gRegnum++, LOCAL_VAR);
+
                 code_add(code_create(Icmp, tArg1, tArg2, tRetval, SLT));
         }
         | expression LE expression
         {
                 Factor *tArg2 = factor_pop();
                 Factor *tArg1 = factor_pop();
-                Factor *tRetval = factor_push("", gRegnum, LOCAL_VAR);
-                gRegnum++;
+                Factor *tRetval = factor_push("", gRegnum++, LOCAL_VAR);
+
                 code_add(code_create(Icmp, tArg1, tArg2, tRetval, SLE));
         }
         ;
@@ -403,8 +436,7 @@ expression
                 // 単項演算はゼロからの足し引きで表現。
                 factor_push("", 0, CONSTANT);
                 Factor *tArg1 = factor_pop();
-                Factor *tRetval = factor_push("", gRegnum, LOCAL_VAR);
-                gRegnum++;
+                Factor *tRetval = factor_push("", gRegnum++, LOCAL_VAR);
                 code_add(code_create(Add, tArg1, tArg2, tRetval, 0));
         }
         | MINUS term
@@ -412,8 +444,7 @@ expression
                 Factor *tArg2 = factor_pop();
                 factor_push("", 0, CONSTANT);
                 Factor *tArg1 = factor_pop();
-                Factor *tRetval = factor_push("", gRegnum, LOCAL_VAR);
-                gRegnum++;
+                Factor *tRetval = factor_push("", gRegnum++, LOCAL_VAR);
                 code_add(code_create(Sub, tArg1, tArg2, tRetval, 0));
         }
         | expression PLUS expression
@@ -425,8 +456,7 @@ expression
                 Factor *tArg1 = factor_pop();
 
                 // 代入先として局所変数を用意、popしないことで、次のオペランドとしてもそのまま使える
-                Factor *tRetval = factor_push("", gRegnum, LOCAL_VAR);
-                gRegnum++;
+                Factor *tRetval = factor_push("", gRegnum++, LOCAL_VAR);
 
                 // Factorからのコード生成と追加を同時に行う
                 code_add(code_create(Add, tArg1, tArg2, tRetval, 0));
@@ -435,8 +465,7 @@ expression
         {
                 Factor *tArg2 = factor_pop();
                 Factor *tArg1 = factor_pop();
-                Factor *tRetval = factor_push("", gRegnum, LOCAL_VAR);
-                gRegnum++;
+                Factor *tRetval = factor_push("", gRegnum++, LOCAL_VAR);
                 code_add(code_create(Sub, tArg1, tArg2, tRetval, 0));
         }
         ;
@@ -447,16 +476,14 @@ term
         {
                 Factor *tArg2 = factor_pop();
                 Factor *tArg1 = factor_pop();
-                Factor *tRetval = factor_push("", gRegnum, LOCAL_VAR);
-                gRegnum++;
+                Factor *tRetval = factor_push("", gRegnum++, LOCAL_VAR);
                 code_add(code_create(Mul, tArg1, tArg2, tRetval, 0));
         }
         | term DIV factor
         {
                 Factor *tArg2 = factor_pop();
                 Factor *tArg1 = factor_pop();
-                Factor *tRetval = factor_push("", gRegnum, LOCAL_VAR);
-                gRegnum++;
+                Factor *tRetval = factor_push("", gRegnum++, LOCAL_VAR);
                 code_add(code_create(Sdiv, tArg1, tArg2, tRetval, 0));
         }
         ;
@@ -477,8 +504,7 @@ var_name
 
                 factor_push(tRaw->name, tRaw->regnum, tRaw->type);
                 Factor *tArg1 = factor_pop();
-                Factor *tRetval = factor_push("", gRegnum, LOCAL_VAR);
-                gRegnum++;
+                Factor *tRetval = factor_push("", gRegnum++, LOCAL_VAR);
 
                 code_add(code_create(Load, tArg1, NULL, tRetval, 0));
         }
@@ -500,8 +526,7 @@ id_list
                         symtab_push($1, 0, gScope);
                 } else{
                         tCommand = Alloca;
-                        symtab_push($1, gRegnum, gScope);
-                        gRegnum++;
+                        symtab_push($1, gRegnum++, gScope);
                 }
 
                 Row *tRow = symtab_lookup($1);
@@ -519,8 +544,7 @@ id_list
                         symtab_push($3, 0, gScope);
                 } else{
                         tCommand = Alloca;
-                        symtab_push($3, gRegnum, gScope);
-                        gRegnum++;
+                        symtab_push($3, gRegnum++, gScope);
                 }
 
                 Row *tRow = symtab_lookup($3);

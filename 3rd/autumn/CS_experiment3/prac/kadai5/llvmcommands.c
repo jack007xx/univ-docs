@@ -164,6 +164,9 @@ LLVMcode *code_create(LLVMcommand aCommand, Factor *aArg1, Factor *aArg2,
     case Write:
       tCode->args.write.arg1 = aArg1;
       break;
+    case Read:
+      tCode->args.read.arg1 = aArg1;
+      break;
     default:
       break;
   }
@@ -188,9 +191,9 @@ void code_add(LLVMcode *aCode) {
   }
 }
 
-char *ito_instruction[] = {"alloca", "global", "load",  "add",  "store",
-                           "add",    "mul",    "sdiv",  "icmp", "br",
-                           "brc",    "call",   "label", "ret",  "phi"};
+char *ito_instruction[] = {"alloca", "global", "load", "store", "add", "sub",
+                           "mul",    "sdiv",   "icmp", "br",    "brc", "call",
+                           "label",  "ret",    "phi",  "write", "read"};
 
 char *ito_cmp_type[] = {"eq", "ne", "sgt", "sge", "slt", "sle"};
 
@@ -217,7 +220,7 @@ void print_code(LLVMcode *aCode) {
   switch (aCode->command) {
     case Alloca:
       factor_encode(aCode->args.alloca.retval, tRetval);
-      fprintf(gFile, "%s = alloca i32 0, align 4\n", tRetval);
+      fprintf(gFile, "\t%s = alloca i32, align 4\n", tRetval);
       break;
     case Global:
       factor_encode(aCode->args.global.retval, tRetval);
@@ -226,61 +229,61 @@ void print_code(LLVMcode *aCode) {
     case Load:
       factor_encode(aCode->args.load.arg1, tArg1);
       factor_encode(aCode->args.load.retval, tRetval);
-      fprintf(gFile, "%s = load i32, i32* %s, align 4\n", tRetval, tArg1);
+      fprintf(gFile, "\t%s = load i32, i32* %s, align 4\n", tRetval, tArg1);
       break;
     case Store:
       factor_encode(aCode->args.store.arg1, tArg1);
       factor_encode(aCode->args.store.arg2, tArg2);
-      fprintf(gFile, "store i32 %s, i32* %s, align 4\n", tArg1, tArg2);
+      fprintf(gFile, "\tstore i32 %s, i32* %s, align 4\n", tArg1, tArg2);
       break;
     case Add:
       factor_encode(aCode->args.add.arg1, tArg1);
       factor_encode(aCode->args.add.arg2, tArg2);
       factor_encode(aCode->args.add.retval, tRetval);
-      fprintf(gFile, "%s = add nsw i32 %s, %s\n", tRetval, tArg1, tArg2);
+      fprintf(gFile, "\t%s = add nsw i32 %s, %s\n", tRetval, tArg1, tArg2);
       break;
     case Sub:
       factor_encode(aCode->args.sub.arg1, tArg1);
       factor_encode(aCode->args.sub.arg2, tArg2);
       factor_encode(aCode->args.sub.retval, tRetval);
-      fprintf(gFile, "%s = sub nsw i32 %s, %s\n", tRetval, tArg1, tArg2);
+      fprintf(gFile, "\t%s = sub nsw i32 %s, %s\n", tRetval, tArg1, tArg2);
       break;
     case Mul:
       factor_encode(aCode->args.mul.arg1, tArg1);
       factor_encode(aCode->args.mul.arg2, tArg2);
       factor_encode(aCode->args.mul.retval, tRetval);
-      fprintf(gFile, "%s = mul nsw i32 %s, %s\n", tRetval, tArg1, tArg2);
+      fprintf(gFile, "\t%s = mul nsw i32 %s, %s\n", tRetval, tArg1, tArg2);
       break;
     case Sdiv:
       factor_encode(aCode->args.sdiv.arg1, tArg1);
       factor_encode(aCode->args.sdiv.arg2, tArg2);
       factor_encode(aCode->args.sdiv.retval, tRetval);
-      fprintf(gFile, "%s = sdiv i32 %s, %s\n", tRetval, tArg1, tArg2);
+      fprintf(gFile, "\t%s = sdiv i32 %s, %s\n", tRetval, tArg1, tArg2);
       break;
     case Icmp:
       factor_encode(aCode->args.icmp.arg1, tArg1);
       factor_encode(aCode->args.icmp.arg2, tArg2);
       factor_encode(aCode->args.icmp.retval, tRetval);
-      fprintf(gFile, "%s = icmp %s i32 %s, %s\n", tRetval,
+      fprintf(gFile, "\t%s = icmp %s i32 %s, %s\n", tRetval,
               ito_cmp_type[aCode->args.icmp.type], tArg1, tArg2);
       break;
     case BrUncond:
       factor_encode(aCode->args.bruncond.arg1, tArg1);
-      fprintf(gFile, "br label %%%s\n", tArg1);
+      fprintf(gFile, "\tbr label %%%s\n", tArg1);
       break;
     case BrCond:
       // condの代わりにretvalに入れてる
       factor_encode(aCode->args.brcond.cond, tRetval);
       factor_encode(aCode->args.brcond.arg1, tArg1);
       factor_encode(aCode->args.brcond.arg2, tArg2);
-      fprintf(gFile, "br i1 %s, label %%%s, label %%%s\n", tRetval, tArg1,
+      fprintf(gFile, "\tbr i1 %s, label %%%s, label %%%s\n", tRetval, tArg1,
               tArg2);
       break;
     case Call:
       break;
     case Label:
       factor_encode(aCode->args.label.arg1, tArg1);
-      fprintf(gFile, "; <label>:%s:\n", tArg1);
+      fprintf(gFile, "\n; <%s>:%s:\n", aCode->args.label.arg1->vname, tArg1);
       break;
     case Ret:
       break;
@@ -289,9 +292,17 @@ void print_code(LLVMcode *aCode) {
     case Write:
       factor_encode(aCode->args.write.arg1, tArg1);
       fprintf(gFile,
-              "call i32 (i8*, ...) @printf(i8* getelementptr inbounds"
-              " ([4 x i8], [4 x i8]* @.str, i64 0, i64 0), i32 %s)\n",
+              "\tcall i32 (i8*, ...) @printf(i8* getelementptr inbounds"
+              " ([4 x i8], [4 x i8]* @.str.write, i64 0, i64 0), i32 %s)\n",
               tArg1);
+      break;
+    case Read:
+      factor_encode(aCode->args.read.arg1, tArg1);
+      fprintf(
+          gFile,
+          "\tcall i32 (i8*, ...) @__isoc99_scanf(i8* getelementptr inbounds "
+          "([3 x i8], [3 x i8]* @.str.read, i64 0, i64 0), i32* %s)\n",
+          tArg1);
       break;
     default:
       break;
@@ -303,22 +314,25 @@ void print_LLVM_code() {
 #ifdef TOFILE
   gFile = fopen("result.ll", "w");
 #endif
+  fprintf(
+      gFile,
+      "@.str.write = private unnamed_addr constant [4 x i8] c\"%%d\\0A\\00\", "
+      "align 1\n");
   fprintf(gFile,
-          "@.str = private unnamed_addr constant [4 x i8] c\"%%d\\0A\\00\", "
+          "@.str.read = private unnamed_addr constant [3 x i8] c\"%%d\\00\", "
           "align 1\n");
-  fprintf(gFile, "declare  i32 @printf(i8*, ...)\n\n");
+  fprintf(gFile, "declare i32 @printf(i8*, ...)\n");
+  fprintf(gFile, "declare i32 @__isoc99_scanf(i8 *, ...)\n\n");
 
   for (Fundecl *tFunPointer = declhd; tFunPointer != NULL;
        tFunPointer = tFunPointer->next) {
     if (tFunPointer != declhd) {
       // 初回のfundeclは大域変数の定義に当てられる
       fprintf(gFile, "define i32 @%s(){\n", tFunPointer->fname);
-      fprintf(gFile, "\t%%1 = alloca i32, align 4\n");
     }
 
     for (LLVMcode *tCodePointer = tFunPointer->codes; tCodePointer != NULL;
          tCodePointer = tCodePointer->next) {
-      if (tFunPointer != declhd) printf("\t");
       print_code(tCodePointer);
     }
 
@@ -336,6 +350,7 @@ void br_push(LLVMcode *aCode) {
   tTop->next = gBrStack;
   gBrStack = tTop;
 }
+
 void br_back_patch(int aLabel) {
   if (gBrStack->code->command == BrCond) {
     if (gBrStack->code->args.brcond.arg1->val == 0) {
