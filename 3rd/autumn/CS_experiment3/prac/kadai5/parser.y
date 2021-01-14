@@ -115,8 +115,7 @@ proc_decl
 proc_name
         : IDENT
         {
-                // TODO プロセス呼び出しについて調査
-                symtab_push($1, gRegnum, PROC_NAME);
+                symtab_push($1, 0, PROC_NAME);
                 Row *tRow = symtab_lookup($1);
 
                 fundecl_add(tRow->name, 0);
@@ -311,10 +310,7 @@ for_statement
                 Factor *tLoop = factor_pop();
                 Factor *tCnt = factor_pop();
 
-                // ラベルでブロックを切る
-                code_add(code_create(BrUncond, factor_push("for.increment", gRegnum++, LABEL), NULL, NULL, 0));
-                code_add(code_create(Label, factor_pop(), NULL, NULL, 0));
-
+                // TODO コメント書けるようにする
                 // cntインクリメント部ここから
                 factor_push("", gRegnum++, LOCAL_VAR);
                 Factor *tCntLocal = factor_pop();
@@ -350,7 +346,12 @@ proc_call_name
         : IDENT
         {
                 Row *tRow = symtab_lookup($1);
-                // TODO 関数のコール処理
+                factor_push(tRow->name, tRow->regnum, tRow->type);
+                Factor *tProc = factor_pop();
+
+                factor_push("", gRegnum++, LOCAL_VAR);//関数の戻り血
+                Factor *tRetval = factor_pop();
+                code_add(code_create(Call, tProc, NULL, tRetval, 0));
         }
         ;
 

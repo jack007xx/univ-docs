@@ -98,7 +98,6 @@ void code_init() {
 }
 
 // Factorのポインタを投げて、コマンドを指定するとコードを生成してくれる
-//
 LLVMcode *code_create(LLVMcommand aCommand, Factor *aArg1, Factor *aArg2,
                       Factor *aRetval, Cmptype aIcmpType) {
   LLVMcode *tCode = malloc(sizeof(LLVMcode));
@@ -153,6 +152,8 @@ LLVMcode *code_create(LLVMcommand aCommand, Factor *aArg1, Factor *aArg2,
       tCode->args.brcond.cond = aRetval;
       break;
     case Call:
+      tCode->args.call.arg1 = aArg1;
+      tCode->args.call.retval = aRetval;
       break;
     case Label:
       tCode->args.label.arg1 = aArg1;
@@ -210,6 +211,10 @@ void factor_encode(Factor *aFactor, char *aArg) {
       break;
     case LABEL:
       sprintf(aArg, "%d", aFactor->val);
+      break;
+    case PROC_NAME:
+      sprintf(aArg, "@%s()", aFactor->vname);
+      break;
     default:
       break;
   }
@@ -280,6 +285,9 @@ void print_code(LLVMcode *aCode) {
               tArg2);
       break;
     case Call:
+      factor_encode(aCode->args.call.arg1, tArg1);
+      factor_encode(aCode->args.call.retval, tRetval);
+      fprintf(gFile, "\t%s = call i32 %s\n", tRetval, tArg1);
       break;
     case Label:
       factor_encode(aCode->args.label.arg1, tArg1);

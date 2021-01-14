@@ -103,6 +103,8 @@ typedef struct llvmcode {
       Factor *arg2;
     } brcond;
     struct {
+      Factor *arg1;
+      Factor *retval;
     } call;
     struct { /* label  */
       Factor *arg1;
