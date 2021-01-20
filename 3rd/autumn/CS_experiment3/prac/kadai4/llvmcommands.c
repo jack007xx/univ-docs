@@ -9,12 +9,12 @@
 
 void print_code(LLVMcode *aCode);
 
-LLVMcode *codehd; /* 命令列の先頭のアドレスを保持するポインタ */
-LLVMcode *codetl; /* 命令列の末尾のアドレスを保持するポインタ */
+LLVMcode *gCodehd; /* 命令列の先頭のアドレスを保持するポインタ */
+LLVMcode *gCodetl; /* 命令列の末尾のアドレスを保持するポインタ */
 Fundecl
-    *declhd; /* 関数定義の線形リストの先頭の要素のアドレスを保持するポインタ */
+    *gDeclhd; /* 関数定義の線形リストの先頭の要素のアドレスを保持するポインタ */
 Fundecl
-    *decltl; /* 関数定義の線形リストの末尾の要素のアドレスを保持するポインタ */
+    *gDecltl; /* 関数定義の線形リストの末尾の要素のアドレスを保持するポインタ */
 
 Factorstack FSTACK; /* 整数もしくはレジスタ番号を保持するスタック */
 
@@ -24,14 +24,14 @@ void fundecl_init() {
   // 課題4では関数呼び出しを行わないので、このように定義する。
   Fundecl *tMain = (Fundecl *)malloc(sizeof(Fundecl));
   strcpy(tMain->fname, "Main");
-  declhd = tMain;
-  decltl = tMain;
+  gDeclhd = tMain;
+  gDecltl = tMain;
 }
 
 void code_init() {
   // LLVMcode *tInitialCode = (LLVMcode *)malloc(sizeof(LLVMcode));
-  codehd = NULL;
-  codetl = NULL;
+  gCodehd = NULL;
+  gCodetl = NULL;
 }
 
 void fstack_init() { /* FSTACKの初期化 */
@@ -148,16 +148,16 @@ void code_add(LLVMcode *aCode) {
   // aCodeの内容は変更される可能性がある
 
   aCode->next = NULL;
-  if (codetl == NULL) {   /* 解析中の関数の最初の命令の場合 */
-    if (decltl == NULL) { /* 解析中の関数がない場合 */
+  if (gCodetl == NULL) {   /* 解析中の関数の最初の命令の場合 */
+    if (gDecltl == NULL) { /* 解析中の関数がない場合 */
       /* 関数宣言を処理する段階でリストが作られているので，ありえない */
       fprintf(stderr, "unexpected error\n");
     }
-    decltl->codes = aCode; /* 関数定義の命令列の先頭の命令に設定 */
-    codehd = codetl = aCode; /* 生成中の命令列の末尾の命令として記憶 */
+    gDecltl->codes = aCode; /* 関数定義の命令列の先頭の命令に設定 */
+    gCodehd = gCodetl = aCode; /* 生成中の命令列の末尾の命令として記憶 */
   } else { /* 解析中の関数の命令列に1つ以上命令が存在する場合 */
-    codetl->next = aCode; /* 命令列の末尾に追加 */
-    codetl = aCode;       /* 命令列の末尾の命令として記憶 */
+    gCodetl->next = aCode; /* 命令列の末尾に追加 */
+    gCodetl = aCode;       /* 命令列の末尾の命令として記憶 */
   }
 }
 
@@ -270,7 +270,7 @@ void print_LLVM_code() {
 #endif
 
   int tIsInMain = 0;
-  for (Fundecl *tFunPointer = declhd; tFunPointer != NULL;
+  for (Fundecl *tFunPointer = gDeclhd; tFunPointer != NULL;
        tFunPointer = tFunPointer->next) {
     for (LLVMcode *tCodePointer = tFunPointer->codes; tCodePointer != NULL;
          tCodePointer = tCodePointer->next) {
