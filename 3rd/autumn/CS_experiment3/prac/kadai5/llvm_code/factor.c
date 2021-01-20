@@ -40,15 +40,12 @@ Factor *factor_push(char *aName, int aVal, Scope aType) {
 }
 
 Factor *factor_pop() {
-  // ポップしてもメモリを開放しない(コード生成に使い回すため)
-  // .topは、挿入する位置を示すので、先にデクリメントしておk
-  FSTACK.top--;
-
 #ifdef DEBUG
   printf("[DEBUG] Factor stack POPED\n");
   print_factor(FSTACK.element[FSTACK.top]);
   printf("\n");
 #endif
-
-  return FSTACK.element[FSTACK.top];
+  // ポップしてもメモリを開放しない(コード生成に使い回すため)
+  // .topは、挿入する位置を示すので、先にデクリメントしておk
+  return FSTACK.element[--FSTACK.top];
 }
