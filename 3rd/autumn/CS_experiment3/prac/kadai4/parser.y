@@ -8,8 +8,9 @@
 #include <stdio.h>
 #include <string.h>
 
-#include "symtab.h"
-#include "llvmcommands.h"
+#include "symtab/symtab.h"
+#include "llvm_code/factor.h"
+#include "llvm_code/llvm.h"
 
 int yyparse();
 int yyerror(char *);
@@ -51,9 +52,13 @@ program
                 code_init();
                 fstack_init();
                 symtab_init();
+
                 gScope = GLOBAL_VAR;
-                gRegnum = 2;
-                symtab_push($2, gRegnum, gScope);
+                gRegnum = 1;
+
+                symtab_push($2, 0, gScope);
+
+                fundecl_add("__GlobalDecl", 0);
         }
           outblock PERIOD
         {
@@ -62,7 +67,15 @@ program
         ;
 
 outblock
-        : var_decl_part subprog_decl_part statement
+        : var_decl_part subprog_decl_part
+        {
+                fundecl_add("main", 0);
+                gRegnum = 1; // 手続きごとにレジスタ番号はリセットされる
+                factor_push("Func Retval", gRegnum++, LOCAL_VAR);
+                Factor *tFunRet = factor_pop();
+                code_add(code_create(Alloca, NULL, NULL, tFunRet, 0)); // 戻り値を先に定義
+        }
+         statement
         ;
 
 var_decl_part
@@ -205,7 +218,22 @@ condition
 expression
         : term
         | PLUS term
+        {
+                Factor *tArg2 = factor_pop();
+                // 単項演算はゼロからの足し引きで表現。
+                factor_push("", 0, CONSTANT);
+                Factor *tArg1 = factor_pop();
+                Factor *tRetval = factor_push("", gRegnum++, LOCAL_VAR);
+                code_add(code_create(Add, tArg1, tArg2, tRetval, 0));
+        }
         | MINUS term
+        {
+                Factor *tArg2 = factor_pop();
+                factor_push("", 0, CONSTANT);
+                Factor *tArg1 = factor_pop();
+                Factor *tRetval = factor_push("", gRegnum++, LOCAL_VAR);
+                code_add(code_create(Sub, tArg1, tArg2, tRetval, 0));
+        }
         | expression PLUS expression
         {
                 // 四則演算は、全部これと一緒
@@ -215,8 +243,7 @@ expression
                 Factor *tArg1 = factor_pop();
 
                 // 代入先として局所変数を用意、popしないことで、次のオペランドとしてもそのまま使える
-                Factor *tRetval = factor_push("", gRegnum, LOCAL_VAR);
-                gRegnum++;
+                Factor *tRetval = factor_push("", gRegnum++, LOCAL_VAR);
 
                 // Factorからのコード生成と追加を同時に行う
                 code_add(code_create(Add, tArg1, tArg2, tRetval));
@@ -225,10 +252,7 @@ expression
         {
                 Factor *tArg2 = factor_pop();
                 Factor *tArg1 = factor_pop();
-
-                Factor *tRetval = factor_push("", gRegnum, LOCAL_VAR);
-                gRegnum++;
-
+                Factor *tRetval = factor_push("", gRegnum++, LOCAL_VAR);
                 code_add(code_create(Sub, tArg1, tArg2, tRetval));
         }
         ;
@@ -239,20 +263,14 @@ term
         {
                 Factor *tArg2 = factor_pop();
                 Factor *tArg1 = factor_pop();
-
-                Factor *tRetval = factor_push("", gRegnum, LOCAL_VAR);
-                gRegnum++;
-
+                Factor *tRetval = factor_push("", gRegnum++, LOCAL_VAR);
                 code_add(code_create(Mul, tArg1, tArg2, tRetval));
         }
         | term DIV factor
         {
                 Factor *tArg2 = factor_pop();
                 Factor *tArg1 = factor_pop();
-
-                Factor *tRetval = factor_push("", gRegnum, LOCAL_VAR);
-                gRegnum++;
-
+                Factor *tRetval = factor_push("", gRegnum++, LOCAL_VAR);
                 code_add(code_create(Sdiv, tArg1, tArg2, tRetval));
         }
         ;
@@ -269,12 +287,11 @@ factor
 var_name
         : IDENT
         {
-                Row* tRaw = symtab_lookup($1);
+                Row* tRow = symtab_lookup($1);
+                factor_push(tRow->name, tRow->regnum, tRow->type);
 
-                factor_push(tRaw->name, tRaw->regnum, tRaw->type);
                 Factor *tArg1 = factor_pop();
-                Factor *tRetval = factor_push("", gRegnum, LOCAL_VAR);
-                gRegnum++;
+                Factor *tRetval = factor_push("", gRegnum++, LOCAL_VAR);
 
                 code_add(code_create(Load, tArg1, NULL, tRetval));
         }
@@ -288,23 +305,39 @@ arg_list
 id_list
         : IDENT
         {
-                symtab_push($1, gRegnum, gScope);
+                // 大域変数と局所変数の場合で処理分けた
+                // 局所だと、レジスタ番号をSSAで管理する必要がある
+                LLVMcommand tCommand;
+                if(gScope == GLOBAL_VAR){
+                        tCommand = Global;
+                        symtab_push($1, 0, gScope);
+                } else{
+                        tCommand = Alloca;
+                        symtab_push($1, gRegnum++, gScope);
+                }
+
                 Row *tRow = symtab_lookup($1);
 
-                factor_push(tRow->name, gRegnum, gScope);
+                factor_push(tRow->name, tRow->regnum, gScope);
                 Factor *tRetval = factor_pop();
 
-                code_add(code_create(Global,NULL,NULL,tRetval));
+                code_add(code_create(tCommand,NULL,NULL,tRetval));
         }
         | id_list COMMA IDENT
         {
-                symtab_push($3, gRegnum, gScope);
+                // ↑と同じ
+                LLVMcommand tCommand;
+                if(gScope == GLOBAL_VAR){
+                        tCommand = Global;
+                        symtab_push($3, 0, gScope);
+                } else{
+                        tCommand = Alloca;
+                        symtab_push($3, gRegnum++, gScope);
+                }
                 Row *tRow = symtab_lookup($3);
-
-                factor_push(tRow->name, gRegnum, gScope);
+                factor_push(tRow->name, tRow->regnum, gScope);
                 Factor *tRetval = factor_pop();
-
-                code_add(code_create(Global,NULL,NULL,tRetval));
+                code_add(code_create(tCommand,NULL,NULL,tRetval, 0));
         }
         ;
 
