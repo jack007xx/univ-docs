@@ -35,9 +35,9 @@ typedef enum { EQUAL, NE, SGT, SGE, SLT, SLE } Cmptype;
 // 1つのLLVM命令と次の命令へのリンク
 // 基本的にFactorでオペランドを定義している
 typedef struct llvmcode {
-  LLVMcommand command; /* 命令名 */
-  union {              /* 命令の引数 */
-    struct {           /* alloca */
+  LLVMcommand command;
+  union {
+    struct {
       Factor *retval;
     } alloca;
     struct {
@@ -130,11 +130,11 @@ void print_LLVM_code();
 
 /* LLVMの関数定義 */
 typedef struct fundecl {
-  char fname[256];      /* 関数名                      */
-  unsigned arity;       /* 引数個数                    */
-  Factor args[10];      /* 引数名                      */
-  LLVMcode *codes;      /* 命令列の線形リストへのポインタ */
-  struct fundecl *next; /* 次の関数定義へのポインタ      */
+  char fname[256];       // 関数名
+  unsigned arity;        // 引数個数
+  Factor args[10];       // 引数名
+  LLVMcode *codes;       // 命令列の線形リストへのポインタ
+  struct fundecl *next;  // 次の関数定義へのポインタ
 } Fundecl;
 
 // 初期化処理
