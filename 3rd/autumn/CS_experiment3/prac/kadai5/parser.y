@@ -554,6 +554,7 @@ id_list
         }
         | id_list COMMA IDENT
         {
+                // ↑と同じ
                 LLVMcommand tCommand;
                 if(gScope == GLOBAL_VAR){
                         tCommand = Global;
@@ -562,12 +563,9 @@ id_list
                         tCommand = Alloca;
                         symtab_push($3, gRegnum++, gScope);
                 }
-
                 Row *tRow = symtab_lookup($3);
-
                 factor_push(tRow->name, tRow->regnum, gScope);
                 Factor *tRetval = factor_pop();
-
                 code_add(code_create(tCommand,NULL,NULL,tRetval, 0));
         }
         ;

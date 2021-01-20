@@ -9,22 +9,15 @@
 
 void print_code(LLVMcode *aCode);
 
-/* 命令列の先頭のアドレスを保持するポインタ */
-LLVMcode *gCodehd;
-/* 命令列の末尾のアドレスを保持するポインタ */
-LLVMcode *gCodetl;
+// 命令列の前後のアドレスを保持するポインタ
+LLVMcode *gCodehd, *gCodetl;
 
-/* 関数定義の線形リストの先頭の要素のアドレスを保持するポインタ */
-Fundecl *gDeclhd;
-/* 関数定義の線形リストの末尾の要素のアドレスを保持するポインタ */
-Fundecl *gDecltl;
+// 関数定義の線形リストの前後アドレスを保持するポインタ
+Fundecl *gDeclhd, *gDecltl;
 
 FILE *gFile;
 
-void fundecl_init() {
-  gDeclhd = NULL;
-  gDecltl = NULL;
-}
+void fundecl_init() { gDeclhd = gDecltl = NULL; }
 
 // 関数を追加する
 void fundecl_add(char *aName, unsigned aArity) {
@@ -44,11 +37,7 @@ void fundecl_add(char *aName, unsigned aArity) {
   }
 }
 
-void code_init() {
-  // LLVMcode *tInitialCode = (LLVMcode *)malloc(sizeof(LLVMcode));
-  gCodehd = NULL;
-  gCodetl = NULL;
-}
+void code_init() { gCodehd = gCodetl = NULL; }
 
 LLVMcode *code_create(LLVMcommand aCommand, Factor *aArg1, Factor *aArg2,
                       Factor *aRetval, Cmptype aIcmpType) {
