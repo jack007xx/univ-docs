@@ -8,8 +8,10 @@
 #include <stdio.h>
 #include <string.h>
 
-#include "symtab.h"
-#include "llvmcommands.h"
+#include "./symtab/symtab.h"
+#include "./llvm_code/llvm.h"
+#include "./llvm_code/factor.h"
+#include "./llvm_code/util.h"
 
 int yyparse();
 int yyerror(char *);
@@ -183,6 +185,7 @@ else_statement
                 factor_push("if.end", gRegnum++, LABEL);
                 Factor *tEnd = factor_pop();
 
+                code_add(code_create(BrUncond, tEnd, NULL, NULL, 0));
                 code_add(code_create(Label, tEnd, NULL, NULL, 0));
         }
         | ELSE
@@ -500,13 +503,15 @@ factor
 var_name
         : IDENT
         {
-                Row* tRaw = symtab_lookup($1);
+                Row* tRow = symtab_lookup($1);
+                factor_push(tRow->name, tRow->regnum, tRow->type);
 
-                factor_push(tRaw->name, tRaw->regnum, tRaw->type);
-                Factor *tArg1 = factor_pop();
-                Factor *tRetval = factor_push("", gRegnum++, LOCAL_VAR);
+                if(tRow->type != LOCAL_VAR){
+                        Factor *tArg1 = factor_pop();
+                        Factor *tRetval = factor_push("", gRegnum++, LOCAL_VAR);
 
-                code_add(code_create(Load, tArg1, NULL, tRetval, 0));
+                        code_add(code_create(Load, tArg1, NULL, tRetval, 0));
+                }
         }
         ;
 

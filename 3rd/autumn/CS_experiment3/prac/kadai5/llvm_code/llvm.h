@@ -1,56 +1,34 @@
+#pragma once
 #ifndef __LLVMCOMMANDS_H__
 #define __LLVMCOMMANDS_H__
-#include "symtab.h"
+#include "factor.h"
+
 /* LLVM命令名の定義 */
-// 15命令
 typedef enum {
-  Alloca, /* alloca */
+  Alloca,
   Global,
-  Load,  /* load   */
-  Store, /* store  */
-  Add,   /* add    */
-  Sub,   /* sub    */
+  Load,
+  Store,
+  Add,
+  Sub,
   Mul,
   Sdiv,
-  Icmp,     /* icmp   */
-  BrUncond, /* br     */
-  BrCond,   /* brc    */
+  Icmp,
+  BrUncond,
+  BrCond,
   Call,
-  Label, /* label  */
-  Ret,   /* ret    */
+  Label,
+  Ret,
   Phi,
   Write,
   Read
 } LLVMcommand;
 
-/* 比較演算子の種類 */
-typedef enum {
-  EQUAL, /* eq （==）*/
-  NE,    /* ne （!=）*/
-  SGT,   /* sgt （>，符号付き） */
-  SGE,   /* sge （>=，符号付き）*/
-  SLT,   /* slt （<，符号付き） */
-  SLE    /* sle （<=，符号付き）*/
-} Cmptype;
+// brcondで指定する比較演算の種類
+typedef enum { EQUAL, NE, SGT, SGE, SLT, SLE } Cmptype;
 
-/* 変数もしくは定数の型 */
-// Row型に合わせて順番変更
-typedef struct {
-  char *vname; /* 変数の場合の変数名 */
-  int val; /* 整数の場合はその値，変数の場合は割り当てたレジスタ番号 */
-  Scope type; /* 変数（のレジスタ）か整数の区別 */
-} Factor;
-
-/* 変数もしくは定数のためのスタック */
-typedef struct {
-  Factor *element[100]; /* スタック（最大要素数は100まで） */
-  unsigned int top;     /* スタックのトップの位置         */
-} Factorstack;
-
-void fstack_init();
-Factor *factor_pop();
-Factor *factor_push(char *, int, Scope);
-
+// 1つのLLVM命令と次の命令へのリンク
+// 基本的にFactorでオペランドを定義している
 typedef struct llvmcode {
   LLVMcommand command; /* 命令名 */
   union {              /* 命令の引数 */
@@ -119,14 +97,24 @@ typedef struct llvmcode {
       Factor *arg1;
     } read;
   } args;
-  /* 次の命令へのポインタ */
+  // 次の命令へのポインタ
   struct llvmcode *next;
 } LLVMcode;
 
+// 初期化処理
 void code_init();
+
+// 命令とオペランド、格納先とかを指定して、llvm命令を作る
 LLVMcode *code_create(LLVMcommand, Factor *, Factor *, Factor *, Cmptype);
+
+// スタックに1つのllvm命令を追加する
 void code_add(LLVMcode *);
+
+// 全てのコードをファイルに出力する
+// 最後に呼び出す
 void print_LLVM_code();
+
+// ~~~~~~~~~ここから関数の表現定義~~~~~~~~~
 
 /* LLVMの関数定義 */
 typedef struct fundecl {
@@ -137,16 +125,10 @@ typedef struct fundecl {
   struct fundecl *next; /* 次の関数定義へのポインタ      */
 } Fundecl;
 
+// 初期化処理
 void fundecl_init();
+
+// 関数を追加して、その関数に対するコード追加を開始する
 void fundecl_add(char *, unsigned);
-
-// バックパッチ専用
-typedef struct brStack {
-  LLVMcode *code;
-  struct brStack *next;
-} BrStack;
-
-void br_push(LLVMcode *);
-void br_back_patch(int);
 
 #endif

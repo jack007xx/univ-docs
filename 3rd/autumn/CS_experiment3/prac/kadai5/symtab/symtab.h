@@ -1,3 +1,5 @@
+#pragma once
+
 #ifndef __SYMBOLS_H__
 #define __SYMBOLS_H__
 

@@ -6,8 +6,7 @@
 
 #include <stdio.h>
 #include <string.h>
-#include "symtab.h"
-#include "llvmcommands.h"
+#include "./symtab/symtab.h"
 
 #define MAXLENGTH 16
 
