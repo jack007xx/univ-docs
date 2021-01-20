@@ -34,6 +34,46 @@
 \author{坪井正太郎（101830245）}
 \date{\today}
 \maketitle
+\section{はじめに}
+\subsection{コード規約}
+\subsubsection*{ケース}
+\begin{itemize}
+  \item 型名
+        \begin{itemize}
+          \item UpperCamelCase
+        \end{itemize}
+  \item 構造体名、メンバ名、変数名
+        \begin{itemize}
+          \item lowerCamelCase
+        \end{itemize}
+  \item 関数名
+        \begin{itemize}
+          \item snake\_case
+        \end{itemize}
+\end{itemize}
+
+\subsubsection*{変数のプレフィックス}
+\begin{itemize}
+  \item グローバル変数:g
+        \begin{itemize}
+          \item gVar
+        \end{itemize}
+  \item ローカル変数:t
+        \begin{itemize}
+          \item tVar
+        \end{itemize}
+  \item 仮引数:a
+        \begin{itemize}
+          \item aVar
+        \end{itemize}
+\end{itemize}
+
+\subsubsection*{コメント}
+型、関数の説明はヘッダにのみ記載、cファイルには実装に関するコメントのみ。
+プライベート関数は明記して実装にコメント。
+
 \input{kadai4.tex}
+
 \input{kadai5.tex}
+
 \end{document}
