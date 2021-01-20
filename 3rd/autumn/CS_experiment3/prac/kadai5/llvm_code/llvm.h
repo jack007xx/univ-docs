@@ -1,6 +1,4 @@
 #pragma once
-#ifndef __LLVMCOMMANDS_H__
-#define __LLVMCOMMANDS_H__
 #include "factor.h"
 
 // +----------------------------------------+
@@ -142,5 +140,3 @@ void fundecl_init();
 
 // 関数を追加して、その関数に対するコード追加を開始する
 void fundecl_add(char *, unsigned);
-
-#endif
