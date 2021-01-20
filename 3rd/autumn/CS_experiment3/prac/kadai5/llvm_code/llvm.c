@@ -259,7 +259,7 @@ void print_code(LLVMcode *aCode) {
       factor_encode(aCode->args.write.arg1, tArg1);
       fprintf(gFile,
               "\tcall i32 (i8*, ...) @printf(i8* getelementptr inbounds"
-              " ([3 x i8], [3 x i8]* @.str, i64 0, i64 0), i32 %s)\n",
+              " ([4 x i8], [4 x i8]* @.str.w, i64 0, i64 0), i32 %s)\n",
               tArg1);
       break;
     case Read:
@@ -267,7 +267,7 @@ void print_code(LLVMcode *aCode) {
       fprintf(
           gFile,
           "\tcall i32 (i8*, ...) @__isoc99_scanf(i8* getelementptr inbounds "
-          "([3 x i8], [3 x i8]* @.str, i64 0, i64 0), i32* %s)\n",
+          "([3 x i8], [3 x i8]* @.str.r, i64 0, i64 0), i32* %s)\n",
           tArg1);
       break;
     case Comment:
@@ -284,11 +284,13 @@ void print_LLVM_code() {
   gFile = fopen("result.ll", "w");
 #endif
   // printf scanfに必要な定義部
-  fprintf(
-      gFile,
-      "@.str = private unnamed_addr constant [3 x i8] c\"%%d\\00\", align 1\n"
-      "declare i32 @printf(i8*, ...)\n"
-      "declare i32 @__isoc99_scanf(i8 *, ...)\n\n");
+  fprintf(gFile,
+          "@.str.w = private unnamed_addr constant [4 x i8] c\"%%d\\0A\\00\", "
+          "align 1\n"
+          "@.str.r = private unnamed_addr constant [3 x i8] c\"%%d\\00\", "
+          "align 1\n"
+          "declare i32 @printf(i8*, ...)\n"
+          "declare i32 @__isoc99_scanf(i8 *, ...)\n\n");
 
   for (Fundecl *tFunPointer = gDeclhd; tFunPointer != NULL;
        tFunPointer = tFunPointer->next) {
