@@ -21,7 +21,8 @@ typedef enum {
   Ret,
   Phi,
   Write,
-  Read
+  Read,
+  Comment
 } LLVMcommand;
 
 // brcondで指定する比較演算の種類
@@ -81,6 +82,8 @@ typedef struct llvmcode {
       Factor *arg2;
     } brcond;
     struct {
+      Factor *arg1;
+      Factor *retval;
     } call;
     struct { /* label  */
       Factor *arg1;
@@ -96,6 +99,9 @@ typedef struct llvmcode {
     struct {
       Factor *arg1;
     } read;
+    struct {
+      Factor *arg1;
+    } comment;
   } args;
   // 次の命令へのポインタ
   struct llvmcode *next;

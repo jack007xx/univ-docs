@@ -70,6 +70,7 @@ outblock
         : var_decl_part subprog_decl_part
         {
                 fundecl_add("main", 0);
+                gRegnum = 1; // 手続きごとにレジスタ番号はリセットされる
                 factor_push("", gRegnum++, LOCAL_VAR);
                 Factor *tFunRet = factor_pop();
                 code_add(code_create(Alloca, NULL, NULL, tFunRet, 0));
@@ -116,11 +117,11 @@ proc_decl
 proc_name
         : IDENT
         {
-                // TODO プロセス呼び出しについて調査
-                symtab_push($1, gRegnum, PROC_NAME);
+                symtab_push($1, 0, PROC_NAME);
                 Row *tRow = symtab_lookup($1);
 
                 fundecl_add(tRow->name, 0);
+                gRegnum = 1; // 手続きごとにレジスタ番号はリセットされる
 
                 gScope = LOCAL_VAR;
         }
@@ -164,6 +165,7 @@ if_statement
         {
                 Factor *tCondition = factor_pop();
 
+                // TODO if.endをいい感じの名前にしたい。if.break?while.breakをかえてもいいけど。
                 factor_push("if.else.end", 0, LABEL);
                 Factor *tElseEnd = factor_pop(); // バックパッチであとで正しい値をつける(elseの前に来る)
 
@@ -198,7 +200,7 @@ else_statement
                 Factor *tEnd = factor_pop();
                 LLVMcode *tBrCode = code_create(BrUncond, tEnd, NULL, NULL, 0); // else節をスキップするためのコード
 
-                br_push(tBrCode);
+                br_push(tBrCode); // あとでif.endを正しく置き換える
 
                 code_add(tBrCode); // then節を経由してきたやつはtElseまでスキップ
                 code_add(code_create(Label, tElse, NULL, NULL, 0));
@@ -309,11 +311,10 @@ for_statement
                 Factor *tLoop = factor_pop();
                 Factor *tCnt = factor_pop();
 
-                // ラベルでブロックを切る
-                code_add(code_create(BrUncond, factor_push("for.increment", gRegnum++, LABEL), NULL, NULL, 0));
-                code_add(code_create(Label, factor_pop(), NULL, NULL, 0));
-
                 // cntインクリメント部ここから
+                factor_push("incremant block", 0, 0);
+                code_add(code_create(Comment, factor_pop(), NULL, NULL, 0));
+
                 factor_push("", gRegnum++, LOCAL_VAR);
                 Factor *tCntLocal = factor_pop();
 
@@ -347,7 +348,13 @@ proc_call_statement
 proc_call_name
         : IDENT
         {
-                symtab_lookup($1);
+                Row *tRow = symtab_lookup($1);
+                factor_push(tRow->name, tRow->regnum, tRow->type);
+                Factor *tProc = factor_pop();
+
+                factor_push("", gRegnum++, LOCAL_VAR);//関数の戻り血
+                Factor *tRetval = factor_pop();
+                code_add(code_create(Call, tProc, NULL, tRetval, 0));
         }
         ;
 

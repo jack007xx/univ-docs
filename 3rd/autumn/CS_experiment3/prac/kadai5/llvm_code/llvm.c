@@ -104,6 +104,8 @@ LLVMcode *code_create(LLVMcommand aCommand, Factor *aArg1, Factor *aArg2,
       tCode->args.brcond.cond = aRetval;
       break;
     case Call:
+      tCode->args.call.arg1 = aArg1;
+      tCode->args.call.retval = aRetval;
       break;
     case Label:
       tCode->args.label.arg1 = aArg1;
@@ -117,6 +119,9 @@ LLVMcode *code_create(LLVMcommand aCommand, Factor *aArg1, Factor *aArg2,
       break;
     case Read:
       tCode->args.read.arg1 = aArg1;
+      break;
+    case Comment:
+      tCode->args.comment.arg1 = aArg1;
       break;
     default:
       break;
@@ -159,6 +164,10 @@ void factor_encode(Factor *aFactor, char *aArg) {
       break;
     case LABEL:
       sprintf(aArg, "%d", aFactor->val);
+      break;
+    case PROC_NAME:
+      sprintf(aArg, "@%s()", aFactor->vname);
+      break;
     default:
       break;
   }
@@ -233,6 +242,9 @@ void print_code(LLVMcode *aCode) {
               tArg2);
       break;
     case Call:
+      factor_encode(aCode->args.call.arg1, tArg1);
+      factor_encode(aCode->args.call.retval, tRetval);
+      fprintf(gFile, "\t%s = call i32 %s\n", tRetval, tArg1);
       break;
     case Label:
       factor_encode(aCode->args.label.arg1, tArg1);
@@ -256,6 +268,9 @@ void print_code(LLVMcode *aCode) {
           "\tcall i32 (i8*, ...) @__isoc99_scanf(i8* getelementptr inbounds "
           "([3 x i8], [3 x i8]* @.str, i64 0, i64 0), i32* %s)\n",
           tArg1);
+      break;
+    case Comment:
+      fprintf(gFile, "\t; %s\n", aCode->args.comment.arg1->vname);
       break;
     default:
       break;
