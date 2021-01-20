@@ -71,9 +71,9 @@ outblock
         {
                 fundecl_add("main", 0);
                 gRegnum = 1; // 手続きごとにレジスタ番号はリセットされる
-                factor_push("", gRegnum++, LOCAL_VAR);
+                factor_push("Func Retval", gRegnum++, LOCAL_VAR);
                 Factor *tFunRet = factor_pop();
-                code_add(code_create(Alloca, NULL, NULL, tFunRet, 0));
+                code_add(code_create(Alloca, NULL, NULL, tFunRet, 0)); // 戻り値を先に定義
         }
          statement
         ;
@@ -107,7 +107,13 @@ subprog_decl
         ;
 
 proc_decl
-        : PROCEDURE proc_name SEMICOLON inblock
+        : PROCEDURE proc_name SEMICOLON 
+        {
+                factor_push("Func Retval", gRegnum++, LOCAL_VAR);
+                Factor *tFunRet = factor_pop();
+                code_add(code_create(Alloca, NULL, NULL, tFunRet, 0)); // 戻り値を先に定義
+        }
+          inblock
         {
                 gScope = GLOBAL_VAR;
                 symtab_delete();
@@ -513,12 +519,10 @@ var_name
                 Row* tRow = symtab_lookup($1);
                 factor_push(tRow->name, tRow->regnum, tRow->type);
 
-                if(tRow->type != LOCAL_VAR){
-                        Factor *tArg1 = factor_pop();
-                        Factor *tRetval = factor_push("", gRegnum++, LOCAL_VAR);
+                Factor *tArg1 = factor_pop();
+                Factor *tRetval = factor_push("", gRegnum++, LOCAL_VAR);
 
-                        code_add(code_create(Load, tArg1, NULL, tRetval, 0));
-                }
+                code_add(code_create(Load, tArg1, NULL, tRetval, 0));
         }
         ;
 
