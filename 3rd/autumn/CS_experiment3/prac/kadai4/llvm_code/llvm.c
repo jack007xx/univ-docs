@@ -106,9 +106,6 @@ void factor_encode(Factor *aFactor, char *aArg) {
     case CONSTANT:
       sprintf(aArg, "%d", aFactor->val);
       break;
-    case LABEL:
-      sprintf(aArg, "%d", aFactor->val);
-      break;
     default:
       break;
   }

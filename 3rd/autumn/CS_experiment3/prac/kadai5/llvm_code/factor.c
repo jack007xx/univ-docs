@@ -3,10 +3,10 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-Factorstack FSTACK;
+Factorstack gFstack;
 
 void fstack_init() {
-  FSTACK.top = 0;
+  gFstack.top = 0;
   return;
 }
 
@@ -18,7 +18,7 @@ void print_factor(Factor *aFactor) {
 
 // デバッグ用
 void print_factor_stack() {
-  for (int i = 0; i <= FSTACK.top - 1; i++) print_factor(FSTACK.element[i]);
+  for (int i = 0; i <= gFstack.top - 1; i++) print_factor(gFstack.element[i]);
   printf("\n");
 }
 
@@ -27,8 +27,8 @@ Factor *factor_push(char *aName, int aVal, Scope aType) {
   Factor *tFactor = malloc(sizeof(Factor));
   *tFactor = (Factor){aName, aVal, aType};
 
-  FSTACK.element[FSTACK.top] = tFactor;
-  FSTACK.top++;
+  gFstack.element[gFstack.top] = tFactor;
+  gFstack.top++;
 
 #ifdef DEBUG
   printf("[DEBUG] Factor stack PUSHED\n");
@@ -42,10 +42,10 @@ Factor *factor_push(char *aName, int aVal, Scope aType) {
 Factor *factor_pop() {
 #ifdef DEBUG
   printf("[DEBUG] Factor stack POPED\n");
-  print_factor(FSTACK.element[FSTACK.top]);
+  print_factor(gFstack.element[gFstack.top]);
   printf("\n");
 #endif
   // ポップしてもメモリを開放しない(コード生成に使い回すため)
   // .topは、挿入する位置を示すので、先にデクリメントしておk
-  return FSTACK.element[--FSTACK.top];
+  return gFstack.element[--gFstack.top];
 }

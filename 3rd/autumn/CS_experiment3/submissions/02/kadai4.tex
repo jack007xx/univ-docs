@@ -1,1 +1,322 @@
 \section{課題4}
+\subsection{課題概要}
+四則演算を行うpl0プログラムをコンパイルして、実行可能なLLVM IRを生成するプログラムを実装する。
+
+\subsection{実装}
+factor.hと、llvm.hを実装し、parser.yの適切な場所で呼び出した。
+
+\subsubsection{factor}
+factorでは、計算途中の変数、定数を記録するための型、関数を定義した。
+\lstinputlisting[caption=factor.h,label=factor.h]{../../prac/kadai4/llvm_code/factor.h}
+
+各関数はfactor.cに実装した。
+プライベートとして実装にのみ定義したグローバル変数をスタックとして、ポインタ操作でpush popを行っているだけなので、省略する。
+
+\subsubsection{llvm}
+llvm.hではLLVM IRと関数の内部表現、その列に対する操作を定義した。
+
+LLVM IRの内部表現はLLVMcodeで定義、命令の種別に加えて、オペランドや返り値は全てFactorへのポインタとして持つ線形リストとして実装した。
+
+それぞれの関数はコード列を持つ線形リストとしている。
+\begin{lstlisting}[caption={llvm.h},label={llvm.h}]
+  /* LLVM命令名の定義 */
+  typedef enum {Alloca, Global, Load, Store, Add, Sub, Mul, Sdiv,} LLVMcommand;
+  
+  // 1つのLLVM命令と次の命令へのリンク
+  // 基本的にFactorでオペランドを定義している
+  typedef struct llvmcode {
+    LLVMcommand command;
+    union {
+      struct {
+        Factor *retval;
+      } alloca;
+!!globalはallocaと同じ
+      struct {
+        Factor *arg1;
+        Factor *retval;
+      } load;
+!!storeはloadと同じ
+      struct {
+        Factor *arg1;
+        Factor *arg2;
+        Factor *retval;
+      } add;
+!!あとの四則演算はaddと同じ
+    } args;
+    // 次の命令へのポインタ
+    struct llvmcode *next;
+  } LLVMcode;
+  
+  // 初期化処理
+  void code_init();
+
+  // 命令とオペランド、格納先とかを指定して、llvm命令を作る
+  LLVMcode *code_create(LLVMcommand, Factor *, Factor *, Factor *);
+  
+  // ↑↓を分けたのは、制御文とかでとりあえず作るけど追加したくないときを想定
+  
+  // スタックに1つのllvm命令を追加する
+  void code_add(LLVMcode *);
+  
+  // 全てのコードをファイルに出力する
+  // 最後に呼び出す
+  void print_LLVM_code();
+  
+  // ~~~~~~~~~ここから関数の表現定義~~~~~~~~~
+  
+  /* LLVMの関数定義 */
+  typedef struct fundecl {
+    char fname[256];       // 関数名
+    unsigned arity;        // 引数個数
+    Factor args[10];       // 引数名
+    LLVMcode *codes;       // 命令列の線形リストへのポインタ
+    struct fundecl *next;  // 次の関数定義へのポインタ
+  } Fundecl;
+  
+  // 初期化処理
+  void fundecl_init();
+  
+  // 関数を追加して、その関数に対するコード追加を開始する
+  void fundecl_add(char *, unsigned); 
+\end{lstlisting}
+
+
+実装は以下のように行った。
+
+命令、関数の追加は、線形リストに対するポインタを外部からは参照できない大域変数として定義し、それに対してポインタの付替えをすることで実現した。
+
+内部表現を出力する関数は、print\_codeであり、対応する文字列としてファイルに書き込んだ。
+全体としては、関数列→コード列の順に線形リストを追い、都度出力した。
+\begin{lstlisting}[caption={llvm.c},label={llvm.c}]
+  void print_code(LLVMcode *aCode);
+  
+  // 命令列の前後のアドレスを保持するポインタ
+  LLVMcode *gCodehd, *gCodetl;
+  
+  // 関数定義の線形リストの前後アドレスを保持するポインタ
+  Fundecl *gDeclhd, *gDecltl;
+  
+  FILE *gFile;  // 出力先
+
+!!単純な線形リスト関係の関数は省略
+
+  LLVMcode *code_create(LLVMcommand aCommand, Factor *aArg1, Factor *aArg2,
+                        Factor *aRetval) {
+    LLVMcode *tCode = malloc(sizeof(LLVMcode));
+    tCode->command = aCommand;
+    switch (aCommand) {
+      case Add:
+        tCode->args.add.arg1 = aArg1;
+        tCode->args.add.arg2 = aArg2;
+        tCode->args.add.retval = aRetval;
+        break;
+!!ほかもunion型に合うように代入するだけ
+      default:
+        break;
+    }
+    return tCode;
+  }
+  
+  void code_add(LLVMcode *aCode) {
+    // aCodeの内容は変更される可能性がある
+  
+    if (gCodetl == NULL && gDecltl == NULL)
+      fprintf(stderr, "[ERROR] unexpected error\n");
+  
+    aCode->next = NULL;
+    if (gCodetl == NULL)  // 解析中の関数の最初の命令の場合
+      gCodetl = gCodehd = gDecltl->codes = aCode;
+    else  // 解析中の関数の命令列に1つ以上命令が存在する場合
+      gCodetl = gCodetl->next = aCode;
+  }
+  
+  // プライベート関数
+  // localとか、globalとか、条件によってそのFactorを示す表記が違う
+  void factor_encode(Factor *aFactor, char *aArg) {
+  !!%1や@nのように変換を行う
+  }
+  
+  // プライベート関数
+  // 1命令単位で実際のLLVMコードを出力する
+  void print_code(LLVMcode *aCode) {
+    // Factorをいい感じのstr表現にしたいので、エンコしてから利用する
+    char tArg1[256], tArg2[256], tRetval[256];
+  
+    switch (aCode->command) {
+      case Add:
+        factor_encode(aCode->args.add.arg1, tArg1);
+        factor_encode(aCode->args.add.arg2, tArg2);
+        factor_encode(aCode->args.add.retval, tRetval);
+        fprintf(gFile, "\t%s = add nsw i32 %s, %s\n", tRetval, tArg1, tArg2);
+        break;
+!!LLVMに変換して出力するだけなので省略
+      default:
+        break;
+    }
+  }
+  
+  void print_LLVM_code() {
+!!単純な2重ループ
+  };
+\end{lstlisting}
+
+\subsubsection{parser.y}
+まず、大域変数の定義は、最初の関数列を使用して行った。
+構文要素id\_listで、現在のスコープがGLOBAL\_VARとLOCAL\_VARの場合で分けてコードを追加した。
+大域変数の場合、outblock前で\_\_GlobalDeclという架空の関数を作られ、その中にglobal命令列が追加されていく。
+
+mainとなる手続きはsubprog\_decl\_partが読み切られてから関数列に追加した。\\
+
+四則演算を実行するために必要な命令は次のような操作で生成するようにした。
+\begin{itemize}
+  \item factorの生成\\
+        定数か変数名が読まれたら、記号表から検索して、factor\_pushした。
+        特に変数はLoad命令を追加し、その戻り値になるfactorをpushした。
+  \item 代入文\\
+        計算が終了した時点で、2回popすると値→代入先の順番に出てくる。
+        これを渡してストア命令を追加した。
+  \item 単項演算\\
+        +単項演算子については、何も操作を行わっていないが、-単項演算子は定数ゼロに対する減算として定義した。
+        実際に、clangでは+-どちらもこれと同じ命令を生成することを確認した。
+  \item 2項演算\\
+        factorは2回popすると右オペランド→左オペランドの順番に出てくる。
+        これをそれぞれ第2、第1引数に渡して命令を追加した。
+
+        四則演算それぞれは命令種が違うだけで、その他の操作は同じである。
+\end{itemize}
+
+factor生成のとき、レジスタの割付も行った。
+基本的に、1つの命令で1つのレジスタを使用するためにcode\_createでインクリメントした。
+手続きごとにレジスタ番号はリセットされ、gRegnumという大域変数で定義した。
+
+\begin{lstlisting}[caption={parser.y},label={parser.y}]
+!!省略
+    program
+            :PROGRAM IDENT SEMICOLON
+            {
+                    gScope = GLOBAL_VAR;
+                    gRegnum = 1;
+    
+                    symtab_push($2, 0, gScope);
+    
+                    fundecl_add("__GlobalDecl", 0);
+            }
+              outblock PERIOD
+            {
+                    print_LLVM_code();
+            }
+            ;
+    
+    outblock
+            : var_decl_part subprog_decl_part
+            {
+                    fundecl_add("main", 0);
+                    gRegnum = 1; // 手続きごとにレジスタ番号はリセットされる
+                    factor_push("Func Retval", gRegnum++, LOCAL_VAR);
+                    Factor *tFunRet = factor_pop();
+                    code_add(code_create(Alloca, NULL, NULL, tFunRet)); // 戻り値を先に定義
+            }
+             statement
+            ;
+!!省略
+    assignment_statement
+            : IDENT ASSIGN expression
+            {
+                    Row *tRow = symtab_lookup($1);
+                    factor_push(tRow->name, tRow->regnum, tRow->type);
+                    Factor *tArg2 = factor_pop();
+                    Factor *tArg1 = factor_pop();
+    
+                    code_add(code_create(Store, tArg1, tArg2, NULL));
+            }
+            ;
+!!省略
+    expression
+            : term
+            | PLUS term
+            | MINUS term
+            {
+                    // 単項演算はゼロからの足し引きで表現。
+                    Factor *tArg2 = factor_pop();
+                    factor_push("", 0, CONSTANT);
+                    Factor *tArg1 = factor_pop();
+                    Factor *tRetval = factor_push("", gRegnum++, LOCAL_VAR);
+                    code_add(code_create(Sub, tArg1, tArg2, tRetval));
+            }
+            | expression PLUS expression
+            {
+                    // 四則演算は、全部これと一緒
+    
+                    // オペランドをポップする(順番に注意)
+                    Factor *tArg2 = factor_pop();
+                    Factor *tArg1 = factor_pop();
+    
+                    // 代入先として局所変数を用意、popしないことで、次のオペランドとしてもそのまま使える
+                    Factor *tRetval = factor_push("", gRegnum++, LOCAL_VAR);
+    
+                    // Factorからのコード生成と追加を同時に行う
+                    code_add(code_create(Add, tArg1, tArg2, tRetval));
+            }
+            | expression MINUS expression
+            ;
+!!省略
+    factor
+            : var_name
+            | NUMBER
+            {
+                    factor_push("const", $1, CONSTANT);
+            }
+            | LPAREN expression RPAREN
+            ;
+    
+    var_name
+            : IDENT
+            {
+                    Row* tRow = symtab_lookup($1);
+                    factor_push(tRow->name, tRow->regnum, tRow->type);
+    
+                    Factor *tArg1 = factor_pop();
+                    Factor *tRetval = factor_push("", gRegnum++, LOCAL_VAR);
+    
+                    code_add(code_create(Load, tArg1, NULL, tRetval));
+            }
+            ;
+!!省略
+    id_list
+            : IDENT
+            {
+                    // 大域変数と局所変数の場合で処理分けた
+                    // 局所だと、レジスタ番号をSSAで管理する必要がある
+                    LLVMcommand tCommand;
+                    if(gScope == GLOBAL_VAR){
+                            tCommand = Global;
+                            symtab_push($1, 0, gScope);
+                    } else{
+                            tCommand = Alloca;
+                            symtab_push($1, gRegnum++, gScope);
+                    }
+    
+                    Row *tRow = symtab_lookup($1);
+    
+                    factor_push(tRow->name, tRow->regnum, gScope);
+                    Factor *tRetval = factor_pop();
+    
+                    code_add(code_create(tCommand, NULL, NULL, tRetval));
+            }
+            | id_list COMMA IDENT
+!!↑と同じ
+            ;
+!!省略
+\end{lstlisting}
+
+
+\subsection{ex1.pのコンパイルと実行}
+以下の操作でex1.pを実行した。
+\begin{lstlisting}[caption={ex.pの実行},label={ex.pの実行}]
+  $ make
+  $ ./parser ex1.p
+  $ lli result.ll
+\end{lstlisting}
+
+result.llの返り値を\%4に変更することで、最後に計算されたzの値を確認した。
+ステータスコードとして32が返り、正しく実行できていることが確認できた。

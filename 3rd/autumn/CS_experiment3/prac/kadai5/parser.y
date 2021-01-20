@@ -447,16 +447,9 @@ condition
 expression
         : term
         | PLUS term
-        {
-                Factor *tArg2 = factor_pop();
-                // 単項演算はゼロからの足し引きで表現。
-                factor_push("", 0, CONSTANT);
-                Factor *tArg1 = factor_pop();
-                Factor *tRetval = factor_push("", gRegnum++, LOCAL_VAR);
-                code_add(code_create(Add, tArg1, tArg2, tRetval, 0));
-        }
         | MINUS term
         {
+                // 単項演算はゼロからの足し引きで表現。
                 Factor *tArg2 = factor_pop();
                 factor_push("", 0, CONSTANT);
                 Factor *tArg1 = factor_pop();
