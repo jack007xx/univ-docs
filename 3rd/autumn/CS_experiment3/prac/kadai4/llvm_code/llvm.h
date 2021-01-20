@@ -90,3 +90,6 @@ typedef struct fundecl {
 
 // 初期化処理
 void fundecl_init();
+
+// 関数を追加して、その関数に対するコード追加を開始する
+void fundecl_add(char *, unsigned);

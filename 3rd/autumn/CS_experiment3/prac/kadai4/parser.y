@@ -73,7 +73,7 @@ outblock
                 gRegnum = 1; // 手続きごとにレジスタ番号はリセットされる
                 factor_push("Func Retval", gRegnum++, LOCAL_VAR);
                 Factor *tFunRet = factor_pop();
-                code_add(code_create(Alloca, NULL, NULL, tFunRet, 0)); // 戻り値を先に定義
+                code_add(code_create(Alloca, NULL, NULL, tFunRet)); // 戻り値を先に定義
         }
          statement
         ;
@@ -224,7 +224,7 @@ expression
                 factor_push("", 0, CONSTANT);
                 Factor *tArg1 = factor_pop();
                 Factor *tRetval = factor_push("", gRegnum++, LOCAL_VAR);
-                code_add(code_create(Add, tArg1, tArg2, tRetval, 0));
+                code_add(code_create(Add, tArg1, tArg2, tRetval));
         }
         | MINUS term
         {
@@ -232,7 +232,7 @@ expression
                 factor_push("", 0, CONSTANT);
                 Factor *tArg1 = factor_pop();
                 Factor *tRetval = factor_push("", gRegnum++, LOCAL_VAR);
-                code_add(code_create(Sub, tArg1, tArg2, tRetval, 0));
+                code_add(code_create(Sub, tArg1, tArg2, tRetval));
         }
         | expression PLUS expression
         {
@@ -321,7 +321,7 @@ id_list
                 factor_push(tRow->name, tRow->regnum, gScope);
                 Factor *tRetval = factor_pop();
 
-                code_add(code_create(tCommand,NULL,NULL,tRetval));
+                code_add(code_create(tCommand, NULL, NULL, tRetval));
         }
         | id_list COMMA IDENT
         {
@@ -337,7 +337,7 @@ id_list
                 Row *tRow = symtab_lookup($3);
                 factor_push(tRow->name, tRow->regnum, gScope);
                 Factor *tRetval = factor_pop();
-                code_add(code_create(tCommand,NULL,NULL,tRetval, 0));
+                code_add(code_create(tCommand, NULL, NULL, tRetval));
         }
         ;
 

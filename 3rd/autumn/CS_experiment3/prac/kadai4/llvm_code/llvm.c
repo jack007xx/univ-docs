@@ -19,6 +19,20 @@ FILE *gFile;  // 出力先
 
 void fundecl_init() { gDeclhd = gDecltl = NULL; }
 
+void fundecl_add(char *aName, unsigned aArity) {
+  Fundecl *tFun = malloc(sizeof(Fundecl));
+  strcpy(tFun->fname, aName);
+  tFun->arity = aArity;
+
+  tFun->codes = gCodehd;
+  code_init();
+
+  if (gDeclhd == NULL)
+    gDecltl = gDeclhd = tFun;
+  else
+    gDecltl = gDecltl->next = tFun;
+}
+
 void code_init() { gCodehd = gCodetl = NULL; }
 
 LLVMcode *code_create(LLVMcommand aCommand, Factor *aArg1, Factor *aArg2,
@@ -67,18 +81,16 @@ LLVMcode *code_create(LLVMcommand aCommand, Factor *aArg1, Factor *aArg2,
 }
 
 void code_add(LLVMcode *aCode) {
-  // printf("<Factpr poped: command is %d>\n\n", aCode.command);
   // aCodeの内容は変更される可能性がある
 
+  if (gCodetl == NULL && gDecltl == NULL)
+    fprintf(stderr, "[ERROR] unexpected error\n");
+
   aCode->next = NULL;
-  if (gCodetl == NULL) {  // 解析中の関数の最初の命令の場合
-    if (gDecltl == NULL) fprintf(stderr, "[ERROR] unexpected error\n");
-    gDecltl->codes = aCode;
-    gCodehd = gCodetl = aCode;
-  } else {  // 解析中の関数の命令列に1つ以上命令が存在する場合
-    gCodetl->next = aCode;
-    gCodetl = aCode;
-  }
+  if (gCodetl == NULL)  // 解析中の関数の最初の命令の場合
+    gCodetl = gCodehd = gDecltl->codes = aCode;
+  else  // 解析中の関数の命令列に1つ以上命令が存在する場合
+    gCodetl = gCodetl->next = aCode;
 }
 
 // プライベート関数
