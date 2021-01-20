@@ -5,7 +5,7 @@
 #include <string.h>
 
 // #define DEBUG
-// #define TOFILE
+#define TOFILE
 
 void print_code(LLVMcode *aCode);
 
@@ -174,7 +174,7 @@ void factor_encode(Factor *aFactor, char *aArg) {
 }
 
 // プライベート関数
-// 1命令単位で出力する
+// 1命令単位で実際のLLVMコードを出力する
 void print_code(LLVMcode *aCode) {
   // Factorをいい感じのstr表現にしたいので、エンコしてから利用する
   char tArg1[256], tArg2[256], tRetval[256];

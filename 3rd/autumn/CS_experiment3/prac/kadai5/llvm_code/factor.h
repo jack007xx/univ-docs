@@ -2,20 +2,30 @@
 
 #include "../symtab/symtab.h"
 
-/* 変数もしくは定数の型 */
-// Row型に合わせて順番変更
+// +--------------------------+
+// | 計算とか遷移のための機能 |
+// +--------------------------+
+
+// 変数もしくは定数の型
+// ラベルとかコメントにも使う
 typedef struct {
-  char *vname; /* 変数の場合の変数名 ラベルはコメントにつけたい名前 */
-  int val; /* 整数の場合はその値，変数の場合は割り当てたレジスタ番号 */
-  Scope type; /* 変数（のレジスタ）か整数の区別 */
+  char *vname;  // 変数の場合の変数名 ラベルはコメントにつけたい名前
+  int val;  // 整数の場合はその値，変数の場合は割り当てたレジスタ番号
+  Scope type;  // 実態が何なのか
 } Factor;
 
-/* 変数もしくは定数のためのスタック */
+// 変数もしくは定数のためのスタック
 typedef struct {
-  Factor *element[100]; /* スタック（最大要素数は100まで） */
-  unsigned int top;     /* スタックのトップの位置         */
+  Factor *element[100];  // スタック（最大要素数は100まで）
+  unsigned int top;      // スタックのトップの位置
 } Factorstack;
 
+// 諸々初期化
 void fstack_init();
-Factor *factor_pop();
+
+// スタックに積む
+// 積むときも返してくれるので、積みつつ保持しておきたいときに便利
 Factor *factor_push(char *, int, Scope);
+
+// スタックから出す
+Factor *factor_pop();

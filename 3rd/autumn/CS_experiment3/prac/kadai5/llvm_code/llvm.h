@@ -3,6 +3,10 @@
 #define __LLVMCOMMANDS_H__
 #include "factor.h"
 
+// +----------------------------------------+
+// | 命令列や、関数列を追加したり、出力する |
+// +----------------------------------------+
+
 /* LLVM命令名の定義 */
 typedef enum {
   Alloca,
@@ -39,20 +43,20 @@ typedef struct llvmcode {
     struct {
       Factor *retval;
     } global;
-    struct { /* load   */
+    struct {
       Factor *arg1;
       Factor *retval;
     } load;
-    struct { /* store  */
+    struct {
       Factor *arg1;
       Factor *arg2;
     } store;
-    struct { /* add    */
+    struct {
       Factor *arg1;
       Factor *arg2;
       Factor *retval;
     } add;
-    struct { /* sub    */
+    struct {
       Factor *arg1;
       Factor *arg2;
       Factor *retval;
@@ -67,16 +71,16 @@ typedef struct llvmcode {
       Factor *arg2;
       Factor *retval;
     } sdiv;
-    struct { /* icmp   */
+    struct {
       Factor *arg1;
       Factor *arg2;
       Factor *retval;
       Cmptype type;
     } icmp;
-    struct { /* br     */
+    struct {
       Factor *arg1;
     } bruncond;
-    struct { /* brc    */
+    struct {
       Factor *cond;
       Factor *arg1;
       Factor *arg2;
@@ -85,10 +89,10 @@ typedef struct llvmcode {
       Factor *arg1;
       Factor *retval;
     } call;
-    struct { /* label  */
+    struct {
       Factor *arg1;
     } label;
-    struct { /* ret    */
+    struct {
       Factor *arg1;
     } ret;
     struct {
@@ -112,6 +116,8 @@ void code_init();
 
 // 命令とオペランド、格納先とかを指定して、llvm命令を作る
 LLVMcode *code_create(LLVMcommand, Factor *, Factor *, Factor *, Cmptype);
+
+// ↑↓を分けたのは、制御文とかでとりあえず作るけど追加したくないときを想定
 
 // スタックに1つのllvm命令を追加する
 void code_add(LLVMcode *);

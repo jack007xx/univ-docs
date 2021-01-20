@@ -18,24 +18,8 @@ void print_factor(Factor *aFactor) {
 
 // デバッグ用
 void print_factor_stack() {
-  for (int i = 0; i <= FSTACK.top - 1; i++) {
-    print_factor(FSTACK.element[i]);
-  }
+  for (int i = 0; i <= FSTACK.top - 1; i++) print_factor(FSTACK.element[i]);
   printf("\n");
-}
-
-Factor *factor_pop() {
-  // ポップしてもメモリを開放しない(コード生成に使い回すため)
-  // .topは、挿入する位置を示すので、先にデクリメントしてもおk
-  FSTACK.top--;
-
-#ifdef DEBUG
-  printf("[DEBUG] Factor stack POPED\n");
-  print_factor(FSTACK.element[FSTACK.top]);
-  printf("\n");
-#endif
-
-  return FSTACK.element[FSTACK.top];
 }
 
 Factor *factor_push(char *aName, int aVal, Scope aType) {
@@ -53,4 +37,18 @@ Factor *factor_push(char *aName, int aVal, Scope aType) {
 #endif
 
   return tFactor;
+}
+
+Factor *factor_pop() {
+  // ポップしてもメモリを開放しない(コード生成に使い回すため)
+  // .topは、挿入する位置を示すので、先にデクリメントしておk
+  FSTACK.top--;
+
+#ifdef DEBUG
+  printf("[DEBUG] Factor stack POPED\n");
+  print_factor(FSTACK.element[FSTACK.top]);
+  printf("\n");
+#endif
+
+  return FSTACK.element[FSTACK.top];
 }
