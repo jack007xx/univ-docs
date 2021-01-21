@@ -16,7 +16,7 @@ typedef struct {
 
 // 変数もしくは定数のためのスタック
 typedef struct {
-  Factor *element[100];  // スタック（最大要素数は100まで）
+  Factor *element[256];  // スタック（最大要素数は100まで）
   unsigned int top;      // スタックのトップの位置
 } Factorstack;
 

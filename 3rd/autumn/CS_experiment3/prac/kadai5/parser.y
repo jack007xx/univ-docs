@@ -11,7 +11,6 @@
 #include "./symtab/symtab.h"
 #include "./llvm_code/llvm.h"
 #include "./llvm_code/factor.h"
-#include "./llvm_code/util.h"
 
 int yyparse();
 int yyerror(char *);
@@ -169,19 +168,18 @@ assignment_statement
 if_statement
         : IF condition THEN
         {
-                Factor *tCondition = factor_pop();
+                Factor *tCond = factor_pop();
 
                 // TODO if.endをいい感じの名前にしたい。if.break?while.breakをかえてもいいけど。
-                factor_push("if.else.end", 0, LABEL);
-                Factor *tElseEnd = factor_pop(); // バックパッチであとで正しい値をつける(elseの前に来る)
+                Factor *tEnd = factor_push("if.else.end", 0, LABEL);
+                // バックパッチであとで正しい値をつける(elseの前に来る)
 
                 factor_push("if.then", gRegnum++, LABEL);
-                Factor *tThen = factor_pop(); // 捨てラベル(icmpのtrueのときに飛ぶラベルを直後に置く)
+                Factor *tThen = factor_pop();
+                // 捨てラベル(icmpのtrueのときに飛ぶラベルを直後に置く)
 
-                LLVMcode *tCode = code_create(BrCond, tThen, tElseEnd, tCondition, 0);
-                br_push(tCode); // あとでバックパッチするためのbr命令スタックに積む
-                code_add(tCode);
-                code_add(code_create(Label, tThen, NULL, NULL, 0)); // 捨てラベルコード生成
+                code_add(code_create(BrCond, tThen, tEnd, tCond, 0));
+                code_add(code_create(Label, tThen, NULL, NULL, 0));
         }
          statement else_statement
         ;
@@ -189,35 +187,29 @@ if_statement
 else_statement
         : /* empty */
         {
-                br_back_patch(gRegnum); // thenから飛んでくるやつをバックパッチ
-                factor_push("if.end", gRegnum++, LABEL);
                 Factor *tEnd = factor_pop();
+                tEnd->val=gRegnum++;
 
                 code_add(code_create(BrUncond, tEnd, NULL, NULL, 0));
                 code_add(code_create(Label, tEnd, NULL, NULL, 0));
         }
         | ELSE
         {
-                br_back_patch(gRegnum); // 今回のBr命令を積むより先にthenから飛んでくるやつをバックパッチ
-                factor_push("if.else", gRegnum++, LABEL);
                 Factor *tElse = factor_pop();
+                tElse->val = gRegnum++;
 
-                factor_push("if.end", 0, LABEL);
-                Factor *tEnd = factor_pop();
-                LLVMcode *tBrCode = code_create(BrUncond, tEnd, NULL, NULL, 0); // else節をスキップするためのコード
-
-                br_push(tBrCode); // あとでif.endを正しく置き換える
-
-                code_add(tBrCode); // then節を経由してきたやつはtElseまでスキップ
+                Factor *tEnd = factor_push("if.end", 0, LABEL);
+                
+                code_add(code_create(BrUncond, tEnd, NULL, NULL, 0));
                 code_add(code_create(Label, tElse, NULL, NULL, 0));
         }
          statement
         {
-                br_back_patch(gRegnum);
-                factor_push("if.end", gRegnum++, LABEL);
                 Factor *tEnd = factor_pop();
+                tEnd->val = gRegnum++;
 
-                code_add(code_create(BrUncond, tEnd, NULL, NULL, 0)); // Labelの前にはそれに対するジャンプがないとダメっぽい?
+                code_add(code_create(BrUncond, tEnd, NULL, NULL, 0));
+                // Labelの前にはそれに対応するジャンプがないとダメっぽい?
                 code_add(code_create(Label, tEnd, NULL, NULL, 0));
         }
         ;
@@ -225,38 +217,32 @@ else_statement
 while_statement
         : WHILE
         {
-                Factor *tLoop = factor_push("while.loop", gRegnum++, LABEL); // あとでここに戻ってくるためにプッシュしたままにしておく
+                Factor *tLoop = factor_push("while.loop", gRegnum++, LABEL);
 
                 code_add(code_create(BrUncond, tLoop, NULL, NULL, 0));
-
                 code_add(code_create(Label, tLoop, NULL, NULL, 0));
         }
          condition DO
         {
-                Factor *tCondition = factor_pop();
+                Factor *tCond = factor_pop();
 
                 factor_push("while.do", gRegnum++, LABEL);
                 Factor *tDo = factor_pop(); // 捨てラベル
 
-                factor_push("", 0, LABEL);
-                Factor *tBreak = factor_pop(); // バックパッチであとで正しい値をつける(whileを抜ける)
+                Factor *tBreak = factor_push("while.break", 0, LABEL);
+                // バックパッチであとで正しい値をつける(whileを抜ける)
 
-                LLVMcode *tCode = code_create(BrCond, tDo, tBreak, tCondition, 0);
-                br_push(tCode); // あとでバックパッチするためのbr命令スタックに積む
-
-                code_add(tCode);
+                code_add(code_create(BrCond, tDo, tBreak, tCond, 0));
                 code_add(code_create(Label, tDo, NULL, NULL, 0));
         }
          statement
         {
-                Factor *tLoop= factor_pop(); // ステートメント内ではFactorのスタックは必ず使い切られる
-                code_add(code_create(BrUncond, tLoop, NULL, NULL, 0));
-
-
-                factor_push("while.break", gRegnum, LABEL);
                 Factor *tBreak = factor_pop();
-                br_back_patch(gRegnum++); // バックパッチで↑のtBreakを書き換える
+                tBreak->val = gRegnum++;
+                Factor *tLoop= factor_pop();
+                // ステートメント内ではFactorのスタックは必ず使い切られる
 
+                code_add(code_create(BrUncond, tLoop, NULL, NULL, 0));
                 code_add(code_create(Label, tBreak, NULL, NULL, 0));
         }
         ;
@@ -274,52 +260,42 @@ for_statement
 
                 code_add(code_create(Store, tFrom, tCnt, NULL, 0));
 
-                Factor *tLoop = factor_push("for.loop", gRegnum++, LABEL);  // ループで戻ってくる場所、あとからpopしてbr命令を書く
+                Factor *tLoop = factor_push("for.loop", gRegnum++, LABEL);
+                // ループで戻ってくる場所、あとからpopしてbr命令を書く
 
                 code_add(code_create(BrUncond, tLoop, NULL, NULL, 0));
                 code_add(code_create(Label, tLoop, NULL, NULL, 0));
 
-                if(tCnt->type == GLOBAL_VAR){
-                        factor_push("", gRegnum++, LOCAL_VAR);
-                        Factor *tCntLocal = factor_pop();
-
-                        code_add(code_create(Load, tCnt, NULL, tCntLocal, 0)); // カウンタをレジスタに持ってくる
-                        tCnt = tCntLocal;
-                }
-
-                if(tTo->type == GLOBAL_VAR){
-                        factor_push("", gRegnum++, LOCAL_VAR);
-                        Factor *tToLocal = factor_pop();
-
-                        code_add(code_create(Load, tTo, NULL, tToLocal, 0)); // 比較先をレジスタに持ってくる
-                        tTo = tToLocal;
-                }
+                factor_push("", gRegnum++, LOCAL_VAR);
+                Factor *tCntLocal = factor_pop();
+                code_add(code_create(Load, tCnt, NULL, tCntLocal, 0)); // カウンタをレジスタに持ってくる
 
                 factor_push("", gRegnum++, LOCAL_VAR);
                 Factor *tCond = factor_pop(); // 条件を用意する
 
-                code_add(code_create(Icmp, tCnt, tTo, tCond, SLE));
+                code_add(code_create(Icmp, tCntLocal, tTo, tCond, SLE));
 
                 factor_push("for.do", gRegnum++, LABEL);
                 Factor *tDo = factor_pop(); // 条件でブレークしないときにここに飛ぶ
 
-                factor_push("", 0, LABEL);
-                Factor *tBreak = factor_pop(); // バックパッチであとから割当
+                Factor *tBreak = factor_push("for.break", 0, LABEL);
+                // バックパッチであとから値入れたいのでpushしたままにする。
 
-                LLVMcode *tBr = code_create(BrCond, tDo, tBreak, tCond, 0);  
-                br_push(tBr);
-                code_add(tBr);
-
+                code_add(code_create(BrCond, tDo, tBreak, tCond, 0));
                 code_add(code_create(Label, tDo, NULL, NULL, 0));
         }
          statement
         {
+                // この順番で出てくる
+                Factor *tBreak = factor_pop();
                 Factor *tLoop = factor_pop();
                 Factor *tCnt = factor_pop();
 
                 // cntインクリメント部ここから
-                factor_push("incremant block", 0, 0);
-                code_add(code_create(Comment, factor_pop(), NULL, NULL, 0));
+                factor_push("for.increment", gRegnum++, LABEL);
+                Factor *tInc = factor_pop();
+                code_add(code_create(BrUncond, tInc, NULL, NULL, 0));
+                code_add(code_create(Label, tInc, NULL, NULL, 0));
 
                 factor_push("", gRegnum++, LOCAL_VAR);
                 Factor *tCntLocal = factor_pop();
@@ -339,10 +315,7 @@ for_statement
 
                 code_add(code_create(BrUncond, tLoop, NULL, NULL, 0));
 
-                factor_push("for.break", gRegnum, LABEL);
-                Factor *tBreak = factor_pop();
-                br_back_patch(gRegnum++);
-
+                tBreak->val = gRegnum++; // バックパッチ
                 code_add(code_create(Label, tBreak, NULL, NULL, 0));
         }
         ;
