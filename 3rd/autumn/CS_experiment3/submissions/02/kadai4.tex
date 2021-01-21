@@ -6,16 +6,16 @@
 factor.hと、llvm.hを実装し、parser.yの適切な場所で呼び出した。
 
 \subsubsection{factor}
-factorでは、計算途中の変数、定数を記録するための型、関数を定義した。
+factor.hでは、計算途中の変数、定数を記録するための型、関数を定義した。
 \lstinputlisting[caption=factor.h,label=factor.h]{../../prac/kadai4/llvm_code/factor.h}
 
 各関数はfactor.cに実装した。
 プライベートとして実装にのみ定義したグローバル変数をスタックとして、ポインタ操作でpush popを行っているだけなので、省略する。
 
 \subsubsection{llvm}
-llvm.hではLLVM IRと関数の内部表現、その列に対する操作を定義した。
+llvm.hではLLVM IRと関数の内部表現、その線形リストに対する操作を定義した。
 
-LLVM IRの内部表現はLLVMcodeで定義、命令の種別に加えて、オペランドや返り値は全てFactorへのポインタとして持つ線形リストとして実装した。
+LLVM IRの内部表現はLLVMcodeで定義、命令の種別に加えて、オペランドや返り値は全てFactorへのポインタとして定義した。
 
 それぞれの関数はコード列を持つ線形リストとしている。
 \begin{lstlisting}[caption={llvm.h},label={llvm.h}]
@@ -187,7 +187,7 @@ mainとなる手続きはsubprog\_decl\_partが読み切られてから関数列
 \end{itemize}
 
 factor生成のとき、レジスタの割付も行った。
-基本的に、1つの命令で1つのレジスタを使用するためにcode\_createでインクリメントした。
+SSAでは基本的に1つの命令で1つのレジスタを使用するため、code\_createにレジスタ番号を渡す際にインクリメントした。
 手続きごとにレジスタ番号はリセットされ、現在の番号はgRegnumという大域変数で管理した。
 
 また、変数の宣言と使用についても実装を行った。
@@ -335,11 +335,11 @@ result.llの返り値を\%4に変更することで、最後に計算されたz�
 
 出力されたLLVM IRを見てみると、四則演算命令については基本的に同じような命令文だが、sdivにのみnswという節がないことが分かる。
 % TODOちゃんと引用
-LLVM Language Reference Manualによると、nswは'No Signed Wrapper'フラグであり、nswが指定されると、オーバーフローする演算に対して、オーバーフローした値ではなくpoison valueという値を返す。
+LLVM Language Reference Manual\cite{reference}によると、nswは'No Signed Wrapper'フラグであり、nswが指定されると、オーバーフローする演算に対して、オーバーフローした値ではなくpoison valueという値を返す。
 (実装は調べていないため、どこかにフラグを立てて伝播させている可能性もある)
 つまり、nswは「未定義動作の検知のために、正規の値で返さないラッパーを有効にする」というフラグだということが分かった。
 
-poison valueによって、LLVM上で未定義動作に基づいた何らかの最適化を行うことができる。
+poison valueによって、LLVM上で未定義動作に基づいた何らかの最適化を行うことができる。\cite{poison}
 
 以上のことから、sdiv演算はオーバーフローの可能性がないのでnswのフラグを持っていないと考えた。
 しかし、sdivもゼロ除算によって未定義動作となるが、poison valueを返すわけではなく、そのようなフラグも無かった。

@@ -7,6 +7,8 @@
 \usepackage[dvipdfmx]{graphicx}
 \usepackage{here}
 
+\usepackage{url}
+
 \usepackage{listingsutf8,jlisting} %日本語のコメントアウトをする場合jlistingが必要
 %ここからソースコードの表示に関する設定
 \lstset{
@@ -36,7 +38,7 @@
 \maketitle
 \section{はじめに}
 \subsection{ソースコードの省略について}
-レポート内に記載したソースコードは、LLVM命令部分のみが違いロジックが同じコードや実装が単純な関数の省略など、意味が分かる範囲で修正が行われている。
+レポート内に記載したソースコードは、LLVM命令部分のみが違いロジックが同じコードや実装が単純な関数の省略など、意味が分かる範囲で省略が行われている。
 省略されている部分は、「!!」で始まるコメントが入っている。
 
 また、関数のシグネチャがわからなくなる省略は行っていない。
@@ -87,6 +89,9 @@ parser.yでは複雑な制御構文、mallocは使用しないようにした。
 
 \input{kadai5.tex}
 
-
+\begin{thebibliography}{9}
+  \bibitem{reference} LLVM Language Reference Manual \#binary-operations,  \url{https://llvm.org/docs/LangRef.html#binary-operations}, (2020/1/20閲覧)
+  \bibitem{poison} LLVM Language Reference Manual \#poison-values,  \url{https://llvm.org/docs/LangRef.html#poisonvalues}, (2020/1/20閲覧)
+\end{thebibliography}
 
 \end{document}
