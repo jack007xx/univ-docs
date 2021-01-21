@@ -1,0 +1,239 @@
+\newpage
+\section{課題5}
+\subsection{課題概要}
+PL-0をコンパイルするために、以下のような機能をコンパイラに追加した。
+\begin{itemize}
+  \item 比較演算
+  \item if,while,forなどの制御文
+  \item 手続きの呼び出し
+  \item read,write手続き
+\end{itemize}
+
+本来であれば、変数の扱いは課題5の内容だが、課題4で既に実装、説明してあるのでその部分は省略する。
+
+\subsection{実装}
+
+\subsubsection{比較演算}
+llvm.hで新たな命令icmpを定義した。
+icmp命令は比較演算の種類を指定する必要があるので、Cmptype列挙体型を用意してコード生成時に引数として渡すこととした。
+それに伴って、parser.yでcode\_create命令を呼び出している部分を変更した。
+
+具体的な生成は、parser.yで以下のように行った。
+
+\begin{lstlisting}[caption={condition},label={condition}]
+  condition
+  : expression EQ expression
+  {
+          // 四則演算と大体一緒
+          Factor *tArg2 = factor_pop();
+          Factor *tArg1 = factor_pop();
+          Factor *tRetval = factor_push("", gRegnum++, LOCAL_VAR);
+
+          code_add(code_create(Icmp, tArg1, tArg2, tRetval, EQUAL));
+  }
+!!その他の比較演算も同様に定義。
+\end{lstlisting}
+
+\subsubsection{if,while,forなどの制御文}
+まず、ラベルを管理しやすくするために、symtabで定義したScopeを変更し、factorでラベルを扱えるようにした。
+LLVMにはLabel命令はないが、llvm.h,llvm.cを変更し、コード生成時には命令としてLabelを指定し、ラベルとしてfactorを渡すことで生成させた。
+
+これによって、バックパッチの実現がfactorのスタックを通して行える。
+以下に示すように、後から番号を付けたいラベルをpushしておき、for文の内部の文が読まれてからpopして*Factor.valに適切な値を代入する。
+br系命令のラベルと、バックパッチされるlabel文は同じポインタを指しているので、レジスタ割当が未確定のラベルに対しても分岐できるようになる。
+
+\begin{lstlisting}[caption={バックパッチの方法},label={バックパッチの方法}]
+hoge_statement
+  : hoge HUGA hoge
+  {
+    Factor *undef_label = factor_push("label_name", 0, LABEL);
+    // popしない!
+
+    code_add(code_create(BrCond, undef_label, hoge, huga_condition, 0));
+  }
+   statement // この中でもレジスタ番号は消費される
+  {
+    Factor *back_patch_label = factor_pop();
+    back_patch_label->val = gRegnum++;
+
+    code_add(code_create(BrUncond, back_patch_label, NULL, NULL, 0));
+    code_add(code_create(Label, back_patch_label, NULL, NULL, 0));
+  }
+  ;
+\end{lstlisting}
+
+各制御構文のうち、forに関してのみparser.yでの生成箇所と、生成されたコードについての説明を行う。
+
+clangを使うことで確かめたLLVM IRは以下のような命令列であった。
+これに加えて、expression TO expressionでpushされた2つのfactorをpopし、(1)～(2)の間で使用する。
+
+\begin{lstlisting}[caption={for文のLLVM IR},label={for文のLLVM IR}]
+  カウンタ変数に初期値を代入する
+LABEL (1)
+  カウンタ変数と上限値の比較
+  上限以下の場合(2)、上限より大きい場合(4)にジャンプする
+LABEL (2)
+  for文の中で行う操作
+LABEL (3)
+  カウンタ変数をインクリメントする
+  (1)にジャンプする
+LABEL (4)
+\end{lstlisting}
+
+実際の実装は以下のようになった。
+カウンタレジスタはstatementの前後で同じ値を使うために、statementの前でpushしておき、後ろからpopできるようにした。
+ラベルについては説明したように、pushのみ行いpopしたときに実際のレジスタ番号を割り当てた。
+これらの操作は、1つのstatementでfactorのスタックが変化しないことが保証されているため、可能である。
+また、各制御文の中でもfactorのスタックを文の前後で保存するように操作した。
+
+\begin{lstlisting}[caption={for文の生成箇所},label={for文の生成箇所}]
+for_statement
+        : FOR IDENT ASSIGN expression TO expression DO
+        {
+                Row *tRow = symtab_lookup($2);
+                Factor *tTo = factor_pop(); // tFromからtToまで
+                Factor *tFrom = factor_pop();
+
+                Factor *tCnt = factor_push(tRow->name, tRow->regnum, tRow->type);
+                // カウンタ(インクリメントしていく変数)
+                //popせずにとっておく
+
+                code_add(code_create(Store, tFrom, tCnt, NULL, 0));
+
+                Factor *tLoop = factor_push("for.loop", gRegnum++, LABEL);
+                // ループで戻ってくる場所、あとからpopしてbr命令を書く
+
+                code_add(code_create(BrUncond, tLoop, NULL, NULL, 0));
+                code_add(code_create(Label, tLoop, NULL, NULL, 0));
+
+                factor_push("", gRegnum++, LOCAL_VAR);
+                Factor *tCntLocal = factor_pop();
+                code_add(code_create(Load, tCnt, NULL, tCntLocal, 0)); // カウンタをレジスタに持ってくる
+
+                factor_push("", gRegnum++, LOCAL_VAR);
+                Factor *tCond = factor_pop(); // 条件を用意する
+
+                code_add(code_create(Icmp, tCntLocal, tTo, tCond, SLE));
+
+                factor_push("for.do", gRegnum++, LABEL);
+                Factor *tDo = factor_pop(); // 条件でブレークしないときにここに飛ぶ
+
+                Factor *tBreak = factor_push("for.break", 0, LABEL);
+                // バックパッチであとから値入れたいのでpushしたままにする。
+
+                code_add(code_create(BrCond, tDo, tBreak, tCond, 0));
+                code_add(code_create(Label, tDo, NULL, NULL, 0));
+        }
+          statement
+        {
+                // この順番で出てくる
+                Factor *tBreak = factor_pop();
+                Factor *tLoop = factor_pop();
+                Factor *tCnt = factor_pop();
+
+                // cntインクリメント部ここから
+                factor_push("for.increment", gRegnum++, LABEL);
+                Factor *tInc = factor_pop();
+                code_add(code_create(BrUncond, tInc, NULL, NULL, 0));
+                code_add(code_create(Label, tInc, NULL, NULL, 0));
+
+                factor_push("", gRegnum++, LOCAL_VAR);
+                Factor *tCntLocal = factor_pop();
+
+                code_add(code_create(Load, tCnt, NULL, tCntLocal, 0)); // カウンタをレジスタに持ってくる
+
+                factor_push("", 1, CONSTANT);
+                Factor *tOne = factor_pop();
+
+                factor_push("", gRegnum++, LOCAL_VAR);
+                Factor *tRetval = factor_pop();
+
+                code_add(code_create(Add, tCntLocal, tOne, tRetval, 0));
+
+                code_add(code_create(Store, tRetval, tCnt, NULL, 0));
+                // インクリメント部ここまで
+
+                code_add(code_create(BrUncond, tLoop, NULL, NULL, 0));
+
+                tBreak->val = gRegnum++; // バックパッチ
+                code_add(code_create(Label, tBreak, NULL, NULL, 0));
+        }
+        ;
+\end{lstlisting}
+
+\subsubsection{手続きの呼び出し}
+LLVM IRでの手続き呼び出しはcall命令を使用する。
+llvm.c, llvm.hにはcallの定義と生成ルールを実装した。
+
+parser.yでは以下のようにロード命令に近い形で生成した。
+
+\begin{lstlisting}[caption={手続きの呼び出し生成部分},label={手続きの呼び出し生成部分}]
+proc_call_name
+: IDENT
+{
+        Row *tRow = symtab_lookup($1);
+        factor_push(tRow->name, tRow->regnum, tRow->type);
+        Factor *tProc = factor_pop();
+
+        factor_push("", gRegnum++, LOCAL_VAR);//関数の戻り血
+        Factor *tRetval = factor_pop();
+        code_add(code_create(Call, tProc, NULL, tRetval, 0));
+}
+;
+\end{lstlisting}
+
+\subsubsection{read,write手続き}
+clangを利用してscanf,printfがどのように表現されるか確かめたところ、それぞれの関数の宣言と、フォーマット文字列が定義されていた事がわかった。
+取り出したものは以下のようになる。
+
+@.str.wは整数に置換される部分(\%d)、改行コード(0A)、終端文字(00)で、@.str.rは整数部と終端文字で構成され、それぞれprintf,scanfで使用する。
+呼び出し時はソースコード\ref{read,writeの呼び出し}で示すように、call命令を使用して引数に出力する整数または、読み込まれる変数を渡す。
+
+\begin{lstlisting}[caption={read,writeのための宣言},label={read,writeのための宣言}]
+@.str.w = private unnamed_addr constant [4 x i8] c"%d\0A\00", align 1
+@.str.r = private unnamed_addr constant [3 x i8] c"%d\00", align 1
+declare i32 @printf(i8*, ...)
+declare i32 @__isoc99_scanf(i8 *, ...)
+\end{lstlisting}
+
+\begin{lstlisting}[caption={read,writeの呼び出し},label={read,writeの呼び出し}]
+  call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([4 x i8], [4 x i8]* @.str.w, i64 0, i64 0), i32 「レジスタ」)
+  call i32 (i8*, ...) @__isoc99_scanf(i8* getelementptr inbounds ([3 x i8], [3 x i8]* @.str.r, i64 0, i64 0), i32* 「変数」)
+\end{lstlisting}
+
+
+\subsection{pl0a.p～pl0d.pのコンパイルと実行}
+以下のコマンドでそれぞれのソースに対してコンパイルを行い、実行した。
+出力されない結果はret文を書き換えてステータスコードを参照することで確かめた。
+
+pl0a.pの結果はn=0,sum=55となり、正しい結果が確認できた。
+また、b,c,dはそれぞれ、入力以下の素数を大きなものから出力するプログラム、同様に小さなものから出力するプログラム、入力値の階乗を出力するプログラムであることが確認でき、入出力が正しいことが確認できた。
+
+\begin{lstlisting}[caption={pl0a.p～pl0d.pのコンパイルと実行コマンド},label={pl0a.p～pl0d.pのコンパイルと実行コマンド}]
+$ make
+$ ./parser pl0a.p
+$ lli result.ll
+$ ./parser pl0b.p
+$ lli result.ll
+  10
+  7
+  5
+  3
+  2
+$ ./parser pl0c.p
+$ lli result.ll
+  10
+  2
+  3
+  5
+  7
+$ ./parser pl0d.p
+$ lli result.ll
+  10
+  3628800
+\end{lstlisting}
+
+\subsection{考察}
+課題4の考察で触れたように、factorのスタックはstatementを抜けるときに必ず入ったときと同じ状態になる。
+課題5の実装では、factorにラベルを記憶できるようにしたことで、その特徴をバックパッチに活用することができた。
+これによって、コード量を削減することができ、可読性が向上したと考える。
