@@ -86,6 +86,7 @@ typedef struct llvmcode {
     struct {
       Factor *arg1;
       Factor *retval;
+      Factor **proc_args;
     } call;
     struct {
       Factor *arg1;
@@ -130,7 +131,7 @@ void print_LLVM_code();
 typedef struct fundecl {
   char fname[256];       // 関数名
   unsigned arity;        // 引数個数
-  Factor args[10];       // 引数名
+  Factor *args[10];      // 引数名
   LLVMcode *codes;       // 命令列の線形リストへのポインタ
   struct fundecl *next;  // 次の関数定義へのポインタ
 } Fundecl;
@@ -139,4 +140,14 @@ typedef struct fundecl {
 void fundecl_init();
 
 // 関数を追加して、その関数に対するコード追加を開始する
-void fundecl_add(char *, unsigned);
+void fundecl_add(char *);
+
+// 新しい引数名を登録する
+void fundecl_add_arg(Factor *);
+
+// 引数用の領域確保して、ストアするとこまでやる
+// 関数ラベルも考慮してgRegnumを返す。
+int fundecl_add_arg_code();
+
+// 関数名で調べてシグネチャ(今回は数字のみでシグネチャは分かる)を返す
+int fundecl_lookup(char *);

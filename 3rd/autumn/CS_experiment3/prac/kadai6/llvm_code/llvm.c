@@ -19,10 +19,10 @@ FILE *gFile;
 
 void fundecl_init() { gDeclhd = gDecltl = NULL; }
 
-void fundecl_add(char *aName, unsigned aArity) {
+void fundecl_add(char *aName) {
   Fundecl *tFun = malloc(sizeof(Fundecl));
   strcpy(tFun->fname, aName);
-  tFun->arity = aArity;
+  tFun->arity = 0;
 
   tFun->codes = gCodehd;
   code_init();
@@ -31,6 +31,37 @@ void fundecl_add(char *aName, unsigned aArity) {
     gDecltl = gDeclhd = tFun;
   else
     gDecltl = gDecltl->next = tFun;
+}
+
+void fundecl_add_arg(Factor *aArg) {
+  gDecltl->args[gDecltl->arity] = aArg;
+  gDecltl->arity++;
+}
+
+int fundecl_add_arg_code() {
+  int tRegnum = gDecltl->arity + 1;
+  for (int i = 0; i < gDecltl->arity; i++) {
+    Factor *tArg = gDecltl->args[i];
+    symtab_push(tArg->vname, tRegnum++, LOCAL_VAR);
+    Row *tRow = symtab_lookup(tArg->vname);
+
+    factor_push(tRow->name, tRow->regnum, tRow->type);
+    Factor *tVArg = factor_pop();
+
+    // 引数を仮引数として持ってくる
+    code_add(code_create(Alloca, NULL, NULL, tVArg, 0));
+    code_add(code_create(Store, gDecltl->args[i], tVArg, NULL, 0));
+  }
+  return tRegnum;
+}
+
+int fundecl_lookup(char *aFunNeme) {
+  for (Fundecl *tFundeclPointer = gDeclhd; tFundeclPointer != NULL;
+       tFundeclPointer = tFundeclPointer->next)
+    if (strcmp(tFundeclPointer->fname, aFunNeme) == 0)
+      return tFundeclPointer->arity;
+
+  return 0;
 }
 
 void code_init() { gCodehd = gCodetl = NULL; }
@@ -91,6 +122,7 @@ LLVMcode *code_create(LLVMcommand aCommand, Factor *aArg1, Factor *aArg2,
     case Call:
       tCode->args.call.arg1 = aArg1;
       tCode->args.call.retval = aRetval;
+      tCode->args.call.proc_args = malloc(sizeof(Factor *) * 10);
       break;
     case Label:
       tCode->args.label.arg1 = aArg1;
@@ -149,7 +181,7 @@ void factor_encode(Factor *aFactor, char *aArg) {
       sprintf(aArg, "%d", aFactor->val);
       break;
     case PROC_NAME:
-      sprintf(aArg, "@%s()", aFactor->vname);
+      sprintf(aArg, "@%s", aFactor->vname);
       break;
     default:
       break;
@@ -228,7 +260,16 @@ void print_code(LLVMcode *aCode) {
     case Call:
       factor_encode(aCode->args.call.arg1, tArg1);
       factor_encode(aCode->args.call.retval, tRetval);
-      fprintf(gFile, "\t%s = call i32 %s\n", tRetval, tArg1);
+
+      fprintf(gFile, "\t%s = call i32 %s(", tRetval, tArg1);
+      // 引数配置
+      int tArity = fundecl_lookup(aCode->args.call.arg1->vname);
+      for (int i = 0; i < tArity; i++) {
+        factor_encode(aCode->args.call.proc_args[i], tArg2);
+        fprintf(gFile, "i32 %s", tArg2);
+        if (i != tArity - 1) fprintf(gFile, ", ");
+      }
+      fprintf(gFile, ")\n");
       break;
     case Label:
       factor_encode(aCode->args.label.arg1, tArg1);
@@ -261,6 +302,19 @@ void print_code(LLVMcode *aCode) {
   }
 }
 
+// プライベート
+// 引数付きの関数定義を生成する
+void pprint_funchd(Fundecl *aFun, char *aFunhd) {
+  sprintf(aFunhd, "define i32 @%s(", aFun->fname);
+  for (int i = 0; i < aFun->arity; i++) {
+    char t[256];
+    sprintf(t, "i32 %%%d", aFun->args[i]->val);
+    strcat(aFunhd, t);
+    if (i != aFun->arity - 1) strcat(aFunhd, ", ");
+  }
+  strcat(aFunhd, "){\n");
+}
+
 void print_LLVM_code() {
   gFile = stdout;
 #ifdef TOFILE
@@ -278,9 +332,11 @@ void print_LLVM_code() {
   for (Fundecl *tFunPointer = gDeclhd; tFunPointer != NULL;
        tFunPointer = tFunPointer->next) {
     // 初回のfundeclは大域変数の定義に当てられる
-    if (tFunPointer != gDeclhd)
-      fprintf(gFile, "define i32 @%s(){\n", tFunPointer->fname);
-
+    if (tFunPointer != gDeclhd) {
+      char tFunhdStr[256];
+      pprint_funchd(tFunPointer, tFunhdStr);
+      fprintf(gFile, "%s", tFunhdStr);
+    }
     // 関数の中のコード読み切るまでブン回す
     for (LLVMcode *tCodePointer = tFunPointer->codes; tCodePointer != NULL;
          tCodePointer = tCodePointer->next)
