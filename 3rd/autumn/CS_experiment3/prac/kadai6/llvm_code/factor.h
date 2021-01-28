@@ -27,5 +27,8 @@ void fstack_init();
 // 積むときも返してくれるので、積みつつ保持しておきたいときに便利
 Factor *factor_push(char *, int, Scope);
 
+// ポインタで積む(Factorを入れ替えたりしたい)
+Factor *factor_push_p(Factor *);
+
 // スタックから出す
 Factor *factor_pop();
