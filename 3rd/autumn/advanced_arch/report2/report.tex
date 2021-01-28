@@ -1,0 +1,92 @@
+\documentclass[a4paper,10pt]{jsarticle}
+
+% 数式
+\usepackage{amsmath,amsfonts}
+\usepackage{bm}
+% 画像
+\usepackage[dvipdfmx]{graphicx}
+\usepackage{here}
+
+\usepackage{listingsutf8,jlisting} %日本語のコメントアウトをする場合jlistingが必要
+%ここからソースコードの表示に関する設定
+\lstset{
+  basicstyle={\ttfamily},
+  identifierstyle={\small},
+  commentstyle={\smallitshape},
+  keywordstyle={\small\bfseries},
+  ndkeywordstyle={\small},
+  stringstyle={\small\ttfamily},
+  frame={tb},
+  breaklines=true,
+  columns=[l]{fullflexible},
+  numbers=left,
+  xrightmargin=0zw,
+  xleftmargin=3zw,
+  numberstyle={\scriptsize},
+  stepnumber=1,
+  numbersep=1zw,
+  lineskip=-0.5ex
+}
+
+\begin{document}
+
+\title{先端計算アーキテクチャレポート課題}
+\author{坪井正太郎（101830245）}
+\date{\today}
+\maketitle
+\section{概要}
+このレポートでは、最新のCPUとしてAMDのEPYC7742(Rome)を選択し、そのアーキテクチャをまとめた。
+
+各性能について変化がある場合には、Zen/Zen+アーキテクチャとの比較も行った。
+
+\section{仕様}
+\begin{table}[H]
+  \centering
+  \label{仕様}
+  \caption{仕様}
+  \begin{tabular}{|c|c|}
+    \hline
+    Core             & 64            \\ \hline
+    Thread           & 128           \\ \hline
+    Base Freaquency  & 2.25GHz       \\ \hline
+    L3 Cache (Total) & 256MB         \\ \hline
+    PCI Express      & PCIe 4.0 x128 \\ \hline
+    Mem Channel      & 8             \\ \hline
+  \end{tabular}
+\end{table}
+
+\section{物理的なダイの構成}
+Zen2アーキテクチャでは、複数のチップモジュールで1つのプロセッサを構成する。
+EPYC Romeは、8つのコアが載ったダイ(Core Complex Dies(CCD))とプロセッサのPCIeレーン、メモリ、コアチップレット同士の通信ハブとなるダイ(server IO die)から構成される。
+
+このようしてIOとコアのダイを分ける設計には、以下のような利点があると考えた。
+\begin{itemize}
+  \item ダイ製造の歩留まりが向上する。
+        \begin{itemize}
+          \item 各ダイのサイズを小さくできることから、歩留まりの向上が見込める。
+        \end{itemize}
+  \item 製品バリエーションを増やすことができる。
+        \begin{itemize}
+          \item 実際に、EPYCとRyzenは共通のCCXを持っている。コンシューマ向けとサーバ向けのIOダイを用意して、CCXの接続数を変更するだけで製品特徴を変更できる。
+        \end{itemize}
+  \item IOダイとCPUダイで独立して進歩できるようになる
+        \begin{itemize}
+          \item 実際に、EPYCのCPUダイのプロセスルールは7nmだが、IOダイでは14nmが使われている。
+        \end{itemize}
+  \item レイテンシの均一化
+        \begin{itemize}
+          \item Zen+まででは、ダイの上にコアとIOを載せていたことで、同一ダイ間と異なるダイ間で行う通信のレイテンシに最大で倍の差がついていた。IOダイを通すことで、レイテンシの均一化が図られ、どのような計算単位でも扱いやすくなった。
+        \end{itemize}
+\end{itemize}
+
+\subsection{CCDの構成}
+EPYCのCCDは、2つのCore Complex(CCX)で構成される。
+CCXは、L2キャッシュを持つコアが4つ、16MBのL3キャッシュを共有する形で実装される。
+
+全体としては、EPYC(1 sIOD + 8 CCD(2 CCX(4 Core)))となる。
+
+\section{キャッシュ}
+
+\section{分岐予測}
+
+\end{document}
