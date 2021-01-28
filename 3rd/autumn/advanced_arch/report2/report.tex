@@ -6,6 +6,7 @@
 % 画像
 \usepackage[dvipdfmx]{graphicx}
 \usepackage{here}
+\usepackage{url}
 
 \usepackage{listingsutf8,jlisting} %日本語のコメントアウトをする場合jlistingが必要
 %ここからソースコードの表示に関する設定
@@ -85,8 +86,50 @@ CCXは、L2キャッシュを持つコアが4つ、16MBのL3キャッシュを�
 
 全体としては、EPYC(1 sIOD + 8 CCD(2 CCX(4 Core)))となる。
 
-\section{キャッシュ}
+\section{キャッシュ戦略}
+\subsection{L1キャッシュ}
+EPYCはL1キャッシュとして、命令キャッシュとデータキャッシュを持つ。
+各キャッシュはそれぞれのコア内に配置される。
+
+また、x86命令はデコードされて内部命令のmicro opとなるが、そのmicro opを保持しておくキャッシュも搭載されている。
+内部命令に変換される理由は、スーパースカラやアウトオブオーダー実行を行うためであり、x86プロセッサでは通常、縮小された内部命令セットを使用する。
+
+\subsubsection{命令キャッシュ}
+32KB, 8wayのセットアソシアティブを採用している。
+Zen+では64KB, 4wayのセットアソシアティブだったため、容量は少なくなっているが連想度を高めることでヒット時の速度を向上させる意図があると考えた。
+
+\subsubsection{micro op cache}
+32Bの命令セットをデコードされて得られる内部命令を、2つ分融合した内部命令をキャッシュとしておくモジュールである。
+容量は4K命令分であり、命令キューに対して8融合命令/サイクルで積む。
+これは、デコーダが4内部命令/サイクルを出力できるので、融合された命令分を考慮して速度を合わせているのではないかと考えた。
+
+\subsubsection{データキャッシュ}
+命令キャッシュと同じく、データキャッシュも32KB, 8wayのセットアソシアティブであり、ライトバック方式を採用している。
+
+\subsection{L2キャッシュ}
+L2キャッシュは各コアに512KBづつ割り当てられている。
+連想度は8wayであり、inclusiveキャッシュである。
+inclusiveキャッシュでは、上位キャッシュで持っているデータを、下位のキャッシュでも保持することがある。
+2次キャッシュをinclusiveにすることで、容量を犠牲にしてミスペナルティを削減しているのではないかと考えた。
+
+\subsection{L3キャッシュ}
+L3キャッシュは、各CCXに対して16MB, 16wayで配置される。
+Zen+と比較して、2倍の容量となった。
+また、L3キャッシュはL2キャッシュから容量不足で追い出されたデータが保管されるvictim cacheとなる。
+これによって、L2で犠牲になった容量分を確保していると考えた。
 
 \section{分岐予測}
+EPYC Romeでは、分岐予測は2段階で行われる。
+L1キャッシュを利用したパーセプトロンと、L2までのキャッシュを利用した、より長い履歴から予測するTAgged GEometric history length predictor(TAGE)の2段階である。
+
+TAGEはパーセプトロンによる予測よりも低速なので、パーセプトロンと異なる予測をした場合にのみ、TAGEの予測に基づいて実行し直される。
+2段階にすることで、的中率と速度を両立することができると考えられる。
+
+\begin{thebibliography}{9}
+  \bibitem{energy}T. Singh et al., "2.1 Zen 2: The AMD 7nm Energy-Efficient High-Performance x86-64 Microprocessor Core," 2020 IEEE International Solid- State Circuits Conference - (ISSCC), San Francisco, CA, USA, 2020, pp. 42-44, doi: 10.1109/ISSCC19947.2020.9063113. (\url{https://www.slideshare.net/AMD/zen-2-the-amd-7nm-energyefficient-highperformance-x8664-microprocessor-core})
+  \bibitem{chiplet}S. Naffziger, K. Lepak, M. Paraschou and M. Subramony, "2.2 AMD Chiplet Architecture for High-Performance Server and Desktop Products," 2020 IEEE International Solid- State Circuits Conference - (ISSCC), San Francisco, CA, USA, 2020, pp. 44-45, doi: 10.1109/ISSCC19947.2020.9063103. (\url{https://www.slideshare.net/AMD/amd-chiplet-architecture-for-highperformance-server-and-desktop-products})
+  \bibitem{analyze}C. Ian, "AMD Zen2 Microarchitecture Analysis:Ryzen 3000 and EPYC Rome," (\url{https://www.anandtech.com/show/14525/amd-zen-2-microarchitecture-analysis-ryzen-3000-and-epyc-rome})(2020-1-29閲覧)
+
+\end{thebibliography}
 
 \end{document}
