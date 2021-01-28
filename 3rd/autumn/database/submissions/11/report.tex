@@ -1,0 +1,41 @@
+\documentclass[a4paper,10pt]{jsarticle}
+
+% 数式
+\usepackage{amsmath,amsfonts}
+\usepackage{bm}
+% 画像
+\usepackage[dvipdfmx]{graphicx}
+\usepackage{here}
+
+\usepackage{listingsutf8,jlisting} %日本語のコメントアウトをする場合jlistingが必要
+%ここからソースコードの表示に関する設定
+\lstset{
+  basicstyle={\ttfamily},
+  identifierstyle={\small},
+  commentstyle={\smallitshape},
+  keywordstyle={\small\bfseries},
+  ndkeywordstyle={\small},
+  stringstyle={\small\ttfamily},
+  frame={tb},
+  breaklines=true,
+  columns=[l]{fullflexible},
+  numbers=left,
+  xrightmargin=0zw,
+  xleftmargin=3zw,
+  numberstyle={\scriptsize},
+  stepnumber=1,
+  numbersep=1zw,
+  lineskip=-0.5ex
+}
+
+\begin{document}
+
+\title{データベース2\\演習課題4}
+\author{坪井正太郎（101830245）}
+\date{\today}
+\maketitle
+1，2，4は全て\(T_1とT_3\)との間で閉路ができてしまい、競合直列可能ではない。
+逆に、3は閉路ができず、\(T_1\rightarrow T_2\rightarrow T_3\rightarrow\)の順で直列なスケジュールと等価なので、競合直列可能である。
+
+
+\end{document}
