@@ -3,6 +3,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+// #define DEBUG ;
+
 Factorstack gFstack;
 
 void fstack_init() {
@@ -39,10 +41,24 @@ Factor *factor_push(char *aName, int aVal, Scope aType) {
   return tFactor;
 }
 
+Factor *factor_push_p(Factor *aFactor) {
+  // プッシュするたびにメモリ確保、変数名はRow構造体に入っているポインタを流用する想定
+  gFstack.element[gFstack.top] = aFactor;
+  gFstack.top++;
+
+#ifdef DEBUG
+  printf("[DEBUG] Factor stack PUSHED\n");
+  print_factor_stack();
+  print_LLVM_code();
+#endif
+
+  return aFactor;
+}
+
 Factor *factor_pop() {
 #ifdef DEBUG
   printf("[DEBUG] Factor stack POPED\n");
-  print_factor(gFstack.element[gFstack.top]);
+  print_factor(gFstack.element[gFstack.top - 1]);
   printf("\n");
 #endif
   // ポップしてもメモリを開放しない(コード生成に使い回すため)
