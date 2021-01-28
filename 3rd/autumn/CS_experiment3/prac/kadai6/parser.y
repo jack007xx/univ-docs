@@ -20,11 +20,8 @@ extern char *yytext;
 
 int gRegnum;
 Scope gScope;
-<<<<<<< HEAD
 char *gProcname;
 Factor *gCalling; // 呼び出し処理中の関数
-=======
->>>>>>> faa72e39fee3c5aa2a26642b6a74d3cdadecb8b1
 %}
 
 %union {
@@ -62,11 +59,7 @@ program
 
                 symtab_push($2, 0, gScope);
 
-<<<<<<< HEAD
                 fundecl_add("__GlobalDecl");
-=======
-                fundecl_add("__GlobalDecl", 0);
->>>>>>> faa72e39fee3c5aa2a26642b6a74d3cdadecb8b1
         }
           outblock PERIOD
         {
@@ -77,13 +70,8 @@ program
 outblock
         : var_decl_part subprog_decl_part
         {
-<<<<<<< HEAD
                 fundecl_add("main");
                 gRegnum = 1;
-=======
-                fundecl_add("main", 0);
-                gRegnum = 1; // 手続きごとにレジスタ番号はリセットされる
->>>>>>> faa72e39fee3c5aa2a26642b6a74d3cdadecb8b1
                 factor_push("Func Retval", gRegnum++, LOCAL_VAR);
                 Factor *tFunRet = factor_pop();
                 code_add(code_create(Alloca, NULL, NULL, tFunRet, 0)); // 戻り値を先に定義
@@ -120,14 +108,9 @@ subprog_decl
         ;
 
 proc_decl
-<<<<<<< HEAD
         : PROCEDURE proc_name LPAREN v_arg_list RPAREN SEMICOLON 
         {
                 gRegnum = fundecl_add_arg_code(); // 引数周りのコード一気に生成
-=======
-        : PROCEDURE proc_name SEMICOLON 
-        {
->>>>>>> faa72e39fee3c5aa2a26642b6a74d3cdadecb8b1
                 factor_push("Func Retval", gRegnum++, LOCAL_VAR);
                 Factor *tFunRet = factor_pop();
                 code_add(code_create(Alloca, NULL, NULL, tFunRet, 0)); // 戻り値を先に定義
@@ -144,17 +127,10 @@ proc_name
         {
                 symtab_push($1, 0, PROC_NAME);
                 Row *tRow = symtab_lookup($1);
-<<<<<<< HEAD
                 gProcname = tRow->name;
                 fundecl_add(gProcname);
 
                 gRegnum = 0;
-=======
-
-                fundecl_add(tRow->name, 0);
-                gRegnum = 1; // 手続きごとにレジスタ番号はリセットされる
-
->>>>>>> faa72e39fee3c5aa2a26642b6a74d3cdadecb8b1
                 gScope = LOCAL_VAR;
         }
         ;
@@ -348,7 +324,6 @@ for_statement
         ;
 
 proc_call_statement
-<<<<<<< HEAD
         : proc_call_name LPAREN arg_list RPAREN
         {
                 Factor *tProc = gCalling;
@@ -364,9 +339,6 @@ proc_call_statement
                 code_add(tCode);
                 gCalling = NULL;
         }
-=======
-        : proc_call_name
->>>>>>> faa72e39fee3c5aa2a26642b6a74d3cdadecb8b1
         ;
 
 proc_call_name
@@ -374,15 +346,7 @@ proc_call_name
         {
                 Row *tRow = symtab_lookup($1);
                 factor_push(tRow->name, tRow->regnum, tRow->type);
-<<<<<<< HEAD
                 gCalling = factor_pop();
-=======
-                Factor *tProc = factor_pop();
-
-                factor_push("", gRegnum++, LOCAL_VAR);//関数の戻り血
-                Factor *tRetval = factor_pop();
-                code_add(code_create(Call, tProc, NULL, tRetval, 0));
->>>>>>> faa72e39fee3c5aa2a26642b6a74d3cdadecb8b1
         }
         ;
 
@@ -546,7 +510,6 @@ arg_list
         | arg_list COMMA expression
         ;
 
-<<<<<<< HEAD
 v_arg_list
         : IDENT
         {
@@ -566,8 +529,6 @@ v_arg_list
         }
         ;
 
-=======
->>>>>>> faa72e39fee3c5aa2a26642b6a74d3cdadecb8b1
 id_list
         : IDENT
         {
@@ -584,11 +545,7 @@ id_list
 
                 Row *tRow = symtab_lookup($1);
 
-<<<<<<< HEAD
                 factor_push(tRow->name, tRow->regnum, tRow->type);
-=======
-                factor_push(tRow->name, tRow->regnum, gScope);
->>>>>>> faa72e39fee3c5aa2a26642b6a74d3cdadecb8b1
                 Factor *tRetval = factor_pop();
 
                 code_add(code_create(tCommand,NULL,NULL,tRetval, 0));
@@ -605,11 +562,7 @@ id_list
                         symtab_push($3, gRegnum++, gScope);
                 }
                 Row *tRow = symtab_lookup($3);
-<<<<<<< HEAD
                 factor_push(tRow->name, tRow->regnum, tRow->type);
-=======
-                factor_push(tRow->name, tRow->regnum, gScope);
->>>>>>> faa72e39fee3c5aa2a26642b6a74d3cdadecb8b1
                 Factor *tRetval = factor_pop();
                 code_add(code_create(tCommand,NULL,NULL,tRetval, 0));
         }
