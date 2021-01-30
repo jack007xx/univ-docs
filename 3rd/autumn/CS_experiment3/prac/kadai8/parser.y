@@ -93,7 +93,7 @@ var_decl_list
         ;
 
 var_decl
-        : VAR id_list
+        : VAR var_list
         ;
 
 subprog_decl_part
@@ -202,6 +202,10 @@ assignment_statement
                 Factor *tArg1 = factor_pop();
 
                 code_add(code_create(Store, tArg1, tArg2, NULL, 0));
+        }
+        | IDENT LBRACKET expression RBRACKET ASSIGN expression
+        {
+                // TODO 代入文の実装
         }
         ;
 
@@ -394,10 +398,8 @@ block_statement
         ;
 
 read_statement
-        : READ LPAREN IDENT RPAREN
+        : READ LPAREN var_name RPAREN
         {
-                Row *tRow = symtab_lookup($3);
-                factor_push(tRow->name, tRow->regnum, tRow->type);
                 Factor *tArg = factor_pop();
                 gRegnum++; // 本当は返り値を持っとく分
                 code_add(code_create(Read, tArg, NULL, NULL, 0));
@@ -524,6 +526,12 @@ term
 
 factor
         : var_name
+        {
+                Factor *tArg1 = factor_pop();
+                Factor *tRetval = factor_push("", gRegnum++, LOCAL_VAR);
+
+                code_add(code_create(Load, tArg1, NULL, tRetval, 0));
+        }
         | NUMBER
         {
                 factor_push("const", $1, CONSTANT);
@@ -569,11 +577,10 @@ var_name
         {
                 Row* tRow = symtab_lookup($1);
                 factor_push(tRow->name, tRow->regnum, tRow->type);
-
-                Factor *tArg1 = factor_pop();
-                Factor *tRetval = factor_push("", gRegnum++, LOCAL_VAR);
-
-                code_add(code_create(Load, tArg1, NULL, tRetval, 0));
+        }
+        | IDENT LBRACKET expression RBRACKET
+        {
+                // TODO 変数参照の実装
         }
         ;
 
@@ -601,7 +608,12 @@ v_arg_list
         }
         ;
 
-id_list
+var_list
+        : id_decl
+        | var_list COMMA id_decl
+        ;
+
+id_decl
         : IDENT
         {
                 // 大域変数と局所変数の場合で処理分けた
@@ -622,21 +634,9 @@ id_list
 
                 code_add(code_create(tCommand,NULL,NULL,tRetval, 0));
         }
-        | id_list COMMA IDENT
+        | IDENT LBRACKET NUMBER INTERVAL NUMBER RBRACKET
         {
-                // ↑と同じ
-                LLVMcommand tCommand;
-                if(gScope == GLOBAL_VAR){
-                        tCommand = Global;
-                        symtab_push($3, 0, gScope);
-                } else{
-                        tCommand = Alloca;
-                        symtab_push($3, gRegnum++, gScope);
-                }
-                Row *tRow = symtab_lookup($3);
-                factor_push(tRow->name, tRow->regnum, tRow->type);
-                Factor *tRetval = factor_pop();
-                code_add(code_create(tCommand,NULL,NULL,tRetval, 0));
+                // TODO 配列の定義実装
         }
         ;
 
