@@ -20,8 +20,9 @@ extern char *yytext;
 
 int gRegnum;
 Scope gScope;
-char *gProcname;
+char *gProgram;
 Factor *gCalling; // 呼び出し処理中の関数
+Factor *gRetval; // 関数の戻り値
 %}
 
 %union {
@@ -72,11 +73,13 @@ outblock
         {
                 fundecl_add("main");
                 gRegnum = 1;
-                factor_push("Func Retval", gRegnum++, LOCAL_VAR);
-                Factor *tFunRet = factor_pop();
-                code_add(code_create(Alloca, NULL, NULL, tFunRet, 0)); // 戻り値を先に定義
         }
          statement
+        {
+                factor_push("", 0, CONSTANT);
+                Factor *tRet = factor_pop();
+                code_add(code_create(Ret, tRet, NULL, NULL, 0));
+        }
         ;
 
 var_decl_part
@@ -105,30 +108,64 @@ subprog_decl_list
 
 subprog_decl
         : proc_decl
+        | func_decl
         ;
 
 proc_decl
-        : PROCEDURE proc_name LPAREN v_arg_list RPAREN SEMICOLON 
+        : PROCEDURE
+        {
+                gScope = PROC_NAME;
+        }
+         subprog_name LPAREN v_arg_list RPAREN SEMICOLON
         {
                 gRegnum = fundecl_add_arg_code(); // 引数周りのコード一気に生成
-                factor_push("Func Retval", gRegnum++, LOCAL_VAR);
-                Factor *tFunRet = factor_pop();
-                code_add(code_create(Alloca, NULL, NULL, tFunRet, 0)); // 戻り値を先に定義
         }
           inblock
         {
+                code_add(code_create(Ret, NULL, NULL, NULL, 0)); // void
                 gScope = GLOBAL_VAR;
                 symtab_delete();
         }
         ;
 
-proc_name
+func_decl
+        : FUNCTION
+        {
+                gScope = FUNC_NAME;
+        }
+         subprog_name LPAREN v_arg_list RPAREN SEMICOLON
+        {
+                gRegnum = fundecl_add_arg_code(); // 引数周りのコード一気に生成
+
+                symtab_push(gProgram, gRegnum++, LOCAL_VAR);
+                Row *tRow = symtab_lookup(gProgram);
+                factor_push(tRow->name, tRow->regnum, tRow->type);
+                gRetval = factor_pop();
+
+                code_add(code_create(Alloca, NULL, NULL, gRetval, 0)); // 戻り値を先に定義
+        }
+          inblock
+        {
+                factor_push("", gRegnum++, LOCAL_VAR); // 戻りのロード先
+                Factor* tRetval = factor_pop();
+
+                code_add(code_create(Load, gRetval, NULL, tRetval, 0));
+                code_add(code_create(Ret, tRetval, NULL, NULL, 0)); // loadして返す
+                gScope = GLOBAL_VAR;
+                symtab_delete();
+        }
+        ;
+
+subprog_name
         : IDENT
         {
-                symtab_push($1, 0, PROC_NAME);
+                symtab_push($1, 0, gScope);
                 Row *tRow = symtab_lookup($1);
-                gProcname = tRow->name;
-                fundecl_add(gProcname);
+                gProgram = tRow->name;
+                if (gScope == PROC_NAME)
+                        procdecl_add(gProgram);
+                else
+                        fundecl_add(gProgram);
 
                 gRegnum = 0;
                 gScope = LOCAL_VAR;
@@ -326,12 +363,9 @@ for_statement
 proc_call_statement
         : proc_call_name LPAREN arg_list RPAREN
         {
-                Factor *tProc = gCalling;
-                factor_push("", gRegnum++, LOCAL_VAR);//関数の戻り血
-                Factor *tRetval = factor_pop();
-                LLVMcode *tCode = code_create(Call, tProc, NULL, tRetval, 0);
+                LLVMcode *tCode = code_create(Call, gCalling, NULL, NULL, 0);
 
-                int tArity = fundecl_lookup(tProc->vname);
+                int tArity = fundecl_lookup(gCalling->vname);
                 for (int i = 0; i < tArity; i++){
                         // 引数は逆順でスタックに入ってる
                         tCode->args.call.proc_args[tArity - i - 1] = factor_pop();
@@ -345,8 +379,13 @@ proc_call_name
         : IDENT
         {
                 Row *tRow = symtab_lookup($1);
-                factor_push(tRow->name, tRow->regnum, tRow->type);
-                gCalling = factor_pop();
+                // 再帰的に呼び出しているときとかをケア
+                if (tRow->type == PROC_NAME || (tRow->type == LOCAL_VAR && strcmp(tRow->name, gProgram) == 0)){
+                        factor_push(tRow->name, 0, PROC_NAME);
+                        gCalling = factor_pop();
+                } else {
+                        yyerror("This is not procedure name.");
+                }
         }
         ;
 
@@ -490,6 +529,39 @@ factor
                 factor_push("const", $1, CONSTANT);
         }
         | LPAREN expression RPAREN
+        | func_call_factor
+        ;
+
+func_call_factor
+        : func_call_name LPAREN arg_list RPAREN
+        {
+                factor_push("", gRegnum++, LOCAL_VAR); // 関数の戻り
+                Factor *tRetval = factor_pop();
+                LLVMcode *tCode = code_create(Call, gCalling, NULL, tRetval, 0);
+
+                int tArity = fundecl_lookup(gCalling->vname);
+                for (int i = 0; i < tArity; i++){
+                        // 引数は逆順でスタックに入ってる
+                        tCode->args.call.proc_args[tArity - i - 1] = factor_pop();
+                }
+                code_add(tCode);
+                factor_push("", tRetval->val, tRetval->type); // 関数の戻り
+                gCalling = NULL;
+        }
+        ;
+
+func_call_name
+        : IDENT
+        {
+                Row *tRow = symtab_lookup($1);
+                // 再帰的に呼び出しているときをケア
+                if (tRow->type == FUNC_NAME || (tRow->type == LOCAL_VAR && strcmp(tRow->name, gProgram) == 0)){
+                        factor_push(tRow->name, 0, FUNC_NAME);
+                        gCalling = factor_pop();
+                } else {
+                        yyerror("This is not function name.");
+                }
+        }
         ;
 
 var_name

@@ -4,7 +4,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-// #define DEBUG
+#define DEBUG
 /* 記号表の実体をここで作成 */
 /* parser.yからは，以下のinsert/symtab_lookup/deleteなどを通してアクセスする */
 Symtab* TABLE;
@@ -70,7 +70,8 @@ int symtab_delete() {
   for (Symtab* tPointer = TABLE; tPointer != NULL;) {
     tPointer = tPointer->prev;
 
-    if (TABLE->row.type == GLOBAL_VAR || TABLE->row.type == PROC_NAME) {
+    if (TABLE->row.type == GLOBAL_VAR || TABLE->row.type == PROC_NAME ||
+        TABLE->row.type == FUNC_NAME) {
       break;
     } else {
       // free(TABLE->row.name);
@@ -92,7 +93,7 @@ int symtab_delete() {
 }
 
 void print_row(Row aRow) {
-  char* tScopeTable[] = {"global", "local", "proc", "const"};
+  char* tScopeTable[] = {"global", "local", "proc", "func", "const", "label"};
   printf("<NAME: %s, REGNUM: %d, SCOPE: %s>\n", aRow.name, aRow.regnum,
          tScopeTable[aRow.type]);
 }

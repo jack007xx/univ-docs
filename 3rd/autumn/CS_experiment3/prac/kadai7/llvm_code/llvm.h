@@ -129,6 +129,7 @@ void print_LLVM_code();
 
 /* LLVMの関数定義 */
 typedef struct fundecl {
+  int is_proc;
   char fname[256];       // 関数名
   unsigned arity;        // 引数個数
   Factor *args[10];      // 引数名
@@ -141,6 +142,9 @@ void fundecl_init();
 
 // 関数を追加して、その関数に対するコード追加を開始する
 void fundecl_add(char *);
+
+// 手続きを追加して、その手続きに対するコード追加を開始する
+void procdecl_add(char *);
 
 // 新しい引数名を登録する
 void fundecl_add_arg(Factor *);
