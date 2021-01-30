@@ -4,7 +4,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#define DEBUG
+// #define DEBUG
 /* 記号表の実体をここで作成 */
 /* parser.yからは，以下のinsert/symtab_lookup/deleteなどを通してアクセスする */
 Symtab* TABLE;
