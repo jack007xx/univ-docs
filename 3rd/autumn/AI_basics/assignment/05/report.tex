@@ -1,0 +1,81 @@
+\documentclass[a4paper,10pt]{jsarticle}
+
+% 数式
+\usepackage{amsmath,amsfonts}
+\usepackage{bm}
+% 画像
+\usepackage[dvipdfmx]{graphicx}
+\usepackage{here}
+
+\usepackage{url}
+
+\usepackage{listingsutf8,jlisting} %日本語のコメントアウトをする場合jlistingが必要
+%ここからソースコードの表示に関する設定
+\lstset{
+  basicstyle={\ttfamily},
+  identifierstyle={\small},
+  commentstyle={\smallitshape},
+  keywordstyle={\small\bfseries},
+  ndkeywordstyle={\small},
+  stringstyle={\small\ttfamily},
+  frame={tb},
+  breaklines=true,
+  columns=[l]{fullflexible},
+  numbers=left,
+  xrightmargin=0zw,
+  xleftmargin=3zw,
+  numberstyle={\scriptsize},
+  stepnumber=1,
+  numbersep=1zw,
+  lineskip=-0.5ex
+}
+
+\begin{document}
+
+\title{人工知能基礎レポート課題\\「人間の感情を認識する技術」の応用システムの例}
+\author{坪井正太郎（101830245）}
+\date{\today}
+\maketitle
+
+\section{感情の推定による保安検査の支援システム}
+\subsection{概要}
+このシステムでは、空港やイベントなどで行われる保安検査の対象人物の感情を推定することによって、重点的に検査する対象人物と、検査する場所を提示する。
+以下で具体的な目的、認識方法を説明する。
+
+\subsection{目的}
+保安作業の効率化、危険人物、危険物の検出。
+
+\subsection{どのような感情を認識するか}
+敵対感情、体のどこを警戒しているかを推定する。
+
+\subsection{どのような仕組みで認識するか}
+\subsubsection{対象人物の推定}
+保安検査場を通過する人物の表情、歩行特徴から推定する。
+表情、歩行特徴どちらも保安検査場に近づく前と、十分近い場所での差異を利用する。
+
+表情からの推定は、検査場に近づいた際に警戒、不安の感情が大きくなるかどうかを観測する。
+
+また、授業内で触れられていた音声や心拍の他に、歩行特徴からも感情が読み取れると考えた。
+例えば、歩行のスピード、歩幅、力の入り方には心拍と同様に感情が表出されると考えられる。
+そこで、接近に伴う歩行特徴の変化からも、感情の変化を観測する。
+
+これら2種類の感情推定によって、通過する人物のうち、重点的に検査すべき人物(危険人物)を挙げる。
+
+\subsubsection{感情のモニタリングによる検査すべき場所の推定}
+検査するべき場所とは、対象が危険物を持っている位置であり、対象人物はそこを触られる前後で、警戒感情や不安の感情が大きく変化すると考えた。
+
+まず、定量化した感情の変化を常にモニタリングしておく。
+検査を担当する要員が身体検査を行っている間、もう一人の担当要員はモニタリングしている感情の起伏を観察する。
+このようにして、感情が変化した際に検査していた部位を、再度検査する必要があるかを判定できると考えた。
+
+\subsection{利点}
+検査対象の絞り込み、効率的な検査によって人員を削減することができる。
+また、検査対象を見つける能力や検査能力に人によるバラツキが減少し、検査能力の統一化を図ることができる。
+
+\subsection{問題点}
+実際に保安検査で問題となる人物は、全体のうちごく少数であると予想されることから、費用に対する効果が高いとは言えない。
+例えば、空港の保安検査場では、このシステムを用いるよりも人員を多くしたり、高性能な検査装置を導入するほうが、効果的であると考えられる。
+
+逆に言えば、物理的に全ての人物を検査することができないシーン。例えば、オリンピックや巨大なイベントなどでの保安警備に応用することはできるのではないかと考えた。
+
+\end{document}
