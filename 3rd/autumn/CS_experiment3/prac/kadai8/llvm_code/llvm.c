@@ -201,12 +201,11 @@ void factor_encode(Factor *aFactor, char *aArg) {
     case LABEL:
       sprintf(aArg, "%d", aFactor->val);
       break;
-    case ARRAY:
-      if (strcmp(aFactor->vname, "") == 0)
-        sprintf(aArg, "%%%d", aFactor->val);
-      else
-        sprintf(aArg, "@%s", aFactor->vname);
-
+    case LOCAL_ARRAY:
+      sprintf(aArg, "%%%d", aFactor->val);
+      break;
+    case GLOBAL_ARRAY:
+      sprintf(aArg, "@%s", aFactor->vname);
       break;
     default:
       break;

@@ -30,8 +30,8 @@ Factor *factor_push(char *aName, int aVal, Scope aType) {
   return push(aName, aVal, -1, aType);
 }
 
-Factor *factor_push_array(char *aName, int aVal, int aSize) {
-  return push(aName, aVal, aSize, ARRAY);
+Factor *factor_push_array(char *aName, int aVal, int aSize, Scope aScope) {
+  return push(aName, aVal, aSize, aScope);
 }
 
 // プライベート

@@ -576,7 +576,7 @@ var_name
         | IDENT LBRACKET expression RBRACKET
         {
                 Row *tRow = symtab_lookup($1);
-                factor_push_array(tRow->name, tRow->regnum, tRow->size);
+                factor_push_array(tRow->name, tRow->regnum, tRow->size, tRow->type);
                 Factor *tArray = factor_pop();
 
                 Factor *tInd = factor_pop();
@@ -640,7 +640,21 @@ id_decl
         }
         | IDENT LBRACKET NUMBER INTERVAL NUMBER RBRACKET
         {
-                // TODO 配列の定義実装
+                LLVMcommand tCommand;
+                if(gScope == GLOBAL_VAR){
+                        tCommand = Global;
+                        symtab_push_array($1, -1, $3, GLOBAL_ARRAY);
+                } else{
+                        tCommand = Alloca;
+                        symtab_push_array($1, gRegnum++, $3, LOCAL_ARRAY);
+                }
+
+                Row *tRow = symtab_lookup($1);
+
+                factor_push(tRow->name, tRow->regnum, tRow->type);
+                Factor *tRetval = factor_pop();
+
+                code_add(code_create(tCommand,NULL,NULL,tRetval, 0));
         }
         ;
 

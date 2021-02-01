@@ -29,7 +29,7 @@ void fstack_init();
 Factor *factor_push(char *, int, Scope);
 
 // 配列バージョン
-Factor *factor_push_array(char *aName, int aVal, int aSize);
+Factor *factor_push_array(char *aName, int aVal, int aSize, Scope aScope);
 
 // スタックから出す
 Factor *factor_pop();

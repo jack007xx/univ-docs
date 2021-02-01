@@ -11,7 +11,8 @@ typedef enum {
   FUNC_NAME,
   CONSTANT, /* 定数     */
   LABEL,
-  ARRAY
+  GLOBAL_ARRAY,
+  LOCAL_ARRAY
 } Scope;
 
 /* 記号表の構造体の宣言 */
@@ -21,6 +22,7 @@ typedef struct row Row;
 struct row {
   char* name;
   int regnum;
+  int offset;
   int size;
   Scope type;
 };
@@ -39,7 +41,7 @@ void symtab_init();
 void symtab_push(char*, int, Scope);
 
 // 配列バージョン
-void symtab_push_array(char*, int, int);
+void symtab_push_array(char*, int, int, int, Scope);
 
 // 失敗したときにNULLを返したいのでポインタにしている。あんまりよくないかも。
 Row* symtab_lookup(char*);
