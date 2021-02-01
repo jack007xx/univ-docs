@@ -11,6 +11,7 @@
 typedef struct {
   char *vname;  // 変数の場合の変数名 ラベルはコメントにつけたい名前
   int val;  // 整数の場合はその値，変数の場合は割り当てたレジスタ番号
+  int size;
   Scope type;  // 実態が何なのか
 } Factor;
 
@@ -26,6 +27,9 @@ void fstack_init();
 // スタックに積む
 // 積むときも返してくれるので、積みつつ保持しておきたいときに便利
 Factor *factor_push(char *, int, Scope);
+
+// 配列バージョン
+Factor *factor_push_array(char *aName, int aVal, int aSize);
 
 // スタックから出す
 Factor *factor_pop();

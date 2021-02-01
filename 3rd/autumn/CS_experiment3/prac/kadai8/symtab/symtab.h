@@ -10,7 +10,8 @@ typedef enum {
   PROC_NAME,  /* 手続き   */
   FUNC_NAME,
   CONSTANT, /* 定数     */
-  LABEL
+  LABEL,
+  ARRAY
 } Scope;
 
 /* 記号表の構造体の宣言 */
@@ -20,6 +21,7 @@ typedef struct row Row;
 struct row {
   char* name;
   int regnum;
+  int size;
   Scope type;
 };
 
@@ -35,6 +37,9 @@ void symtab_init();
 
 // 先頭に挿入
 void symtab_push(char*, int, Scope);
+
+// 配列バージョン
+void symtab_push_array(char*, int, int);
 
 // 失敗したときにNULLを返したいのでポインタにしている。あんまりよくないかも。
 Row* symtab_lookup(char*);

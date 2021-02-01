@@ -152,6 +152,11 @@ LLVMcode *code_create(LLVMcommand aCommand, Factor *aArg1, Factor *aArg2,
     case Comment:
       tCode->args.comment.arg1 = aArg1;
       break;
+    case Gep:
+      tCode->args.gep.arg1 = aArg1;
+      tCode->args.gep.ind = aArg2;
+      tCode->args.gep.retval = aRetval;
+      break;
     default:
       break;
   }
@@ -195,6 +200,13 @@ void factor_encode(Factor *aFactor, char *aArg) {
       break;
     case LABEL:
       sprintf(aArg, "%d", aFactor->val);
+      break;
+    case ARRAY:
+      if (strcmp(aFactor->vname, "") == 0)
+        sprintf(aArg, "%%%d", aFactor->val);
+      else
+        sprintf(aArg, "@%s", aFactor->vname);
+
       break;
     default:
       break;
@@ -320,6 +332,17 @@ void print_code(LLVMcode *aCode) {
       break;
     case Comment:
       fprintf(gFile, "\t; %s\n", aCode->args.comment.arg1->vname);
+      break;
+    case Gep:
+      factor_encode(aCode->args.gep.arg1, tArg1);
+      factor_encode(aCode->args.gep.ind, tArg2);
+      factor_encode(aCode->args.gep.retval, tRetval);
+      fprintf(
+          gFile,
+          "\t%s = getelementptr inbounds [%s x i32], [%s x i32]* %s, i64 0, "
+          "i64 %d\n",
+          tRetval, aCode->args.gep.arg1->size, aCode->args.gep.arg1->size,
+          tArg1, tArg2);
       break;
     default:
       break;

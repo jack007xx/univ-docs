@@ -645,7 +645,6 @@ id_decl
 int yyerror(char *s)
 {
   fprintf(stderr, "%s\n", s);
-  fprintf(stderr, "%s\n", yytext);
-  fprintf(stderr, "%d\n", yylineno);
+  fprintf(stderr, "line: %d\n%s\n", yylineno, yytext);
   return yylineno;
 }

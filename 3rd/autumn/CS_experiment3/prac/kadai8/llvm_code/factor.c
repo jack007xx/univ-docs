@@ -27,9 +27,19 @@ void print_factor_stack() {
 }
 
 Factor *factor_push(char *aName, int aVal, Scope aType) {
+  return push(aName, aVal, -1, aType);
+}
+
+Factor *factor_push_array(char *aName, int aVal, int aSize) {
+  return push(aName, aVal, aSize, ARRAY);
+}
+
+// プライベート
+// バックエンドでのプッシュ
+Factor *push(char *aName, int aVal, int aSize, Scope aType) {
   // プッシュするたびにメモリ確保、変数名はRow構造体に入っているポインタを流用する想定
   Factor *tFactor = malloc(sizeof(Factor));
-  *tFactor = (Factor){aName, aVal, aType};
+  *tFactor = (Factor){aName, aVal, aSize, aType};
 
   gFstack.element[gFstack.top] = tFactor;
   gFstack.top++;
