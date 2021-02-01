@@ -194,7 +194,7 @@ statement
         ;
 
 assignment_statement
-        : IDENT ASSIGN expression
+        : var_name ASSIGN expression
         {
                 Row *tRow = symtab_lookup($1);
                 factor_push(tRow->name, tRow->regnum, tRow->type);
@@ -202,20 +202,6 @@ assignment_statement
                 Factor *tArg1 = factor_pop();
 
                 code_add(code_create(Store, tArg1, tArg2, NULL, 0));
-        }
-        | IDENT LBRACKET expression RBRACKET ASSIGN expression
-        {
-                Row *tRow = symtab_lookup($1);
-                factor_push_array(tRow->name, tRow->regnum, tRow->size);
-                Factor *tArray = factor_pop();
-                Factor *tArg1 = factor_pop();
-                Factor *tInd = factor_pop();
-
-                factor_push("", gRegnum++, LOCAL_VAR);
-                Factor *tRetval = factor_pop();
-
-                code_add(code_create(Gep, tArray, tInd, tRetval, 0));
-                code_add(code_create(Store, tArg1, tRetval, NULL, 0));
         }
         ;
 
@@ -589,7 +575,16 @@ var_name
         }
         | IDENT LBRACKET expression RBRACKET
         {
-                // TODO 変数参照の実装
+                Row *tRow = symtab_lookup($1);
+                factor_push_array(tRow->name, tRow->regnum, tRow->size);
+                Factor *tArray = factor_pop();
+
+                Factor *tInd = factor_pop();
+
+                Factor *tRetval = factor_push("", gRegnum++, LOCAL_VAR);
+                // Retvalを上位で使う
+
+                code_add(code_create(Gep, tArray, tInd, tRetval, 0));
         }
         ;
 
