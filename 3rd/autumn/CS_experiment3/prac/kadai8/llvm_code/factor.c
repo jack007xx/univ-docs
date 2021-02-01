@@ -26,17 +26,9 @@ void print_factor_stack() {
   printf("\n");
 }
 
-Factor *factor_push(char *aName, int aVal, Scope aType) {
-  return push(aName, aVal, -1, aType);
-}
-
-Factor *factor_push_array(char *aName, int aVal, int aSize, Scope aScope) {
-  return push(aName, aVal, aSize, aScope);
-}
-
 // プライベート
 // バックエンドでのプッシュ
-Factor *push(char *aName, int aVal, int aSize, Scope aType) {
+Factor *__factor_push(char *aName, int aVal, int aSize, Scope aType) {
   // プッシュするたびにメモリ確保、変数名はRow構造体に入っているポインタを流用する想定
   Factor *tFactor = malloc(sizeof(Factor));
   *tFactor = (Factor){aName, aVal, aSize, aType};
@@ -51,6 +43,14 @@ Factor *push(char *aName, int aVal, int aSize, Scope aType) {
 #endif
 
   return tFactor;
+}
+
+Factor *factor_push(char *aName, int aVal, Scope aType) {
+  return __factor_push(aName, aVal, -1, aType);
+}
+
+Factor *factor_push_array(char *aName, int aVal, int aSize, Scope aType) {
+  return __factor_push(aName, aVal, aSize, aType);
 }
 
 Factor *factor_pop() {

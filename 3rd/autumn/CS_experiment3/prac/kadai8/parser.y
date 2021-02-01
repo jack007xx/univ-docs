@@ -196,10 +196,8 @@ statement
 assignment_statement
         : var_name ASSIGN expression
         {
-                Row *tRow = symtab_lookup($1);
-                factor_push(tRow->name, tRow->regnum, tRow->type);
-                Factor *tArg2 = factor_pop();
                 Factor *tArg1 = factor_pop();
+                Factor *tArg2 = factor_pop();
 
                 code_add(code_create(Store, tArg1, tArg2, NULL, 0));
         }
@@ -636,25 +634,26 @@ id_decl
                 factor_push(tRow->name, tRow->regnum, tRow->type);
                 Factor *tRetval = factor_pop();
 
-                code_add(code_create(tCommand,NULL,NULL,tRetval, 0));
+                code_add(code_create(tCommand, NULL, NULL, tRetval, 0));
         }
         | IDENT LBRACKET NUMBER INTERVAL NUMBER RBRACKET
         {
                 LLVMcommand tCommand;
+                int tSize = $5 - $3 + 1;
                 if(gScope == GLOBAL_VAR){
                         tCommand = Global;
-                        symtab_push_array($1, -1, $3, GLOBAL_ARRAY);
+                        symtab_push_array($1, 0, $3, tSize, GLOBAL_ARRAY);
                 } else{
                         tCommand = Alloca;
-                        symtab_push_array($1, gRegnum++, $3, LOCAL_ARRAY);
+                        symtab_push_array($1, gRegnum++, $3, tSize, LOCAL_ARRAY);
                 }
 
                 Row *tRow = symtab_lookup($1);
 
-                factor_push(tRow->name, tRow->regnum, tRow->type);
+                factor_push_array(tRow->name, tRow->regnum, tRow->size, tRow->type);
                 Factor *tRetval = factor_pop();
 
-                code_add(code_create(tCommand,NULL,NULL,tRetval, 0));
+                code_add(code_create(tCommand, NULL, NULL, tRetval, 0));
         }
         ;
 

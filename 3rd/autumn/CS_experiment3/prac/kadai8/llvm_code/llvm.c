@@ -221,12 +221,26 @@ void print_code(LLVMcode *aCode) {
   switch (aCode->command) {
     case Alloca:
       factor_encode(aCode->args.alloca.retval, tRetval);
-      fprintf(gFile, "\t%s = alloca i32, align 4 ; Allocate for %s\n", tRetval,
-              aCode->args.alloca.retval->vname);
+      if (aCode->args.alloca.retval->type == LOCAL_ARRAY) {
+        fprintf(gFile, "\t%s = alloca [%d x i32], align %d ; Allocate for %s\n",
+                tRetval, aCode->args.alloca.retval->size,
+                aCode->args.alloca.retval->size * 4,
+                aCode->args.alloca.retval->vname);
+      } else {
+        fprintf(gFile, "\t%s = alloca i32, align 4 ; Allocate for %s\n",
+                tRetval, aCode->args.alloca.retval->vname);
+      }
       break;
     case Global:
       factor_encode(aCode->args.global.retval, tRetval);
-      fprintf(gFile, "%s = common global i32 0, align 4\n", tRetval);
+      if (aCode->args.global.retval->type == GLOBAL_ARRAY) {
+        fprintf(gFile,
+                "%s = common dso_local global [%d x i32] zeroinitializer, "
+                "align 4\n",
+                tRetval, aCode->args.global.retval->size);
+      } else {
+        fprintf(gFile, "%s = common global i32 0, align 4\n", tRetval);
+      }
       break;
     case Load:
       factor_encode(aCode->args.load.arg1, tArg1);
@@ -338,8 +352,8 @@ void print_code(LLVMcode *aCode) {
       factor_encode(aCode->args.gep.retval, tRetval);
       fprintf(
           gFile,
-          "\t%s = getelementptr inbounds [%s x i32], [%s x i32]* %s, i64 0, "
-          "i64 %d\n",
+          "\t%s = getelementptr inbounds [%d x i32], [%d x i32]* %s, i32 0, "
+          "i32 %s\n",
           tRetval, aCode->args.gep.arg1->size, aCode->args.gep.arg1->size,
           tArg1, tArg2);
       break;
