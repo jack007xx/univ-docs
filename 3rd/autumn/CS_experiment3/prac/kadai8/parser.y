@@ -205,7 +205,17 @@ assignment_statement
         }
         | IDENT LBRACKET expression RBRACKET ASSIGN expression
         {
-                // TODO 代入文の実装
+                Row *tRow = symtab_lookup($1);
+                factor_push_array(tRow->name, tRow->regnum, tRow->size);
+                Factor *tArray = factor_pop();
+                Factor *tArg1 = factor_pop();
+                Factor *tInd = factor_pop();
+
+                factor_push("", gRegnum++, LOCAL_VAR);
+                Factor *tRetval = factor_pop();
+
+                code_add(code_create(Gep, tArray, tInd, tRetval, 0));
+                code_add(code_create(Store, tArg1, tRetval, NULL, 0));
         }
         ;
 
@@ -214,7 +224,6 @@ if_statement
         {
                 Factor *tCond = factor_pop();
 
-                // TODO if.endをいい感じの名前にしたい。if.break?while.breakをかえてもいいけど。
                 Factor *tEnd = factor_push("if.else.end", 0, LABEL);
                 // バックパッチであとで正しい値をつける(elseの前に来る)
 
