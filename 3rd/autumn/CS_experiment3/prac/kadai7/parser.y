@@ -20,9 +20,10 @@ extern char *yytext;
 
 int gRegnum;
 Scope gScope;
-char *gProgram;
+Row *gProgram; // 定義処理中の関数名
 Factor *gCalling; // 呼び出し処理中の関数
 Factor *gRetval; // 関数の戻り値
+int gArity;
 %}
 
 %union {
@@ -57,6 +58,7 @@ program
 
                 gScope = GLOBAL_VAR;
                 gRegnum = 1;
+                gArity = 0;
 
                 symtab_push($2, 0, gScope);
 
@@ -116,9 +118,20 @@ proc_decl
         {
                 gScope = PROC_NAME;
         }
-         subprog_name LPAREN v_arg_list RPAREN SEMICOLON
+         subprog_name v_args SEMICOLON
         {
-                gRegnum = fundecl_add_arg_code(); // 引数周りのコード一気に生成
+                if (gProgram->type != PROC_NAME)
+                        yyerror("not decleared as procedure");
+
+                if (gProgram->size == -1)
+                        gProgram->size = gArity;
+
+                if (gProgram->size == gArity) 
+                        gRegnum = fundecl_add_arg_code(); // 引数周りのコード一気に生成
+                else if (gProgram->size > gArity) 
+                        yyerror("too much procedure argments");
+                else 
+                        yyerror("too few procedure argments");
         }
           inblock
         {
@@ -133,16 +146,26 @@ func_decl
         {
                 gScope = FUNC_NAME;
         }
-         subprog_name LPAREN v_arg_list RPAREN SEMICOLON
+         subprog_name v_args SEMICOLON
         {
-                gRegnum = fundecl_add_arg_code(); // 引数周りのコード一気に生成
+                if (gProgram->type != FUNC_NAME)
+                        yyerror("not decleared as function");
 
-                symtab_push(gProgram, gRegnum++, LOCAL_VAR);
-                Row *tRow = symtab_lookup(gProgram);
-                factor_push(tRow->name, tRow->regnum, tRow->type);
-                gRetval = factor_pop();
+                if (gProgram->size == -1)
+                        gProgram->size = gArity;
 
-                code_add(code_create(Alloca, NULL, NULL, gRetval, 0)); // 戻り値を先に定義
+                if (gProgram->size == gArity) { 
+                        gRegnum = fundecl_add_arg_code(); // 引数周りのコード一気に生成
+
+                        factor_push("return val", gRegnum++, LOCAL_VAR);
+                        gRetval = factor_pop();
+
+                        code_add(code_create(Alloca, NULL, NULL, gRetval, 0)); // 戻り値を先に定義
+                }
+                else if (gProgram->size > gArity) 
+                        yyerror("too much function argments");
+                else 
+                        yyerror("too few function argments");
         }
           inblock
         {
@@ -159,15 +182,19 @@ func_decl
 subprog_name
         : IDENT
         {
-                symtab_push($1, 0, gScope);
                 Row *tRow = symtab_lookup($1);
-                gProgram = tRow->name;
-                if (gScope == PROC_NAME)
-                        procdecl_add(gProgram);
-                else
-                        fundecl_add(gProgram);
+                if (tRow == NULL) {
+                        tRow = symtab_push($1, 0, gScope);
+                        tRow->size = -1;
+                }
 
-                gRegnum = 0;
+                if (gScope == PROC_NAME)
+                        procdecl_add(tRow->name);
+                else
+                        fundecl_add(tRow->name);
+
+                gProgram = tRow;
+                gArity = gRegnum = 0;
                 gScope = LOCAL_VAR;
         }
         ;
@@ -194,12 +221,10 @@ statement
         ;
 
 assignment_statement
-        : IDENT ASSIGN expression
+        : var_name ASSIGN expression
         {
-                Row *tRow = symtab_lookup($1);
-                factor_push(tRow->name, tRow->regnum, tRow->type);
-                Factor *tArg2 = factor_pop();
                 Factor *tArg1 = factor_pop();
+                Factor *tArg2 = factor_pop();
 
                 code_add(code_create(Store, tArg1, tArg2, NULL, 0));
         }
@@ -210,8 +235,7 @@ if_statement
         {
                 Factor *tCond = factor_pop();
 
-                // TODO if.endをいい感じの名前にしたい。if.break?while.breakをかえてもいいけど。
-                Factor *tEnd = factor_push("if.else.end", 0, LABEL);
+                Factor *tEnd = factor_push("if.end.else", 0, LABEL);
                 // バックパッチであとで正しい値をつける(elseの前に来る)
 
                 factor_push("if.then", gRegnum++, LABEL);
@@ -291,6 +315,9 @@ for_statement
         : FOR IDENT ASSIGN expression TO expression DO
         {
                 Row *tRow = symtab_lookup($2);
+                if (tRow == NULL)
+                        yyerror("not decleared yet");
+
                 Factor *tTo = factor_pop(); // tFromからtToまで
                 Factor *tFrom = factor_pop();
 
@@ -361,11 +388,20 @@ for_statement
         ;
 
 proc_call_statement
-        : proc_call_name LPAREN arg_list RPAREN
+        : IDENT args
         {
+                Row *tRow = symtab_lookup($1);
+                if (tRow == NULL)
+                        yyerror("not decleared yet");
+                else if(tRow->type != PROC_NAME)
+                        yyerror("not decleared as procedure");
+
+                factor_push(tRow->name, 0, PROC_NAME);
+                gCalling = factor_pop();
+
                 LLVMcode *tCode = code_create(Call, gCalling, NULL, NULL, 0);
 
-                int tArity = fundecl_lookup(gCalling->vname);
+                int tArity = tRow->size;
                 for (int i = 0; i < tArity; i++){
                         // 引数は逆順でスタックに入ってる
                         tCode->args.call.proc_args[tArity - i - 1] = factor_pop();
@@ -375,29 +411,13 @@ proc_call_statement
         }
         ;
 
-proc_call_name
-        : IDENT
-        {
-                Row *tRow = symtab_lookup($1);
-                // 再帰的に呼び出しているときとかをケア
-                if (tRow->type == PROC_NAME || (tRow->type == LOCAL_VAR && strcmp(tRow->name, gProgram) == 0)){
-                        factor_push(tRow->name, 0, PROC_NAME);
-                        gCalling = factor_pop();
-                } else {
-                        yyerror("This is not procedure name.");
-                }
-        }
-        ;
-
 block_statement
         : SBEGIN statement_list SEND
         ;
 
 read_statement
-        : READ LPAREN IDENT RPAREN
+        : READ LPAREN var_name RPAREN
         {
-                Row *tRow = symtab_lookup($3);
-                factor_push(tRow->name, tRow->regnum, tRow->type);
                 Factor *tArg = factor_pop();
                 gRegnum++; // 本当は返り値を持っとく分
                 code_add(code_create(Read, tArg, NULL, NULL, 0));
@@ -524,6 +544,12 @@ term
 
 factor
         : var_name
+        {
+                Factor *tArg1 = factor_pop();
+                Factor *tRetval = factor_push("", gRegnum++, LOCAL_VAR);
+
+                code_add(code_create(Load, tArg1, NULL, tRetval, 0));
+        }
         | NUMBER
         {
                 factor_push("const", $1, CONSTANT);
@@ -533,13 +559,23 @@ factor
         ;
 
 func_call_factor
-        : func_call_name LPAREN arg_list RPAREN
+        : IDENT args
         {
+                Row *tRow = symtab_lookup($1);
+                if (tRow == NULL)
+                        yyerror("not decleared yet");
+                else if(tRow->type != FUNC_NAME)
+                        yyerror("not decleared as function");
+
+                // 再帰的に呼び出しているときをケア
+                factor_push(tRow->name, 0, FUNC_NAME);
+                gCalling = factor_pop();
+
                 factor_push("", gRegnum++, LOCAL_VAR); // 関数の戻り
                 Factor *tRetval = factor_pop();
                 LLVMcode *tCode = code_create(Call, gCalling, NULL, tRetval, 0);
 
-                int tArity = fundecl_lookup(gCalling->vname);
+                int tArity = tRow->size;
                 for (int i = 0; i < tArity; i++){
                         // 引数は逆順でスタックに入ってる
                         tCode->args.call.proc_args[tArity - i - 1] = factor_pop();
@@ -550,31 +586,20 @@ func_call_factor
         }
         ;
 
-func_call_name
-        : IDENT
-        {
-                Row *tRow = symtab_lookup($1);
-                // 再帰的に呼び出しているときをケア
-                if (tRow->type == FUNC_NAME || (tRow->type == LOCAL_VAR && strcmp(tRow->name, gProgram) == 0)){
-                        factor_push(tRow->name, 0, FUNC_NAME);
-                        gCalling = factor_pop();
-                } else {
-                        yyerror("This is not function name.");
-                }
-        }
-        ;
-
 var_name
         : IDENT
         {
                 Row* tRow = symtab_lookup($1);
-                factor_push(tRow->name, tRow->regnum, tRow->type);
-
-                Factor *tArg1 = factor_pop();
-                Factor *tRetval = factor_push("", gRegnum++, LOCAL_VAR);
-
-                code_add(code_create(Load, tArg1, NULL, tRetval, 0));
+                if (tRow->type == FUNC_NAME)
+                        factor_push(gRetval->vname, gRetval->val, gRetval->type);
+                else 
+                        factor_push(tRow->name, tRow->regnum, tRow->type);
         }
+        ;
+
+args
+        : /* empty */
+        | LPAREN arg_list RPAREN
         ;
 
 arg_list
@@ -582,19 +607,24 @@ arg_list
         | arg_list COMMA expression
         ;
 
+v_args
+        : /* empty */
+        | LPAREN v_arg_list RPAREN
+        ;
+
 v_arg_list
         : IDENT
         {
-                symtab_push($1, gRegnum++, LOCAL_VAR);
-                Row *tRow = symtab_lookup($1);
+                gArity++;
+                Row *tRow = symtab_push($1, gRegnum++, LOCAL_VAR);
 
                 factor_push(tRow->name, tRow->regnum, tRow->type);
                 fundecl_add_arg(factor_pop());
         }
         | v_arg_list COMMA IDENT 
         {
-                symtab_push($3, gRegnum++, LOCAL_VAR);
-                Row *tRow = symtab_lookup($3);
+                gArity++;
+                Row *tRow = symtab_push($3, gRegnum++, LOCAL_VAR);
 
                 factor_push(tRow->name, tRow->regnum, tRow->type);
                 fundecl_add_arg(factor_pop());
@@ -645,7 +675,6 @@ id_list
 int yyerror(char *s)
 {
   fprintf(stderr, "%s\n", s);
-  fprintf(stderr, "%s\n", yytext);
-  fprintf(stderr, "%d\n", yylineno);
+  fprintf(stderr, "line: %d\n%s\n", yylineno, yytext);
   return yylineno;
 }

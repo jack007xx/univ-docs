@@ -20,6 +20,7 @@ typedef struct row Row;
 struct row {
   char* name;
   int regnum;
+  int size;
   Scope type;
 };
 
@@ -34,7 +35,10 @@ struct symtab {
 void symtab_init();
 
 // 先頭に挿入
-void symtab_push(char*, int, Scope);
+Row* symtab_push(char*, int, Scope);
+
+// 配列バージョン
+Row* symtab_push_array(char*, int, int, int, Scope);
 
 // 失敗したときにNULLを返したいのでポインタにしている。あんまりよくないかも。
 Row* symtab_lookup(char*);
