@@ -20,9 +20,10 @@ extern char *yytext;
 
 int gRegnum;
 Scope gScope;
-char *gProgram;
+Row *gProgram; // 定義処理中の関数名
 Factor *gCalling; // 呼び出し処理中の関数
 Factor *gRetval; // 関数の戻り値
+int gArity;
 %}
 
 %union {
@@ -57,6 +58,7 @@ program
 
                 gScope = GLOBAL_VAR;
                 gRegnum = 1;
+                gArity = 0;
 
                 symtab_push($2, 0, gScope);
 
@@ -118,7 +120,18 @@ proc_decl
         }
          subprog_name v_args SEMICOLON
         {
-                gRegnum = fundecl_add_arg_code(); // 引数周りのコード一気に生成
+                if (gProgram->type != PROC_NAME)
+                        yyerror("not decleared as procedure");
+
+                if (gProgram->size == -1)
+                        gProgram->size = gArity;
+
+                if (gProgram->size == gArity) 
+                        gRegnum = fundecl_add_arg_code(); // 引数周りのコード一気に生成
+                else if (gProgram->size > gArity) 
+                        yyerror("too much procedure argments");
+                else 
+                        yyerror("too few procedure argments");
         }
           inblock
         {
@@ -135,12 +148,24 @@ func_decl
         }
          subprog_name v_args SEMICOLON
         {
-                gRegnum = fundecl_add_arg_code(); // 引数周りのコード一気に生成
+                if (gProgram->type != FUNC_NAME)
+                        yyerror("not decleared as function");
 
-                factor_push(gProgram, gRegnum++, LOCAL_VAR);
-                gRetval = factor_pop();
+                if (gProgram->size == -1)
+                        gProgram->size = gArity;
 
-                code_add(code_create(Alloca, NULL, NULL, gRetval, 0)); // 戻り値を先に定義
+                if (gProgram->size == gArity) { 
+                        gRegnum = fundecl_add_arg_code(); // 引数周りのコード一気に生成
+
+                        factor_push("return val", gRegnum++, LOCAL_VAR);
+                        gRetval = factor_pop();
+
+                        code_add(code_create(Alloca, NULL, NULL, gRetval, 0)); // 戻り値を先に定義
+                }
+                else if (gProgram->size > gArity) 
+                        yyerror("too much function argments");
+                else 
+                        yyerror("too few function argments");
         }
           inblock
         {
@@ -157,15 +182,19 @@ func_decl
 subprog_name
         : IDENT
         {
-                symtab_push($1, 0, gScope);
                 Row *tRow = symtab_lookup($1);
-                gProgram = tRow->name;
-                if (gScope == PROC_NAME)
-                        procdecl_add(gProgram);
-                else
-                        fundecl_add(gProgram);
+                if (tRow == NULL) {
+                        tRow = symtab_push($1, 0, gScope);
+                        tRow->size = -1;
+                }
 
-                gRegnum = 0;
+                if (gScope == PROC_NAME)
+                        procdecl_add(tRow->name);
+                else
+                        fundecl_add(tRow->name);
+
+                gProgram = tRow;
+                gArity = gRegnum = 0;
                 gScope = LOCAL_VAR;
         }
         ;
@@ -206,7 +235,7 @@ if_statement
         {
                 Factor *tCond = factor_pop();
 
-                Factor *tEnd = factor_push("if.else.end", 0, LABEL);
+                Factor *tEnd = factor_push("if.end.else", 0, LABEL);
                 // バックパッチであとで正しい値をつける(elseの前に来る)
 
                 factor_push("if.then", gRegnum++, LABEL);
@@ -286,6 +315,9 @@ for_statement
         : FOR IDENT ASSIGN expression TO expression DO
         {
                 Row *tRow = symtab_lookup($2);
+                if (tRow == NULL)
+                        yyerror("not decleared yet");
+
                 Factor *tTo = factor_pop(); // tFromからtToまで
                 Factor *tFrom = factor_pop();
 
@@ -359,12 +391,17 @@ proc_call_statement
         : IDENT args
         {
                 Row *tRow = symtab_lookup($1);
+                if (tRow == NULL)
+                        yyerror("not decleared yet");
+                else if(tRow->type != PROC_NAME)
+                        yyerror("not decleared as procedure");
+
                 factor_push(tRow->name, 0, PROC_NAME);
                 gCalling = factor_pop();
 
                 LLVMcode *tCode = code_create(Call, gCalling, NULL, NULL, 0);
 
-                int tArity = fundecl_lookup(gCalling->vname);
+                int tArity = tRow->size;
                 for (int i = 0; i < tArity; i++){
                         // 引数は逆順でスタックに入ってる
                         tCode->args.call.proc_args[tArity - i - 1] = factor_pop();
@@ -525,6 +562,11 @@ func_call_factor
         : IDENT args
         {
                 Row *tRow = symtab_lookup($1);
+                if (tRow == NULL)
+                        yyerror("not decleared yet");
+                else if(tRow->type != FUNC_NAME)
+                        yyerror("not decleared as function");
+
                 // 再帰的に呼び出しているときをケア
                 factor_push(tRow->name, 0, FUNC_NAME);
                 gCalling = factor_pop();
@@ -533,7 +575,7 @@ func_call_factor
                 Factor *tRetval = factor_pop();
                 LLVMcode *tCode = code_create(Call, gCalling, NULL, tRetval, 0);
 
-                int tArity = fundecl_lookup(gCalling->vname);
+                int tArity = tRow->size;
                 for (int i = 0; i < tArity; i++){
                         // 引数は逆順でスタックに入ってる
                         tCode->args.call.proc_args[tArity - i - 1] = factor_pop();
@@ -557,6 +599,11 @@ var_name
         | IDENT LBRACKET expression RBRACKET
         {
                 Row *tRow = symtab_lookup($1);
+                if (tRow == NULL)
+                        yyerror("not decleared yet");
+                else if(tRow->type != GLOBAL_ARRAY && tRow->type != LOCAL_ARRAY)
+                        yyerror("not decleared as array");
+
                 factor_push_array(tRow->name, tRow->regnum, tRow->size, tRow->type);
                 Factor *tArray = factor_pop();
 
@@ -594,16 +641,16 @@ v_args
 v_arg_list
         : IDENT
         {
-                symtab_push($1, gRegnum++, LOCAL_VAR);
-                Row *tRow = symtab_lookup($1);
+                gArity++;
+                Row *tRow = symtab_push($1, gRegnum++, LOCAL_VAR);
 
                 factor_push(tRow->name, tRow->regnum, tRow->type);
                 fundecl_add_arg(factor_pop());
         }
         | v_arg_list COMMA IDENT 
         {
-                symtab_push($3, gRegnum++, LOCAL_VAR);
-                Row *tRow = symtab_lookup($3);
+                gArity++;
+                Row *tRow = symtab_push($3, gRegnum++, LOCAL_VAR);
 
                 factor_push(tRow->name, tRow->regnum, tRow->type);
                 fundecl_add_arg(factor_pop());

@@ -21,7 +21,7 @@ void symtab_init() {
 
 // プライベート
 // バックエンドでのプッシュ
-void __symtab_push(char* aName, int aRegnum, int aOffset, int aSize,
+Row* __symtab_push(char* aName, int aRegnum, int aOffset, int aSize,
                    Scope aScope) {
   // TODO mallocの例外処理
   char* tName = (char*)malloc(sizeof(char) * strlen(aName));
@@ -43,15 +43,17 @@ void __symtab_push(char* aName, int aRegnum, int aOffset, int aSize,
   }
   printf("\n");
 #endif
+
+  return &tTable->row;
 }
 
-void symtab_push(char* aName, int aRegnum, Scope aScope) {
-  __symtab_push(aName, aRegnum, 0, 0, aScope);
+Row* symtab_push(char* aName, int aRegnum, Scope aScope) {
+  return __symtab_push(aName, aRegnum, 0, 0, aScope);
 }
 
-void symtab_push_array(char* aName, int aRegnum, int aOffset, int aSize,
+Row* symtab_push_array(char* aName, int aRegnum, int aOffset, int aSize,
                        Scope aScope) {
-  __symtab_push(aName, aRegnum, aOffset, aSize, aScope);
+  return __symtab_push(aName, aRegnum, aOffset, aSize, aScope);
 }
 
 Row* symtab_lookup(char* aName) {
