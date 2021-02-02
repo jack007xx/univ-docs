@@ -590,10 +590,15 @@ var_name
         : IDENT
         {
                 Row* tRow = symtab_lookup($1);
-                if (tRow->type == FUNC_NAME)
+                if (tRow == NULL)
+                        yyerror("not decleared yet");
+                else if (tRow->type == FUNC_NAME)
                         factor_push(gRetval->vname, gRetval->val, gRetval->type);
+                else if(tRow->type != GLOBAL_VAR && tRow->type != LOCAL_VAR)
+                        yyerror("not decleared as var");
                 else 
                         factor_push(tRow->name, tRow->regnum, tRow->type);
+
         }
         ;
 
@@ -650,7 +655,7 @@ id_list
                 factor_push(tRow->name, tRow->regnum, tRow->type);
                 Factor *tRetval = factor_pop();
 
-                code_add(code_create(tCommand,NULL,NULL,tRetval, 0));
+                code_add(code_create(tCommand, NULL, NULL, tRetval, 0));
         }
         | id_list COMMA IDENT
         {
@@ -666,7 +671,8 @@ id_list
                 Row *tRow = symtab_lookup($3);
                 factor_push(tRow->name, tRow->regnum, tRow->type);
                 Factor *tRetval = factor_pop();
-                code_add(code_create(tCommand,NULL,NULL,tRetval, 0));
+
+                code_add(code_create(tCommand, NULL, NULL, tRetval, 0));
         }
         ;
 

@@ -33,6 +33,11 @@ void fundecl_add(char *aName) {
     gDecltl = gDecltl->next = tFun;
 }
 
+void procdecl_add(char *aName) {
+  fundecl_add(aName);
+  gDecltl->is_proc = 1;
+}
+
 void fundecl_add_arg(Factor *aArg) {
   gDecltl->args[gDecltl->arity] = aArg;
   gDecltl->arity++;
@@ -63,6 +68,12 @@ int fundecl_lookup(char *aFunNeme) {
 
   return 0;
 }
+
+char *ito_instruction[] = {"alloca", "global", "load",   "store", "add",
+                           "sub",    "mul",    "sdiv",   "icmp",  "br",
+                           "brc",    "call",   "label",  "ret",   "phi",
+                           "write",  "read",   "comment"};
+char *ito_cmp_type[] = {"eq", "ne", "sgt", "sge", "slt", "sle"};
 
 void code_init() { gCodehd = gCodetl = NULL; }
 
@@ -128,6 +139,7 @@ LLVMcode *code_create(LLVMcommand aCommand, Factor *aArg1, Factor *aArg2,
       tCode->args.label.arg1 = aArg1;
       break;
     case Ret:
+      tCode->args.ret.arg1 = aArg1;
       break;
     case Phi:
       break;
@@ -157,13 +169,11 @@ void code_add(LLVMcode *aCode) {
     gCodetl = gCodehd = gDecltl->codes = aCode;
   else  // 解析中の関数の命令列に1つ以上命令が存在する場合
     gCodetl = gCodetl->next = aCode;
+
+#ifdef DEBUG
+  printf("%s\n", ito_instruction[aCode->command]);
+#endif
 }
-
-char *ito_instruction[] = {"alloca", "global", "load", "store", "add", "sub",
-                           "mul",    "sdiv",   "icmp", "br",    "brc", "call",
-                           "label",  "ret",    "phi",  "write", "read"};
-char *ito_cmp_type[] = {"eq", "ne", "sgt", "sge", "slt", "sle"};
-
 // プライベート関数
 // localとか、globalとか、条件によってそのFactorを示す表記が違う
 void factor_encode(Factor *aFactor, char *aArg) {
@@ -174,14 +184,14 @@ void factor_encode(Factor *aFactor, char *aArg) {
     case LOCAL_VAR:
       sprintf(aArg, "%%%d", aFactor->val);
       break;
+    case PROC_NAME:
+      sprintf(aArg, "@%s", aFactor->vname);
+      break;
     case CONSTANT:
       sprintf(aArg, "%d", aFactor->val);
       break;
     case LABEL:
       sprintf(aArg, "%d", aFactor->val);
-      break;
-    case PROC_NAME:
-      sprintf(aArg, "@%s", aFactor->vname);
       break;
     default:
       break;
@@ -259,9 +269,14 @@ void print_code(LLVMcode *aCode) {
       break;
     case Call:
       factor_encode(aCode->args.call.arg1, tArg1);
-      factor_encode(aCode->args.call.retval, tRetval);
 
-      fprintf(gFile, "\t%s = call i32 %s(", tRetval, tArg1);
+      if (aCode->args.call.retval == NULL) {
+        fprintf(gFile, "\tcall void %s(", tArg1);
+      } else {
+        factor_encode(aCode->args.call.retval, tRetval);
+        fprintf(gFile, "\t%s = call i32 %s(", tRetval, tArg1);
+      }
+
       // 引数配置
       int tArity = fundecl_lookup(aCode->args.call.arg1->vname);
       for (int i = 0; i < tArity; i++) {
@@ -276,6 +291,12 @@ void print_code(LLVMcode *aCode) {
       fprintf(gFile, "\n; <%s>:%s:\n", aCode->args.label.arg1->vname, tArg1);
       break;
     case Ret:
+      if (aCode->args.ret.arg1 == NULL) {
+        fprintf(gFile, "\tret void\n");
+      } else {
+        factor_encode(aCode->args.ret.arg1, tArg1);
+        fprintf(gFile, "\tret i32 %s\n", tArg1);
+      }
       break;
     case Phi:
       break;
@@ -305,7 +326,11 @@ void print_code(LLVMcode *aCode) {
 // プライベート
 // 引数付きの関数定義を生成する
 void pprint_funchd(Fundecl *aFun, char *aFunhd) {
-  sprintf(aFunhd, "define i32 @%s(", aFun->fname);
+  if (aFun->is_proc)
+    sprintf(aFunhd, "define void @%s(", aFun->fname);
+  else
+    sprintf(aFunhd, "define i32 @%s(", aFun->fname);
+
   for (int i = 0; i < aFun->arity; i++) {
     char t[256];
     sprintf(t, "i32 %%%d", aFun->args[i]->val);
@@ -343,7 +368,7 @@ void print_LLVM_code() {
       print_code(tCodePointer);
 
     // 初回のfundeclは大域変数の定義に当てられる
-    if (tFunPointer != gDeclhd) fprintf(gFile, "\tret i32 0\n}\n");
+    if (tFunPointer != gDeclhd) fprintf(gFile, "}\n");
     fprintf(gFile, "\n");
   }
 

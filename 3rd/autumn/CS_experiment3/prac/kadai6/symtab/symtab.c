@@ -19,7 +19,10 @@ void symtab_init() {
 #endif
 }
 
-void symtab_push(char* aName, int aRegnum, Scope aScope) {
+// プライベート
+// バックエンドでのプッシュ
+Row* __symtab_push(char* aName, int aRegnum, int aOffset, int aSize,
+                   Scope aScope) {
   // TODO mallocの例外処理
   char* tName = (char*)malloc(sizeof(char) * strlen(aName));
   strcpy(tName, aName);
@@ -27,7 +30,7 @@ void symtab_push(char* aName, int aRegnum, Scope aScope) {
   Symtab* tTable = (Symtab*)malloc(sizeof(Symtab));
 
   // 多重にmallocしなくても良いように、Rowは値で渡す。問題ないはず?
-  Row tRow = {tName, aRegnum, aScope};
+  Row tRow = {tName, aRegnum, aSize, aScope};
   tTable->row = tRow;
   tTable->prev = TABLE;
   TABLE = tTable;
@@ -40,6 +43,12 @@ void symtab_push(char* aName, int aRegnum, Scope aScope) {
   }
   printf("\n");
 #endif
+
+  return &tTable->row;
+}
+
+Row* symtab_push(char* aName, int aRegnum, Scope aScope) {
+  return __symtab_push(aName, aRegnum, 0, 0, aScope);
 }
 
 Row* symtab_lookup(char* aName) {
@@ -92,7 +101,7 @@ int symtab_delete() {
 }
 
 void print_row(Row aRow) {
-  char* tScopeTable[] = {"global", "local", "proc", "const"};
+  char* tScopeTable[] = {"global", "local", "proc", "const", "label"};
   printf("<NAME: %s, REGNUM: %d, SCOPE: %s>\n", aRow.name, aRow.regnum,
          tScopeTable[aRow.type]);
 }

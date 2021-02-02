@@ -590,11 +590,14 @@ var_name
         : IDENT
         {
                 Row* tRow = symtab_lookup($1);
-                if (tRow->type == FUNC_NAME){
+                if (tRow == NULL)
+                        yyerror("not decleared yet");
+                else if (tRow->type == FUNC_NAME)
                         factor_push(gRetval->vname, gRetval->val, gRetval->type);
-                } else {
+                else if(tRow->type != GLOBAL_VAR && tRow->type != LOCAL_VAR)
+                        yyerror("not decleared as var");
+                else 
                         factor_push(tRow->name, tRow->regnum, tRow->type);
-                }
         }
         | IDENT LBRACKET expression RBRACKET
         {

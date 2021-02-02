@@ -3,7 +3,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-// #define DEBUG ;
+#include "llvm.h"
+
+// #define DEBUG
 
 Factorstack gFstack;
 
@@ -33,9 +35,9 @@ Factor *factor_push(char *aName, int aVal, Scope aType) {
   gFstack.top++;
 
 #ifdef DEBUG
-  printf("[DEBUG] Factor stack PUSHED\n");
-  print_factor_stack();
-  print_LLVM_code();
+  printf("<<");
+  print_factor(tFactor);
+  // print_LLVM_code();
 #endif
 
   return tFactor;
@@ -43,9 +45,8 @@ Factor *factor_push(char *aName, int aVal, Scope aType) {
 
 Factor *factor_pop() {
 #ifdef DEBUG
-  printf("[DEBUG] Factor stack POPED\n");
+  printf(">>");
   print_factor(gFstack.element[gFstack.top - 1]);
-  printf("\n");
 #endif
   // ポップしてもメモリを開放しない(コード生成に使い回すため)
   // .topは、挿入する位置を示すので、先にデクリメントしておk

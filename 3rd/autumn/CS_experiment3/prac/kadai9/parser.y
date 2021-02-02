@@ -58,6 +58,7 @@ program
 
                 gScope = GLOBAL_VAR;
                 gRegnum = 1;
+                gArity = 0;
 
                 symtab_push($2, 0, gScope);
 
@@ -267,7 +268,7 @@ if_statement
         {
                 Factor *tCond = factor_pop();
 
-                Factor *tEnd = factor_push("if.else.end", 0, LABEL);
+                Factor *tEnd = factor_push("if.end.else", 0, LABEL);
                 // バックパッチであとで正しい値をつける(elseの前に来る)
 
                 factor_push("if.then", gRegnum++, LABEL);
@@ -433,7 +434,7 @@ proc_call_statement
 
                 LLVMcode *tCode = code_create(Call, gCalling, NULL, NULL, 0);
 
-                int tArity = fundecl_lookup(gCalling->vname);
+                int tArity = tRow->size;
                 for (int i = 0; i < tArity; i++){
                         // 引数は逆順でスタックに入ってる
                         tCode->args.call.proc_args[tArity - i - 1] = factor_pop();
@@ -607,7 +608,7 @@ func_call_factor
                 Factor *tRetval = factor_pop();
                 LLVMcode *tCode = code_create(Call, gCalling, NULL, tRetval, 0);
 
-                int tArity = fundecl_lookup(gCalling->vname);
+                int tArity = tRow->size;
                 for (int i = 0; i < tArity; i++){
                         // 引数は逆順でスタックに入ってる
                         tCode->args.call.proc_args[tArity - i - 1] = factor_pop();
@@ -622,11 +623,14 @@ var_name
         : IDENT
         {
                 Row* tRow = symtab_lookup($1);
-                if (tRow->type == FUNC_NAME){
+                if (tRow == NULL)
+                        yyerror("not decleared yet");
+                else if (tRow->type == FUNC_NAME)
                         factor_push(gRetval->vname, gRetval->val, gRetval->type);
-                } else {
+                else if(tRow->type != GLOBAL_VAR && tRow->type != LOCAL_VAR)
+                        yyerror("not decleared as var");
+                else 
                         factor_push(tRow->name, tRow->regnum, tRow->type);
-                }
         }
         | IDENT LBRACKET expression RBRACKET
         {
