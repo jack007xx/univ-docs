@@ -562,10 +562,17 @@ var_name
 
                 Factor *tInd = factor_pop();
 
+                // オフセットを減算
+                factor_push("", tRow->offset, CONSTANT);
+                Factor *tOffset = factor_pop();
+                factor_push("", gRegnum++, LOCAL_VAR);
+                Factor *tRealIndex = factor_pop();
+                code_add(code_create(Sub, tInd, tOffset, tRealIndex, 0));
+                
                 Factor *tRetval = factor_push("", gRegnum++, LOCAL_VAR);
                 // Retvalを上位で使う
 
-                code_add(code_create(Gep, tArray, tInd, tRetval, 0));
+                code_add(code_create(Gep, tArray, tRealIndex, tRetval, 0));
         }
         ;
 
