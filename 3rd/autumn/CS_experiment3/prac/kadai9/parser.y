@@ -347,6 +347,9 @@ for_statement
         : FOR IDENT ASSIGN expression TO expression DO
         {
                 Row *tRow = symtab_lookup($2);
+                if (tRow == NULL)
+                        yyerror("not decleared yet");
+
                 Factor *tTo = factor_pop(); // tFromからtToまで
                 Factor *tFrom = factor_pop();
 
@@ -420,6 +423,11 @@ proc_call_statement
         : IDENT args
         {
                 Row *tRow = symtab_lookup($1);
+                if (tRow == NULL)
+                        yyerror("not decleared yet");
+                else if(tRow->type != PROC_NAME)
+                        yyerror("not decleared as procedure");
+
                 factor_push(tRow->name, 0, PROC_NAME);
                 gCalling = factor_pop();
 
@@ -586,6 +594,11 @@ func_call_factor
         : IDENT args
         {
                 Row *tRow = symtab_lookup($1);
+                if (tRow == NULL)
+                        yyerror("not decleared yet");
+                else if(tRow->type != FUNC_NAME)
+                        yyerror("not decleared as function");
+
                 // 再帰的に呼び出しているときをケア
                 factor_push(tRow->name, 0, FUNC_NAME);
                 gCalling = factor_pop();
@@ -618,6 +631,11 @@ var_name
         | IDENT LBRACKET expression RBRACKET
         {
                 Row *tRow = symtab_lookup($1);
+                if (tRow == NULL)
+                        yyerror("not decleared yet");
+                else if(tRow->type != GLOBAL_ARRAY && tRow->type != LOCAL_ARRAY)
+                        yyerror("not decleared as array");
+
                 factor_push_array(tRow->name, tRow->regnum, tRow->size, tRow->type);
                 Factor *tArray = factor_pop();
 
@@ -656,8 +674,7 @@ v_arg_list
         : IDENT
         {
                 gArity++;
-                symtab_push($1, gRegnum++, LOCAL_VAR);
-                Row *tRow = symtab_lookup($1);
+                Row *tRow = symtab_push($1, gRegnum++, LOCAL_VAR);
 
                 factor_push(tRow->name, tRow->regnum, tRow->type);
                 fundecl_add_arg(factor_pop());
@@ -665,8 +682,7 @@ v_arg_list
         | v_arg_list COMMA IDENT 
         {
                 gArity++;
-                symtab_push($3, gRegnum++, LOCAL_VAR);
-                Row *tRow = symtab_lookup($3);
+                Row *tRow = symtab_push($3, gRegnum++, LOCAL_VAR);
 
                 factor_push(tRow->name, tRow->regnum, tRow->type);
                 fundecl_add_arg(factor_pop());
@@ -691,7 +707,6 @@ id_decl
                         tCommand = Alloca;
                         symtab_push($1, gRegnum++, gScope);
                 }
-
                 Row *tRow = symtab_lookup($1);
 
                 factor_push(tRow->name, tRow->regnum, tRow->type);
@@ -710,7 +725,6 @@ id_decl
                         tCommand = Alloca;
                         symtab_push_array($1, gRegnum++, $3, tSize, LOCAL_ARRAY);
                 }
-
                 Row *tRow = symtab_lookup($1);
 
                 factor_push_array(tRow->name, tRow->regnum, tRow->size, tRow->type);

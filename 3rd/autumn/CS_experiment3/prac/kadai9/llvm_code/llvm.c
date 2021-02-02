@@ -5,7 +5,7 @@
 #include <string.h>
 
 // #define DEBUG
-#define TOFILE
+// #define TOFILE
 
 void print_code(LLVMcode *aCode);
 
