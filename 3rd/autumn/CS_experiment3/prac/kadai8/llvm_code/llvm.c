@@ -299,7 +299,7 @@ void print_code(LLVMcode *aCode) {
       factor_encode(aCode->args.call.arg1, tArg1);
 
       if (aCode->args.call.retval == NULL) {
-        fprintf(gFile, "\tcall i32 %s(", tArg1);
+        fprintf(gFile, "\tcall void %s(", tArg1);
       } else {
         factor_encode(aCode->args.call.retval, tRetval);
         fprintf(gFile, "\t%s = call i32 %s(", tRetval, tArg1);
