@@ -4,8 +4,10 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "../optimize/optimize.h"
+
 // #define DEBUG
-#define TOFILE
+// #define TOFILE
 
 void print_code(LLVMcode *aCode);
 
@@ -25,6 +27,7 @@ void fundecl_add(char *aName) {
   tFun->arity = 0;
 
   tFun->codes = gCodehd;
+  tFun->prev = gDecltl;
   code_init();
 
   if (gDeclhd == NULL)
@@ -381,6 +384,7 @@ void pprint_funchd(Fundecl *aFun, char *aFunhd) {
 }
 
 void print_LLVM_code() {
+  optimize_all(gDeclhd->next);
   gFile = stdout;
 #ifdef TOFILE
   gFile = fopen("result.ll", "w");

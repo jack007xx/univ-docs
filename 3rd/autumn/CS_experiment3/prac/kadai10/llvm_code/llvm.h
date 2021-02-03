@@ -141,6 +141,7 @@ typedef struct fundecl {
   unsigned arity;        // 引数個数
   Factor *args[10];      // 引数名
   LLVMcode *codes;       // 命令列の線形リストへのポインタ
+  struct fundecl *prev;  // 最適化用に後ろにも参照できる
   struct fundecl *next;  // 次の関数定義へのポインタ
 } Fundecl;
 
