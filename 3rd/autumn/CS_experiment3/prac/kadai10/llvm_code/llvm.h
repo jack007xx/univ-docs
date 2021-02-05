@@ -25,7 +25,8 @@ typedef enum {
   Write,
   Read,
   Comment,
-  Gep
+  Gep,
+  Free
 } LLVMcommand;
 
 // brcondで指定する比較演算の種類
@@ -111,7 +112,9 @@ typedef struct llvmcode {
       Factor *ind;
       Factor *retval;
     } gep;  // getelementptr
-
+    struct {
+      Factor *arg1;
+    } free;
   } args;
   // 次の命令へのポインタ
   struct llvmcode *next;

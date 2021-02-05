@@ -73,10 +73,10 @@ void *malloc(size_t nbytes) {
     if (p->s.size >= nunits) { /* big enough */
       if (p->s.size == nunits) /* exactly */
         q->s.ptr = p->s.ptr;
-      else { /* allocate tail end */
-        p->s.size -= nunits;
+      else {                  /* allocate tail end */
+        p->s.size -= nunits;  // このpは空き領域のヘッダを指してる
         p += p->s.size;
-        p->s.size = nunits;
+        p->s.size = nunits;  // このpは割当領域のヘッダを指してる
       }
       allocp = q;
       return ((char *)(p + 1));
@@ -108,15 +108,17 @@ void free(void *ap) {
     if (q >= q->s.ptr && (p > q || p < q->s.ptr)) break;
 
   if (p + p->s.size == q->s.ptr) {
+    // 右が空き
     p->s.size += q->s.ptr->s.size;
     p->s.ptr = q->s.ptr->s.ptr;
   } else
-    p->s.ptr = q->s.ptr;
+    p->s.ptr = q->s.ptr;  // 右になんかある
   if (q + q->s.size == p) {
+    // 左が空き領域
     q->s.size += p->s.size;
     q->s.ptr = p->s.ptr;
   } else
-    q->s.ptr = p;
+    q->s.ptr = p;  // 左になんかある
   allocp = q;
 }
 

@@ -7,7 +7,7 @@
 #include "../optimize/optimize.h"
 
 // #define DEBUG
-// #define TOFILE
+#define TOFILE
 
 void print_code(LLVMcode *aCode);
 
@@ -160,6 +160,9 @@ LLVMcode *code_create(LLVMcommand aCommand, Factor *aArg1, Factor *aArg2,
       tCode->args.gep.ind = aArg2;
       tCode->args.gep.retval = aRetval;
       break;
+    case Free:
+      tCode->args.free.arg1 = aArg1;
+      break;
     default:
       break;
   }
@@ -190,7 +193,7 @@ void factor_encode(Factor *aFactor, char *aArg) {
       sprintf(aArg, "@%s", aFactor->vname);
       break;
     case LOCAL_VAR:
-      sprintf(aArg, "%%%d", aFactor->val);
+      sprintf(aArg, "%%o%d", aFactor->val);
       break;
     case PROC_NAME:
       sprintf(aArg, "@%s", aFactor->vname);
@@ -202,10 +205,10 @@ void factor_encode(Factor *aFactor, char *aArg) {
       sprintf(aArg, "%d", aFactor->val);
       break;
     case LABEL:
-      sprintf(aArg, "%d", aFactor->val);
+      sprintf(aArg, "o%d", aFactor->val);
       break;
     case LOCAL_ARRAY:
-      sprintf(aArg, "%%%d", aFactor->val);
+      sprintf(aArg, "%%o%d", aFactor->val);
       break;
     case GLOBAL_ARRAY:
       sprintf(aArg, "@%s", aFactor->vname);
@@ -320,7 +323,7 @@ void print_code(LLVMcode *aCode) {
       break;
     case Label:
       factor_encode(aCode->args.label.arg1, tArg1);
-      fprintf(gFile, "\n; <%s>:%s:\n", aCode->args.label.arg1->vname, tArg1);
+      fprintf(gFile, "\n; <%s>:\n%s:\n", aCode->args.label.arg1->vname, tArg1);
       break;
     case Ret:
       if (aCode->args.ret.arg1 == NULL) {
@@ -361,6 +364,9 @@ void print_code(LLVMcode *aCode) {
           tRetval, aCode->args.gep.arg1->size, aCode->args.gep.arg1->size,
           tArg1, tArg2);
       break;
+    case Free:
+      fprintf(gFile, "%s", aCode->args.free.arg1->vname);
+      break;
     default:
       break;
   }
@@ -376,7 +382,7 @@ void pprint_funchd(Fundecl *aFun, char *aFunhd) {
 
   for (int i = 0; i < aFun->arity; i++) {
     char t[256];
-    sprintf(t, "i32 %%%d", aFun->args[i]->val);
+    sprintf(t, "i32 %%o%d", aFun->args[i]->val);
     strcat(aFunhd, t);
     if (i != aFun->arity - 1) strcat(aFunhd, ", ");
   }
