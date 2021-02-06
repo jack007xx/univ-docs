@@ -42,13 +42,14 @@ optimize/optimize.hで最適化用のプログラムを実装した。
 \subsection{テストプログラムの実行}
 以下のようなプログラムを用意して、コンパイル結果を確認、timeコマンドでベンチマークをとった。
 \begin{lstlisting}[caption={テストプログラム},label={テストプログラム}]
-  program BENCH;
+program bench;
   var x, n, nn;
   begin
-     for n := 1 to 300000000 do
-      for nn := 1 to 1000 do
+     for n := 1 to 1000000 do
+      for nn := 1 to 5000 do
         begin
             x := n div (2 + 1);
+            x := n div 2;
         end
   end.
 \end{lstlisting}
@@ -57,7 +58,8 @@ optimize/optimize.hで最適化用のプログラムを実装した。
 ソースコード\ref{テストプログラム}をコンパイルした結果、以下のプログラムが生成された。
 for.doブロック内において、定数のコンパイル時計算(2+1→3)と、2と3の割り算の最適化が行われていることが確認できる。
 
-\begin{lstlisting}[caption={コンパイル結果},label={コンパイル結果}]@.str.w = private unnamed_addr constant [4 x i8] c"%d\0A\00", align 1
+\begin{lstlisting}[caption={コンパイル結果},label={コンパイル結果}]
+  @.str.w = private unnamed_addr constant [4 x i8] c"%d\0A\00", align 1
   @.str.r = private unnamed_addr constant [3 x i8] c"%d\00", align 1
   declare i32 @printf(i8*, ...)
   declare i32 @__isoc99_scanf(i8 *, ...)
@@ -73,7 +75,7 @@ for.doブロック内において、定数のコンパイル時計算(2+1→3)�
   ; <for.loop>:
   o1:
     %o2 = load i32, i32* @n, align 4
-    %o3 = icmp sle i32 %o2, 300000000
+    %o3 = icmp sle i32 %o2, 1000000
     br i1 %o3, label %o4, label %o21
   
   ; <for.do>:
@@ -84,7 +86,7 @@ for.doブロック内において、定数のコンパイル時計算(2+1→3)�
   ; <for.loop>:
   o5:
     %o6 = load i32, i32* @nn, align 4
-    %o7 = icmp sle i32 %o6, 1000
+    %o7 = icmp sle i32 %o6, 5000
     br i1 %o7, label %o8, label %o17
   
   ; <for.do>:
@@ -133,12 +135,33 @@ for.doブロック内において、定数のコンパイル時計算(2+1→3)�
   ; <for.break>:
   o21:
     ret i32 0
-  }  
+  }
+  
+  
 \end{lstlisting}
 
 \subsubsection{ベンチマーク結果}
-
-
+最適化の前後で10回づつ計測し、timeコマンドのうちuserのCPU時間をとった。
+\begin{table}[H]
+  \centering
+  \label{ベンチマーク結果}
+  \caption{ベンチマーク結果}
+  \begin{tabular}{|c|c|c|}
+    \hline
+           & 最適化前(s) & 最適化後(s) \\ \hline
+    1回目  & 9.047       & 9.052       \\ \hline
+    2回目  & 9.028       & 9.123       \\ \hline
+    3回目  & 9.102       & 9.074       \\ \hline
+    4回目  & 9.020       & 9.068       \\ \hline
+    5回目  & 9.021       & 9.154       \\ \hline
+    6回目  & 9.009       & 9.102       \\ \hline
+    7回目  & 9.023       & 9.124       \\ \hline
+    8回目  & 9.026       & 9.071       \\ \hline
+    9回目  & 8.968       & 9.043       \\ \hline
+    10回目 & 9.050       & 9.448       \\ \hline
+    平均   & 9.294       & 9.126       \\ \hline
+  \end{tabular}
+\end{table}
 \subsection{考察}
 今回の最適化では、定数の計算に関わる部分に関してのみ基本的な最適化を行った。
 一般に、プロセッサレベルでは除算はその他の四則演算より大幅に遅いことから、その部分について特に重点的に最適化を行った。
@@ -152,4 +175,37 @@ for.doブロック内において、定数のコンパイル時計算(2+1→3)�
 としてもよい。
 負の数の表現を考慮して結果には符号ビットを足す必要があるが、3の除算についてはこれによって掛け算と右シフトで表現できる。
 
+さらに、同様の計算を他の数に対しても適用できるため、ある程度小さな数については、3以外の除算に対しても同じ最適化ができる。
+これによって、2のべき乗との組み合わせで様々な数の除算が乗算に変更できる。
+
 \subsubsection{ベンチマークに対する考察}
+ベンチマークをとったところ、最適化後のほうが平均で0.17秒(2\%)ほど遅い結果となった。
+これは、i32←→i64の型変換によるオーバーヘッドの影響であると予想し、追実験を行った。
+コンパイル結果のソースコード\ref{コンパイル結果}のうち、型変換に関する
+37,42行目を削除し、実行にエラーが起きないように削除されたレジスタ部分を定数で書き換えて再度10回実行した。
+
+結果は以下のようになり、0.313秒(3.3\%)ほど早くなった。
+予想通り、型変換のオーバーヘッドが原因であることが分かった。
+\begin{table}[H]
+  \centering
+  \label{追実験結果}
+  \caption{追実験結果}
+  \begin{tabular}{|c|c|c|}
+    \hline
+           & 最適化前(s) & 型変換なし最適化(s) \\ \hline
+    1回目  & 9.047       & 8.968               \\ \hline
+    2回目  & 9.028       & 9.052               \\ \hline
+    3回目  & 9.102       & 8.992               \\ \hline
+    4回目  & 9.020       & 9.017               \\ \hline
+    5回目  & 9.021       & 9.019               \\ \hline
+    6回目  & 9.009       & 9.051               \\ \hline
+    7回目  & 9.023       & 9.043               \\ \hline
+    8回目  & 9.026       & 8.900               \\ \hline
+    9回目  & 8.968       & 8.846               \\ \hline
+    10回目 & 9.050       & 8.928               \\ \hline
+    平均   & 9.294       & 8.981               \\ \hline
+  \end{tabular}
+\end{table}
+
+このことから、3の除算最適化はLLVM IRにおいては効果が打ち消され、レジスタの幅が利用する型ごとに決定されるLLVMとの相性が悪いと考えた。
+逆にレジスタが、利用する整数型の倍以上の幅を持っている場合や、整数型のうち、下位半分のビットしか使わない場合には一定の効果があると言える。
