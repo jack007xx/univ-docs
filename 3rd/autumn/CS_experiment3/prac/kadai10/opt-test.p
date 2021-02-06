@@ -5,5 +5,6 @@ begin
     for nn := 1 to 1000 do
       begin
           x := n div (2 + 1);
+          x := n div 2;
       end
 end.

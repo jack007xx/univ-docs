@@ -118,18 +118,9 @@ proc_decl
         }
          subprog_name v_args SEMICOLON
         {
-                if (gProgram->type != PROC_NAME)
-                        yyerror("not decleared as procedure");
-
-                if (gProgram->size == -1)
-                        gProgram->size = gArity;
-
-                if (gProgram->size == gArity) 
-                        gRegnum = fundecl_add_arg_code(); // 引数周りのコード一気に生成
-                else if (gProgram->size > gArity) 
-                        yyerror("too much procedure argments");
-                else 
-                        yyerror("too few procedure argments");
+                gProgram->size = gArity;
+                gRegnum = fundecl_add_arg_code(); // 引数周りのコード一気に生成
+                gArity = 0;
         }
           inblock
         {
@@ -354,6 +345,11 @@ proc_call_statement
                 else if(tRow->type != PROC_NAME)
                         yyerror("not decleared as procedure");
 
+                if (tRow->size < gArity)
+                        yyerror("too much procedure argments");
+                else if(tRow->size > gArity)
+                        yyerror("too few procedure argments");
+
                 factor_push(tRow->name, 0, PROC_NAME);
                 gCalling = factor_pop();
 
@@ -366,6 +362,7 @@ proc_call_statement
                 }
                 code_add(tCode);
                 gCalling = NULL;
+                gArity = 0;
         }
         ;
 
@@ -535,7 +532,13 @@ args
 
 arg_list
         : expression
+        {
+                gArity++;
+        }
         | arg_list COMMA expression
+        {
+                gArity++;
+        }
         ;
 
 v_args
@@ -548,6 +551,8 @@ v_arg_list
         {
                 gArity++;
                 Row *tRow = symtab_push($1, gRegnum++, LOCAL_VAR);
+                if (tRow == NULL) yyerror("not decleared yet");
+                else if(tRow->type != LOCAL_VAR && tRow->type != GLOBAL_VAR) yyerror("not decleared as var");
 
                 factor_push(tRow->name, tRow->regnum, tRow->type);
                 fundecl_add_arg(factor_pop());
@@ -556,6 +561,8 @@ v_arg_list
         {
                 gArity++;
                 Row *tRow = symtab_push($3, gRegnum++, LOCAL_VAR);
+                if (tRow == NULL) yyerror("not decleared yet");
+                else if(tRow->type != LOCAL_VAR && tRow->type != GLOBAL_VAR) yyerror("not decleared as var");
 
                 factor_push(tRow->name, tRow->regnum, tRow->type);
                 fundecl_add_arg(factor_pop());

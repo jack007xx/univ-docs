@@ -24,6 +24,7 @@ Row *gProgram; // 定義処理中の関数名
 Factor *gCalling; // 呼び出し処理中の関数
 Factor *gRetval; // 関数の戻り値
 int gArity; // 呼び出し中の関数のアリティ
+int gUndefined; // 宣言のみで定義されていないもの
 %}
 
 %union {
@@ -59,6 +60,7 @@ program
                 gScope = GLOBAL_VAR;
                 gRegnum = 1;
                 gArity = 0;
+                gUndefined = 0;
 
                 symtab_push($2, 0, gScope);
 
@@ -66,6 +68,8 @@ program
         }
           outblock PERIOD
         {
+                if (gUndefined != 0)
+                        yyerror("there are undefined declared sub-program");
                 print_LLVM_code();
         }
         ;
@@ -95,7 +99,7 @@ var_decl_list
         ;
 
 var_decl
-        : VAR var_list
+        : VAR id_list
         ;
 
 forward_decl_part
@@ -113,12 +117,14 @@ forward_decl
         {
                 Row *tRow = symtab_push($3, 0, PROC_NAME);
                 tRow->size = gArity;
+                gUndefined++;
                 gArity = 0;
         }
         | FORWARD FUNCTION IDENT f_args
         {
                 Row *tRow = symtab_push($3, 0, FUNC_NAME);
                 tRow->size = gArity;
+                gUndefined++;
                 gArity = 0;
         }
         ;
@@ -155,18 +161,9 @@ proc_decl
         }
          subprog_name v_args SEMICOLON
         {
-                if (gProgram->type != PROC_NAME)
-                        yyerror("not decleared as procedure");
-
-                if (gProgram->size == -1)
-                        gProgram->size = gArity;
-
-                if (gProgram->size == gArity) 
-                        gRegnum = fundecl_add_arg_code(); // 引数周りのコード一気に生成
-                else if (gProgram->size > gArity) 
-                        yyerror("too much procedure argments");
-                else 
-                        yyerror("too few procedure argments");
+                gProgram->size = gArity;
+                gRegnum = fundecl_add_arg_code(); // 引数周りのコード一気に生成
+                gArity = 0;
         }
           inblock
         {
@@ -183,22 +180,13 @@ func_decl
         }
          subprog_name v_args SEMICOLON
         {
-                if (gProgram->type != FUNC_NAME)
-                        yyerror("not decleared as function");
+                gProgram->size = gArity;
+                gRegnum = fundecl_add_arg_code(); // 引数周りのコード一気に生成
+                gArity = 0;
 
-                if (gProgram->size == -1)
-                        gProgram->size = gArity;
-
-                if (gProgram->size == gArity) { 
-                        gRegnum = fundecl_add_arg_code(); // 引数周りのコード一気に生成
-                        factor_push("return val", gRegnum++, LOCAL_VAR);
-                        gRetval = factor_pop();
-                        code_add(code_create(Alloca, NULL, NULL, gRetval, 0)); // 戻り値を先に定義
-                }
-                else if (gProgram->size > gArity) 
-                        yyerror("too much function argments");
-                else 
-                        yyerror("too few function argments");
+                factor_push("return val", gRegnum++, LOCAL_VAR);
+                gRetval = factor_pop();
+                code_add(code_create(Alloca, NULL, NULL, gRetval, 0)); // 戻り値を先に定義
         }
           inblock
         {
@@ -219,6 +207,10 @@ subprog_name
                 if (tRow == NULL) {
                         tRow = symtab_push($1, 0, gScope);
                         tRow->size = -1;
+                } else if (tRow->type != gScope) {
+                        yyerror("scope miss matched");
+                } else {
+                        gUndefined--;
                 }
 
                 if (gScope == PROC_NAME)
@@ -429,6 +421,11 @@ proc_call_statement
                 else if(tRow->type != PROC_NAME)
                         yyerror("not decleared as procedure");
 
+                if (tRow->size < gArity)
+                        yyerror("too much procedure argments");
+                else if(tRow->size > gArity)
+                        yyerror("too few procedure argments");
+
                 factor_push(tRow->name, 0, PROC_NAME);
                 gCalling = factor_pop();
 
@@ -441,6 +438,7 @@ proc_call_statement
                 }
                 code_add(tCode);
                 gCalling = NULL;
+                gArity = 0;
         }
         ;
 
@@ -600,6 +598,11 @@ func_call_factor
                 else if(tRow->type != FUNC_NAME)
                         yyerror("not decleared as function");
 
+                if (tRow->size < gArity)
+                        yyerror("too much procedure argments");
+                else if(tRow->size > gArity)
+                        yyerror("too few procedure argments");
+
                 // 再帰的に呼び出しているときをケア
                 factor_push(tRow->name, 0, FUNC_NAME);
                 gCalling = factor_pop();
@@ -616,6 +619,7 @@ func_call_factor
                 code_add(tCode);
                 factor_push("", tRetval->val, tRetval->type); // 関数の戻り
                 gCalling = NULL;
+                gArity = 0;
         }
         ;
 
@@ -625,7 +629,7 @@ var_name
                 Row* tRow = symtab_lookup($1);
                 if (tRow == NULL)
                         yyerror("not decleared yet");
-                else if (tRow->type == FUNC_NAME)
+                else if (gProgram != NULL && tRow->type == FUNC_NAME && strcmp(tRow->name, gProgram->name) == 0)
                         factor_push(gRetval->vname, gRetval->val, gRetval->type);
                 else if(tRow->type != GLOBAL_VAR && tRow->type != LOCAL_VAR)
                         yyerror("not decleared as var");
@@ -666,7 +670,13 @@ args
 
 arg_list
         : expression
+        {
+                gArity++;
+        }
         | arg_list COMMA expression
+        {
+                gArity++;
+        }
         ;
 
 v_args
@@ -679,6 +689,8 @@ v_arg_list
         {
                 gArity++;
                 Row *tRow = symtab_push($1, gRegnum++, LOCAL_VAR);
+                if (tRow == NULL) yyerror("not decleared yet");
+                else if(tRow->type != LOCAL_VAR && tRow->type != GLOBAL_VAR) yyerror("not decleared as var");
 
                 factor_push(tRow->name, tRow->regnum, tRow->type);
                 fundecl_add_arg(factor_pop());
@@ -687,15 +699,17 @@ v_arg_list
         {
                 gArity++;
                 Row *tRow = symtab_push($3, gRegnum++, LOCAL_VAR);
+                if (tRow == NULL) yyerror("not decleared yet");
+                else if(tRow->type != LOCAL_VAR && tRow->type != GLOBAL_VAR) yyerror("not decleared as var");
 
                 factor_push(tRow->name, tRow->regnum, tRow->type);
                 fundecl_add_arg(factor_pop());
         }
         ;
 
-var_list
+id_list
         : id_decl
-        | var_list COMMA id_decl
+        | id_list COMMA id_decl
         ;
 
 id_decl
@@ -711,6 +725,7 @@ id_decl
                         tCommand = Alloca;
                         symtab_push($1, gRegnum++, gScope);
                 }
+
                 Row *tRow = symtab_lookup($1);
 
                 factor_push(tRow->name, tRow->regnum, tRow->type);

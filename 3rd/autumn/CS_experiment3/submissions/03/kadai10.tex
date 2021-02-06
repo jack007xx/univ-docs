@@ -1,0 +1,155 @@
+\section{課題10}
+\subsection{課題概要}
+最適化の機能として、以下の機能を追加した。
+\begin{itemize}
+  \item コンパイル時の定数計算
+  \item 除算の高速化
+\end{itemize}
+
+\subsection{実装}
+optimize/optimize.hで最適化用のプログラムを実装した。
+まず、基本ブロックごとの最適化を行うために、関数列→コード列→基本ブロックの順に分解する関数の中で、基本ブロックの開始と終了ポインタをとる関数として最適化関数を定義した。
+
+最適化された命令列を生成するためにllvm.h内で任意の文字列をコードとして埋め込むことの出来る疑似命令Freeを実装した。
+通常変数名となる部分に命令文字列を格納することで、その文字列を展開する。
+
+また、llvm IRではレジスタが番号でつけられていると、番号の間が飛んだ場合にエラーが発生する。
+そのため、全てのレジスタ番号にプレフィックスをつけることでレジスタ名による指定に切り替えた。
+
+\subsubsection{コンパイル時の定数計算}
+四則演算命令のうち、オペランドが2つとも定数である場合、そのコードを削除、格納先のレジスタを定数に書き換え、値として命令の演算結果を入力した。
+連続して行うことで、計算可能なコード列については全て置き換えることができる。
+
+\subsubsection{除算の高速化}
+除算の高速化として「2のべき乗による割り算のシフト化」「3で割る処理を乗算で実行」の2種類を実装した。
+
+\subsubsection{2のべき乗による割り算のシフト化}
+2のべき乗による割り算を、右シフト命令として置き換えた。
+今回のプログラムは全て符号付き整数なので、符号拡張を行うashr命令によって右シフトを実行した。
+
+また、負の数を割る際の丸めを正しく実行するために、負の数を割る場合にのみ符号ビットをあらかじめ加算した。
+この処理は、31ビット分ashrで右シフトすることで0または-1を取り出すことで実現した。
+
+\subsubsection{3で割る処理を乗算で実行}
+2のべき乗を3で割った巨大な整数を掛け合わせることで、べき乗分右シフトすると3で割った数を出力できる。
+今回は2の32乗を3で割り、上に切り上げた数1431655766を使った。
+2で割ったときと同様に、負の数の丸め分を補うために、1を加算する処理も行った。
+この処理は、符号ビットを結果から減算することで実装した。
+
+また、2の32乗を掛けた数は明らかにi32には収まらない。
+そのため、型変換拡張命令sextと縮小命令truncを前後につけた。
+
+\subsection{テストプログラムの実行}
+以下のようなプログラムを用意して、コンパイル結果を確認、timeコマンドでベンチマークをとった。
+\begin{lstlisting}[caption={テストプログラム},label={テストプログラム}]
+  program BENCH;
+  var x, n, nn;
+  begin
+     for n := 1 to 300000000 do
+      for nn := 1 to 1000 do
+        begin
+            x := n div (2 + 1);
+        end
+  end.
+\end{lstlisting}
+
+\subsubsection{コンパイル結果}
+ソースコード\ref{テストプログラム}をコンパイルした結果、以下のプログラムが生成された。
+for.doブロック内において、定数のコンパイル時計算(2+1→3)と、2と3の割り算の最適化が行われていることが確認できる。
+
+\begin{lstlisting}[caption={コンパイル結果},label={コンパイル結果}]@.str.w = private unnamed_addr constant [4 x i8] c"%d\0A\00", align 1
+  @.str.r = private unnamed_addr constant [3 x i8] c"%d\00", align 1
+  declare i32 @printf(i8*, ...)
+  declare i32 @__isoc99_scanf(i8 *, ...)
+  
+  @x = common global i32 0, align 4
+  @n = common global i32 0, align 4
+  @nn = common global i32 0, align 4
+  
+  define i32 @main(){
+    store i32 1, i32* @n, align 4
+    br label %o1
+  
+  ; <for.loop>:
+  o1:
+    %o2 = load i32, i32* @n, align 4
+    %o3 = icmp sle i32 %o2, 300000000
+    br i1 %o3, label %o4, label %o21
+  
+  ; <for.do>:
+  o4:
+    store i32 1, i32* @nn, align 4
+    br label %o5
+  
+  ; <for.loop>:
+  o5:
+    %o6 = load i32, i32* @nn, align 4
+    %o7 = icmp sle i32 %o6, 1000
+    br i1 %o7, label %o8, label %o17
+  
+  ; <for.do>:
+  o8:
+    %o9 = load i32, i32* @n, align 4
+  
+    ;[OPTIMIZED]
+    ;div 3 -> sift hogehoge
+    %o9.1 = sext i32 %o9 to i64
+    %o9.2 = ashr i64 %o9.1, 31
+    %o9.3 = mul i64 %o9.1, 1431655766
+    %o9.4 = ashr i64 %o9.3, 32
+    %o9.5 = sub i64 %o9.4, %o9.2
+    %o11 = trunc i64 %o9.5 to i32
+  
+    store i32 %o11, i32* @x, align 4
+    %o12 = load i32, i32* @n, align 4
+  
+    ;[OPTIMIZED]
+    ;div 2^n -> sift-R n
+    %o12.1 = ashr i32 %o12, 31
+    %o12.2 = add i32 %o12, %o12.1
+    %o13 = ashr i32 %o12.2, 1
+  
+    store i32 %o13, i32* @x, align 4
+    br label %o14
+  
+  ; <for.increment>:
+  o14:
+    %o15 = load i32, i32* @nn, align 4
+    %o16 = add nsw i32 %o15, 1
+    store i32 %o16, i32* @nn, align 4
+    br label %o5
+  
+  ; <for.break>:
+  o17:
+    br label %o18
+  
+  ; <for.increment>:
+  o18:
+    %o19 = load i32, i32* @n, align 4
+    %o20 = add nsw i32 %o19, 1
+    store i32 %o20, i32* @n, align 4
+    br label %o1
+  
+  ; <for.break>:
+  o21:
+    ret i32 0
+  }  
+\end{lstlisting}
+
+\subsubsection{ベンチマーク結果}
+
+
+\subsection{考察}
+今回の最適化では、定数の計算に関わる部分に関してのみ基本的な最適化を行った。
+一般に、プロセッサレベルでは除算はその他の四則演算より大幅に遅いことから、その部分について特に重点的に最適化を行った。
+
+\subsubsection{3の除算}
+割られる数をq、結果をpとすると、以下の等式が成り立つ。
+\[p=q\left(\frac{2^{32}}{3}\right)\left(\frac{1}{2^{32}}\right)\]
+ここで、\(\frac{2^{32}}{3}=1431655765.33\)であり、小数点以下については\(\frac{1}{2^{32}}\)を掛けたときに必ず切り捨てられる。
+そのため、q,pを整数に制限すると
+\[p=q\left(1431655766\right)\left(\frac{1}{2^{32}}\right)\]
+としてもよい。
+負の数の表現を考慮して結果には符号ビットを足す必要があるが、3の除算についてはこれによって掛け算と右シフトで表現できる。
+
+\subsubsection{ベンチマークに対する考察}

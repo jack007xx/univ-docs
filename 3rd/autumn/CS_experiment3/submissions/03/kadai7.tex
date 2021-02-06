@@ -1,0 +1,52 @@
+\section{課題7}
+\subsection{課題概要}
+PL-2コンパイラを完成させるために、以下の機能を実装した。
+\begin{itemize}
+  \item 関数の定義
+  \item 関数の戻り値の生成
+  \item 定義時、呼び出し時の引数のチェック(手続きと一緒なので実装は省略)
+\end{itemize}
+
+\subsection{実装}
+関数の定義は、LLVMにおいて関数と手続きの区別がないことから構文要素func\_declを追加し、その中でproc\_declと同じような操作を行った。
+
+また、関数の戻り値は項として必ず利用され、文(statement)として扱われることはないとした。
+そのため、関数呼び出しは新たな構文要素func\_call\_factorを構文要素factorの中で定義した。
+
+\subsubsection{関数の定義}
+関数の定義は、LLVMにおいて関数と手続きの区別がないことから構文要素func\_declを追加し、その中でproc\_declと同じような操作を行った。
+
+\subsubsection{関数の戻り値の生成}
+関数は戻り値を持つため、そのための領域を関数の先頭でallocaしておき、これをグローバル変数として保持した。
+変数名として、現在定義中の関数名と同じ名前のものが渡された場合には、保持しておいた戻り値領域を利用する。
+
+\subsection{実行結果}
+実行結果は以下のようになった。
+
+\subsubsection{pl2の実行結果}
+\begin{lstlisting}[caption={pl2a.p, pl2b.pの実行結果 },label={pl2a.p, pl2b.pの実行結果}]
+$ ./parser pl2a.p
+$ lli result.ll
+$ 5
+  120
+$ ./parser pl2b.p
+$ lli result.ll
+$ 2 
+$ 4
+  16
+\end{lstlisting}
+
+\subsubsection{関数を手続きとして呼び出したときの実行結果}
+pl2a.pの12行目に手続きとしてfact(n);を挿入し、実行した。
+\begin{lstlisting}[caption={関数を手続きとして呼び出す},label={関数を手続きとして呼び出す}]
+$ ./parser pl2a.p
+  not decleared as procedure
+  line: 12
+  )
+\end{lstlisting}
+
+\subsection{考察}
+今回の実装では、関数は文として使われないという仕様を決めた。
+実際に、実行結果では関数が手続きと同様に呼び出されたときにエラーを出力している。
+
+また、通常のpl2の実行結果から、階乗を行うプログラム(a)と、2つの数のべき乗を求めるプログラム(b)が正しく動作していることが確認できる。

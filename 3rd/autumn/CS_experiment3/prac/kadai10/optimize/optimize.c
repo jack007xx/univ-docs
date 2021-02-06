@@ -9,6 +9,7 @@ int block(LLVMcode *, LLVMcode *);
 Fundecl *gFun;
 // 以下startは基本ブロックの一個前、endは一個後ろの命令を表す。
 
+// 関数→コード列→基本ブロックに分割していく。
 int optimize_all(Fundecl *aFuncs) {
   for (Fundecl *tFunPointer = aFuncs; tFunPointer != NULL;
        tFunPointer = tFunPointer->next) {

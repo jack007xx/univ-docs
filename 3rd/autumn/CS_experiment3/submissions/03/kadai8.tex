@@ -1,0 +1,60 @@
+\section{課題7}
+\subsection{課題概要}
+PL-3コンパイラを完成させるために、以下の機能を実装した。
+\begin{itemize}
+  \item 配列の定義
+  \item 配列の参照
+  \item 配列への代入
+\end{itemize}
+
+\subsection{実装}
+記号表に配列用の新たな種別を追加し、Factor構造体にサイズを持たせるための新たなメンバを追加した。
+これにより、通常の命令生成と同じようにallocaやglobalに渡すことができる。
+
+\subsubsection{配列の定義}
+id\_listの内部を新たな構文要素id\_declで入れ替え、その中で変数と配列の定義を行った。
+表現するデータ構造はほぼ一緒で、メンバの内容だけが違うので、変数の定義とほぼ同様の処理である。
+
+配列のサイズは、最大インデックス-オフセット+1で算出した。
+
+\subsubsection{配列の参照、代入}
+var\_name中に、配列の参照部分を作成し、その中でgetelementptr命令を呼び出した。
+getelementptrで1次元の配列の要素のポインタを取り出すとき、getelementptr inbounds [size x i32], [size x i32]* array, i32 0, i32 index という呼び出しを行う。
+このような命令を生成するコマンドをllvm.h内で宣言した。
+
+\subsection{プログラムの実行結果}
+\subsubsection{pl3の実行結果}
+pl3を実行した結果、以下のようになった。
+\begin{lstlisting}[caption={pl3.pの実行結果},label={pl3.pの実行結果}]
+$ ./parser pl3a.p
+$ lli result.ll
+$ 5
+$ 1
+$ 2
+$ 3
+$ 4
+$ 5
+  5
+  4
+  3
+  2
+  1
+
+$ ./parser pl3a.p
+$ lli result.ll
+$ 20
+  2
+  3
+  5
+  7
+  11
+  13
+  17
+  19
+\end{lstlisting}
+
+\subsection{考察}
+getelementptrの1つ目のオペランドに指定されているi32 0は、配列それ自体を指すオフセットである。
+また、getelementptrにinboundsキーワードを指定することで、範囲外へのアクセスに対してpoison valueを返す。
+
+pl3の実行では、入力した数列を逆順に出力するプログラム(a)と、入力以下の素数を出力するプログラム(b)が正しく動作していることが確認できた。

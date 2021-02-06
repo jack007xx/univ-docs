@@ -306,7 +306,6 @@ void print_code(LLVMcode *aCode) {
       }
 
       // 引数配置
-      // todo ->size
       int tArity = fundecl_lookup(aCode->args.call.arg1->vname);
       for (int i = 0; i < tArity; i++) {
         factor_encode(aCode->args.call.proc_args[i], tArg2);

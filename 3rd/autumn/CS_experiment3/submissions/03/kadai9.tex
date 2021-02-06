@@ -1,0 +1,35 @@
+\section{課題9}
+\subsection{課題概要}
+以下の機能を実装した。
+\begin{itemize}
+  \item forward文による、先行宣言
+\end{itemize}
+
+\subsection{実装}
+var\_decl\_partのあとにforward\_decl\_partを追加した。
+その中で、記号表に対する関数(手続き)名の追加を行った。
+また、引数の数も記号表に登録する必要があるので、f\_argsの中でグローバル変数gArityをインクリメントした。
+
+今回の実装では、宣言されたプログラムが定義されていない場合、エラーを出力する必要があり、そのためにグローバル変数としてgUndefinedを用意した。
+また、関数として宣言されて手続きとして定義された場合(逆も)にもエラーを出力した。
+
+\subsection{pl4の実行}
+pl4-test.p, pl4a.pを実行した結果、以下のようになった。
+\begin{lstlisting}[caption={pl4の実行結果},label={pl4の実行結果}]
+$ ./parser pl4-test.p
+$ lli result.ll
+$ 6
+  8
+$ 100
+
+$ ./parser pl4a.p
+$ lli result.ll
+$ 100
+  5050
+\end{lstlisting}
+
+\subsection{考察}
+llvm IRではグローバルに定義された関数はどの順序でも呼び出すことができる。
+したがって、記号表への追加のみでコード生成のプログラムに変更はなかった。
+
+また、入力が10以下のときにフィボナッチ数列を出力するプログラム(pl4-test)と入力までの数の和を出力するプログラム(pl4a)が正しく動作していることが確認できた。
